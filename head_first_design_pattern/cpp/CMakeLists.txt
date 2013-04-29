@@ -7,3 +7,4 @@ ENDIF()
 SET (CMAKE_INSTALL_PREFIX /)
 
 ADD_SUBDIRECTORY (strategy)
+ADD_SUBDIRECTORY (observer/weather)
