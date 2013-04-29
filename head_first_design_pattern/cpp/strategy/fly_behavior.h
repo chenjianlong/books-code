@@ -1,6 +1,6 @@
 /*!
  * \file fly_behavior.h
- * \brief The Fly_Behavior class implementation. 
+ * \brief The Fly_Behavior interface. 
  * \author Jianlong Chen <jianlong99@gmail.com>
  * \date 2013-04-23
  */

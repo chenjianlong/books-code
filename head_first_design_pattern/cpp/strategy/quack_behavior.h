@@ -1,6 +1,6 @@
 /*!
  * \file quack_behavior.h
- * \brief The Quack_Behavior class implementation. 
+ * \brief The Quack_Behavior interface. 
  * \author Jianlong Chen <jianlong99@gmail.com>
  * \date 2013-04-23
  */
