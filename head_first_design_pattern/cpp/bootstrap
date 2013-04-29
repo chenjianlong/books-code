@@ -1,0 +1,7 @@
+mkdir build
+cd build
+cmake ..
+make
+mkdir out
+make install DESTDIR=./out
+cd ..
