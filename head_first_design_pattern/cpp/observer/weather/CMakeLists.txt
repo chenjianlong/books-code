@@ -13,3 +13,4 @@ SET (weather_station_SOURCE_FILES
 
 ADD_EXECUTABLE (weather_station ${weather_station_SOURCE_FILES})
 INSTALL (TARGETS weather_station DESTINATION bin)
+

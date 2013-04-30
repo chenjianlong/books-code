@@ -21,3 +21,4 @@ SET (mini_duck_simulator_SOURCE_FILES
 
 ADD_EXECUTABLE (mini_duck_simulator ${mini_duck_simulator_SOURCE_FILES})
 INSTALL (TARGETS mini_duck_simulator DESTINATION bin)
+
