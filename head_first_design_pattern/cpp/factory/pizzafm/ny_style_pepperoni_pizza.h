@@ -1,0 +1,22 @@
+/*!
+ * \file ny_style_pepperoni_pizza.h
+ * \brief The NY_Style_Pepperoni_Pizza class implementation. 
+ * \author Jianlong Chen <jianlong99@gmail.com>
+ * \date 2013-05-02
+ */
+/* $Id$ */
+
+#ifndef NY_STYLE_PEPPERONI_PIZZA_H
+#define NY_STYLE_PEPPERONI_PIZZA_H
+
+#include "pizza.h"
+
+class NY_Style_Pepperoni_Pizza : public Pizza
+{
+public:
+    NY_Style_Pepperoni_Pizza();
+    virtual ~NY_Style_Pepperoni_Pizza();
+};
+
+#endif /* NY_STYLE_PEPPERONI_PIZZA_H */
+
