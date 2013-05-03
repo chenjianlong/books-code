@@ -20,6 +20,6 @@ void Current_Conditions_Display::update(float temperature, float humidity, float
 
 void Current_Conditions_Display::display()
 {
-		std::cout << "Current conditions: " << temperature_ << "F degress and " << humidity_ << "\% humidity" << std::endl;
+		std::cout << "Current conditions: " << temperature_ << "F degress and " << humidity_ << "% humidity" << std::endl;
 }
 
