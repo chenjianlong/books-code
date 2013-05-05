@@ -9,6 +9,8 @@
 #ifndef VEGGIES_H
 #define VEGGIES_H
 
+#include <boost/shared_ptr.hpp>
+#include <vector>
 #include <string>
 
 class Veggies
@@ -19,6 +21,9 @@ public:
 
     virtual std::string to_string() = 0;
 };
+
+typedef std::vector<boost::shared_ptr<Veggies> > VEGGIES_VEC;
+typedef boost::shared_ptr<Veggies> VEGGIES_PTR;
 
 #endif /* VEGGIES_H */
 

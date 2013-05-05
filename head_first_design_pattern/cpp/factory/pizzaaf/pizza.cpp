@@ -57,7 +57,7 @@ string Pizza::to_string()
         result += cheese_->to_string() + "\n";
     }
     if (veggies_.get() != NULL) {
-        for (vector<auto_ptr<Veggies> >::iterator it = veggies_->begin(); it != veggies_->end(); it++) {
+        for (VEGGIES_VEC::iterator it = veggies_->begin(); it != veggies_->end(); it++) {
             result += (*it)->to_string() + "\n";
         }
     }

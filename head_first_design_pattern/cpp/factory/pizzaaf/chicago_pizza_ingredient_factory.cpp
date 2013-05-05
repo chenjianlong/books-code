@@ -21,36 +21,36 @@ Chicago_Pizza_Ingredient_Factory::Chicago_Pizza_Ingredient_Factory()
 Chicago_Pizza_Ingredient_Factory::~Chicago_Pizza_Ingredient_Factory()
 { }
 
-Dough *Chicago_Pizza_Ingredient_Factory::create_dough()
+Dough* Chicago_Pizza_Ingredient_Factory::create_dough()
 {
     return new Thick_Crust_Dough();
 }
 
-Sauce *Chicago_Pizza_Ingredient_Factory::create_sauce()
+Sauce* Chicago_Pizza_Ingredient_Factory::create_sauce()
 {
     return new Plum_Tomato_Sauce();
 }
 
-Cheese *Chicago_Pizza_Ingredient_Factory::create_cheese()
+Cheese* Chicago_Pizza_Ingredient_Factory::create_cheese()
 {
     return new Mozzarella_Cheese();
 }
 
-vector<auto_ptr<Veggies> > *Chicago_Pizza_Ingredient_Factory::create_veggies()
+VEGGIES_VEC* Chicago_Pizza_Ingredient_Factory::create_veggies()
 {
-    auto_ptr<vector<auto_ptr<Veggies> > > veggies(new vector<auto_ptr<Veggies> >());
-    veggies->push_back(auto_ptr<Veggies>(new Black_Olives()));
-    veggies->push_back(auto_ptr<Veggies>(new Spinach()));
-    veggies->push_back(auto_ptr<Veggies>(new Eggplant()));
+    auto_ptr<VEGGIES_VEC> veggies(new VEGGIES_VEC());
+    veggies->push_back(VEGGIES_PTR(new Black_Olives()));
+    veggies->push_back(VEGGIES_PTR(new Spinach()));
+    veggies->push_back(VEGGIES_PTR(new Eggplant()));
     return veggies.release();
 }
 
-Pepperoni *Chicago_Pizza_Ingredient_Factory::create_pepperoni()
+Pepperoni* Chicago_Pizza_Ingredient_Factory::create_pepperoni()
 {
     return new Sliced_Pepperoni();
 }
 
-Clams *Chicago_Pizza_Ingredient_Factory::create_clam()
+Clams* Chicago_Pizza_Ingredient_Factory::create_clam()
 {
     return new Frozen_Clams();
 }

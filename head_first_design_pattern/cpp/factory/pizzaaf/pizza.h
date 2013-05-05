@@ -9,7 +9,6 @@
 #ifndef PIZZA_H
 #define PIZZA_H
 
-#include <vector>
 #include <memory>
 #include <string>
 #include "dough.h"
@@ -39,7 +38,7 @@ protected:
 
     std::auto_ptr<Dough> dough_;
     std::auto_ptr<Sauce> sauce_;
-    std::auto_ptr<std::vector<std::auto_ptr<Veggies> > > veggies_;
+    std::auto_ptr<VEGGIES_VEC> veggies_;
     std::auto_ptr<Cheese> cheese_;
     std::auto_ptr<Pepperoni> pepperoni_;
     std::auto_ptr<Clams> clam_;

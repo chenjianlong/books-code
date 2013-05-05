@@ -9,8 +9,6 @@
 #ifndef PIZZA_INGREDIENT_FACTORY_H
 #define PIZZA_INGREDIENT_FACTORY_H
 
-#include <memory>
-#include <vector>
 #include "dough.h"
 #include "sauce.h"
 #include "cheese.h"
@@ -27,7 +25,7 @@ public:
     virtual Dough* create_dough() = 0;
     virtual Sauce* create_sauce() = 0;
     virtual Cheese* create_cheese() = 0;
-    virtual std::vector<std::auto_ptr<Veggies> > *create_veggies() = 0;
+    virtual VEGGIES_VEC *create_veggies() = 0;
     virtual Pepperoni* create_pepperoni() = 0;
     virtual Clams* create_clam() = 0;
 };

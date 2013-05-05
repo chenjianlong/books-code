@@ -10,7 +10,7 @@
 #define SPINACH_H
 
 #include <string>
-#include "Veggies.h"
+#include "veggies.h"
 
 class Spinach : public Veggies
 {

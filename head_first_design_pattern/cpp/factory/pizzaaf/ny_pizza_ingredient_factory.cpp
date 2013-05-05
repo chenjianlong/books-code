@@ -20,38 +20,38 @@ NY_Pizza_Ingredient_Factory::NY_Pizza_Ingredient_Factory()
 NY_Pizza_Ingredient_Factory::~NY_Pizza_Ingredient_Factory()
 { }
 
-Dough *NY_Pizza_Ingredient_Factory::create_dough()
+Dough* NY_Pizza_Ingredient_Factory::create_dough()
 {
     return new Thin_Crust_Dough();
 }
 
-Sauce *NY_Pizza_Ingredient_Factory::create_sauce()
+Sauce* NY_Pizza_Ingredient_Factory::create_sauce()
 {
     return new Marinara_Sauce();
 }
 
-Cheese *NY_Pizza_Ingredient_Factory::create_cheese()
+Cheese* NY_Pizza_Ingredient_Factory::create_cheese()
 {
     return new Reggiano_Cheese();
 }
 
-std::vector<std::auto_ptr<Veggies> > *NY_Pizza_Ingredient_Factory::create_veggies()
+VEGGIES_VEC* NY_Pizza_Ingredient_Factory::create_veggies()
 {
-    auto_ptr<vector<auto_ptr<Veggies> > > veggies(new std::vector<std::auto_ptr<Veggies> >());
-    veggies->push_back(auto_ptr<Veggies>(new Garlic()));
-    veggies->push_back(auto_ptr<Veggies>(new Onion()));
-    veggies->push_back(auto_ptr<Veggies>(new Mushroom()));
-    veggies->push_back(auto_ptr<Veggies>(new Red_Pepper()));
+    auto_ptr<VEGGIES_VEC> veggies(new VEGGIES_VEC());
+    veggies->push_back(VEGGIES_PTR(new Garlic()));
+    veggies->push_back(VEGGIES_PTR(new Onion()));
+    veggies->push_back(VEGGIES_PTR(new Mushroom()));
+    veggies->push_back(VEGGIES_PTR(new Red_Pepper()));
 
     return veggies.release();
 }
 
-Pepperoni *NY_Pizza_Ingredient_Factory::create_pepperoni()
+Pepperoni* NY_Pizza_Ingredient_Factory::create_pepperoni()
 {
     return new Sliced_Pepperoni();
 }
 
-Clams *NY_Pizza_Ingredient_Factory::create_clam()
+Clams* NY_Pizza_Ingredient_Factory::create_clam()
 {
     return new Fresh_Clams();
 }

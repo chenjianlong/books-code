@@ -20,7 +20,7 @@ public:
     virtual Dough* create_dough();
     virtual Sauce* create_sauce();
     virtual Cheese* create_cheese();
-    virtual std::vector<std::auto_ptr<Veggies> >* create_veggies();
+    virtual VEGGIES_VEC* create_veggies();
     virtual Pepperoni* create_pepperoni();
     virtual Clams* create_clam();
 };
