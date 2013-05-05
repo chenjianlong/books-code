@@ -42,7 +42,7 @@ void Chocolate_Boiler::drain()
 void Chocolate_Boiler::boil()
 {
 	if (!is_empty() && !is_boiled()) {
-		boiled_ - true;
+		boiled_ = true;
 	}
 }
 
