@@ -2,7 +2,7 @@ PROJECT (pizza_abstract_factory)
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 INCLUDE_DIRECTORIES (
-    $ENV{BOOST_ROOT}
+    ${BOOST_INCLUDE_DIRS}
 )
 
 SET (pizza_abstract_factory_SOURCE_FILES
