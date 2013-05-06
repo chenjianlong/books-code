@@ -29,6 +29,7 @@ void Singleton::close()
         boost::lock_guard<LOCK> guard(lock_);
         if (NULL != unique_) {
             delete unique_;
+            unique_ = NULL;
         }
     }
 }
