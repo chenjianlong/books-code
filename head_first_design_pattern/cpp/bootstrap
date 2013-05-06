@@ -4,5 +4,5 @@ cd build
 cmake ..
 make
 mkdir out
-make install DESTDIR=./out
+make install DESTDIR=$(pwd)/out
 cd ..

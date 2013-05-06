@@ -4,5 +4,6 @@ cd build
 cmake -G"NMake Makefiles" ..
 nmake
 mkdir out
-nmake install DESTDIR=.\out
+nmake install DESTDIR=%CD%\out
 cd ..
+
