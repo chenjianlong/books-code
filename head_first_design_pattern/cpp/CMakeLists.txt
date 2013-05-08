@@ -18,4 +18,5 @@ ADD_SUBDIRECTORY (factory/pizzaaf)
 ADD_SUBDIRECTORY (singleton/chocolate)
 ADD_SUBDIRECTORY (singleton/dcl)
 ADD_SUBDIRECTORY (singleton/stat)
+ADD_SUBDIRECTORY (command/party)
 
