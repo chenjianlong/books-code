@@ -62,7 +62,7 @@ std::ostream& operator<<(std::ostream &os, Remote_Control &rc)
 	for (int i = 0; i < Remote_Control::MAX_SLOTS; i++) {
 		os << "[slot " << i << "] " << *(rc.on_commands_)[i] << "    " << *(rc.off_commands_)[i] << "\n";
 	}
-	os << "[undo] " << rc.undo_command_;
+	os << "[undo] " << *rc.undo_command_;
 	return os;
 }
 
