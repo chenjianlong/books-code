@@ -46,9 +46,9 @@ void Hottub::jets_off()
 void Hottub::set_temperature(int temperature)
 {
 	if (temperature > temperature_) {
-		cout << "Hottub is heating to a steaming " << temperature_ << " degrees" << endl;
+		cout << "Hottub is heating to a steaming " << temperature << " degrees" << endl;
 	} else {
-		cout << "Hottub is cooling to " << temperature_ << " degrees" << endl;
+		cout << "Hottub is cooling to " << temperature << " degrees" << endl;
 	}
 	temperature_ = temperature;
 }
