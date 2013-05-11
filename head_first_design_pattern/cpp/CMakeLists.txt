@@ -20,4 +20,5 @@ ADD_SUBDIRECTORY (singleton/dcl)
 ADD_SUBDIRECTORY (singleton/stat)
 ADD_SUBDIRECTORY (command/party)
 ADD_SUBDIRECTORY (adapter/ducks)
+ADD_SUBDIRECTORY (facade/hometheater)
 
