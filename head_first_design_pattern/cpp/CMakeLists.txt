@@ -21,4 +21,7 @@ ADD_SUBDIRECTORY (singleton/stat)
 ADD_SUBDIRECTORY (command/party)
 ADD_SUBDIRECTORY (adapter/ducks)
 ADD_SUBDIRECTORY (facade/hometheater)
+ADD_SUBDIRECTORY (templatemethod/simplebarista)
+ADD_SUBDIRECTORY (templatemethod/barista)
+ADD_SUBDIRECTORY (templatemethod/sort)
 
