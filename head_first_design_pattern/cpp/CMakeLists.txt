@@ -26,4 +26,5 @@ ADD_SUBDIRECTORY (templatemethod/barista)
 ADD_SUBDIRECTORY (templatemethod/sort)
 ADD_SUBDIRECTORY (iterator/dinermerger)
 ADD_SUBDIRECTORY (iterator/dinermergercafe)
+ADD_SUBDIRECTORY (composite/menu)
 
