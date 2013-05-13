@@ -24,4 +24,6 @@ ADD_SUBDIRECTORY (facade/hometheater)
 ADD_SUBDIRECTORY (templatemethod/simplebarista)
 ADD_SUBDIRECTORY (templatemethod/barista)
 ADD_SUBDIRECTORY (templatemethod/sort)
+ADD_SUBDIRECTORY (iterator/dinermerger)
+ADD_SUBDIRECTORY (iterator/dinermergercafe)
 
