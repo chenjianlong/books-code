@@ -34,7 +34,7 @@ void Waitress::print_vegetarian_menu()
 			if (component->is_vegetarian()) {
 				component->print();
 			}
-		} catch (runtime_error &e) {
+		} catch (runtime_error) {
 		
 		}
 	}

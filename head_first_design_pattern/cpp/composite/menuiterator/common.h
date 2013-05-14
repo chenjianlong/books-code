@@ -17,10 +17,10 @@
 class Menu_Component;
 class Iterator;
 
-typedef typename boost::shared_ptr<Menu_Component> MENU;
-typedef typename std::vector<MENU> MENU_LIST;
-typedef typename boost::shared_ptr<Iterator> ITER_PTR;
-typedef typename std::stack<ITER_PTR> ITER_STACK;
+typedef boost::shared_ptr<Menu_Component> MENU;
+typedef std::vector<MENU> MENU_LIST;
+typedef boost::shared_ptr<Iterator> ITER_PTR;
+typedef std::stack<ITER_PTR> ITER_STACK;
 
 #endif /* COMMON_H */
 
