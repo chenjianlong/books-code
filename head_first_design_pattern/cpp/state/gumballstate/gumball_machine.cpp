@@ -54,7 +54,7 @@ void Gumball_Machine::set_state(State *state)
 void Gumball_Machine::release_ball()
 {
 	cout << "A gumball comes rolling out the solt..." << endl;
-	if (!count_) {
+	if (count_) {
 		count_--;
 	}
 }
