@@ -28,4 +28,5 @@ ADD_SUBDIRECTORY (iterator/dinermerger)
 ADD_SUBDIRECTORY (iterator/dinermergercafe)
 ADD_SUBDIRECTORY (composite/menu)
 ADD_SUBDIRECTORY (composite/menuiterator)
+ADD_SUBDIRECTORY (state/gumball)
 
