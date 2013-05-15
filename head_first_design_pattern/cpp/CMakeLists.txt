@@ -31,4 +31,5 @@ ADD_SUBDIRECTORY (composite/menuiterator)
 ADD_SUBDIRECTORY (state/gumball)
 ADD_SUBDIRECTORY (state/gumballstate)
 ADD_SUBDIRECTORY (state/gumballstatewinner)
+ADD_SUBDIRECTORY (proxy/gumballmonitor)
 
