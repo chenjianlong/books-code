@@ -1,6 +1,6 @@
 ## Introduct
 
-This is the cpp version code of <<head first design pattern>>
+This is the cpp version code of \<\<head first design pattern\>\>
 
 Support Windows, Linux and Mac OS X
 
