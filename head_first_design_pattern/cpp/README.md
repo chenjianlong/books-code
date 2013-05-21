@@ -16,6 +16,8 @@ xcode in Mac OS X
 
 * Boost Library 
 
+http://www.boost.org/
+
 and maybe should set BOOST_ROOT environment variable
 
 In Ubuntu you can use
