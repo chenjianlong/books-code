@@ -1,4 +1,4 @@
 books code
 ==========
 
-This repo is the books example/exercise code i had read!
+This repositories is the books example/exercise code i had read!
