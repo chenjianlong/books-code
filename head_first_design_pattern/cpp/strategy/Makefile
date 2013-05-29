@@ -1,5 +1,5 @@
 # file Makefile
-# author Jianlong Chen 
+# author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-28
 # $Id$
 
