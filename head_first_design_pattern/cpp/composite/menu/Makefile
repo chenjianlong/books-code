@@ -5,6 +5,7 @@
 # $Id$
 
 PROG = menu
+CXXFLAGS += -I$(BOOST_ROOT)
 include ../../depend.make
 
 OBJS = main.o\

@@ -7,12 +7,15 @@
 PROG = sort
 include ../../depend.make
 
-OBJS = ducks.o\
+OBJS = duck.o\
 	   duck_sort_test_drive.o\
 	   main.o
 
 .PHONY: all clean
 all: $(PROG)
+
+$(PROG): $(OBJS)
+	$(CXX) $^ -o $@
 
 -include $(OBJS:.o=.d)
 

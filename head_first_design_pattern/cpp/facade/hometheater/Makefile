@@ -27,3 +27,5 @@ $(PROG): $(OBJS)
 
 -include $(OBJS:.o=.d)
 
+clean:
+	$(Q) -rm *.d *.o $(PROG)

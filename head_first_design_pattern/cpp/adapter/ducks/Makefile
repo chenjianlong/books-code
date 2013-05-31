@@ -7,7 +7,7 @@
 PROG = ducks_adapter
 include ../../depend.make
 
-OBJS = ducks_adapter.o\
+OBJS = duck_adapter.o\
 	   duck_test_drive.o\
 	   main.o\
 	   mallard_duck.o\
