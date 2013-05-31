@@ -4,6 +4,7 @@
 # date 2013-05-31
 # $Id$
 
+export DESTDIR = $(shell pwd)
 SUB_DIRS := strategy\
 		   observer/weather\
 		   decorator/starbuzz\
@@ -32,7 +33,9 @@ SUB_DIRS := strategy\
 all: $(SUB_DIRS)
 	@set -e;$(foreach n,$(SUB_DIRS),$(MAKE) -C $(n);)
 
+install:
+	@set -e;$(foreach n,$(SUB_DIRS),$(MAKE) -C $(n) install;)
+
 clean:
 	@set -e;$(foreach n,$(SUB_DIRS),$(MAKE) -C $(n) clean;)
-
 

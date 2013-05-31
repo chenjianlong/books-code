@@ -23,8 +23,6 @@ OBJS = decoy_duck.o\
 	   rubber_duck.o\
 	   squeak.o
 
-
-
 .PHONY: all clean
 all: $(PROG)
 
@@ -32,6 +30,9 @@ $(PROG): $(OBJS)
 	$(CXX)  $^ -o $@
 
 -include $(OBJS:.o=.d)
+
+install:
+	$(Q) mkdir -p $(DESTDIR)/bin/ && cp $(PROG) $(DESTDIR)/bin/
 
 clean:
 	$(Q) -rm *.d *.o $(PROG)
