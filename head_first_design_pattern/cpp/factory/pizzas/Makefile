@@ -1,6 +1,6 @@
 # file Makefile
 # brief this file is use to generate simple_pizza_factory
-# author Jianlong Chen  <jianlong99@gmail.com>
+# author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-30
 # $Id$
 

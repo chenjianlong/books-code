@@ -1,6 +1,6 @@
 # file Makefile
 # brief this is the Makefile to build weather_station
-# author Jianlong Chen  <jianlong99@gmail.com>
+# author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-30
 # $Id$
 

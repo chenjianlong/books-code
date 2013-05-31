@@ -1,15 +1,15 @@
 # file Makefile
-# brief this file is use to build stat
+# brief  this file is use to build gumball
 # author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-31
 # $Id$
 
-PROG = stat
+PROG = gumball
 include ../../depend.make
 
-OBJS = main.o\
-	   singleton.o\
-	   singleton_client.o
+OBJS = gumball_machine.o\
+	   gumball_machine_test_drive.o\
+	   main.o
 
 .PHONY: all clean
 all: $(PROG)

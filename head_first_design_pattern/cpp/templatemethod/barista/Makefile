@@ -1,15 +1,20 @@
 # file Makefile
-# brief this file is use to build stat
+# brief this file is use to build barista
 # author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-31
 # $Id$
 
-PROG = stat
+PROG = barista
 include ../../depend.make
 
-OBJS = main.o\
-	   singleton.o\
-	   singleton_client.o
+OBJS = beverage_test_drive.o\
+	   caffeine_beverage.o\
+	   caffeiner_beverage_with_hook.o\
+	   coffee.o\
+	   coffee_with_hook.o\
+	   main.o\
+	   tea.o\
+	   tea_with_hook.o
 
 .PHONY: all clean
 all: $(PROG)

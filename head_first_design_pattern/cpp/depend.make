@@ -1,6 +1,6 @@
 # file depend.make
 # brief this file is use to generate dpend rule for c/cpp
-# author Jianlong Chen  <jianlong99@gmail.com>
+# author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-30
 # $Id$
 

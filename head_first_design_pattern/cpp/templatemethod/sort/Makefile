@@ -1,21 +1,18 @@
 # file Makefile
-# brief this file is use to build stat
+# brief this file is use to build sort
 # author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-31
 # $Id$
 
-PROG = stat
+PROG = sort
 include ../../depend.make
 
-OBJS = main.o\
-	   singleton.o\
-	   singleton_client.o
+OBJS = ducks.o\
+	   duck_sort_test_drive.o\
+	   main.o
 
 .PHONY: all clean
 all: $(PROG)
-
-$(PROG): $(OBJS)
-	$(CXX) $^ -o $@
 
 -include $(OBJS:.o=.d)
 

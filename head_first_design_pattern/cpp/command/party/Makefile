@@ -1,6 +1,6 @@
 # file Makefile
 # brief this file is use to build party
-# author Jianlong Chen  <jianlong99@gmail.com>
+# author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-31
 # $Id$
 

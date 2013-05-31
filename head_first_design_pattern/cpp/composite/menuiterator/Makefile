@@ -1,22 +1,27 @@
 # file Makefile
-# brief this file is use to build dcl
+# brief this file is use to build menu_iterator
 # author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-05-31
 # $Id$
 
-PROG = dcl
+PROG = menu_iterator
 export CXXFLAGS += -I$(BOOST_ROOT)
 include ../../depend.make
 
-OBJS = main.o\
-	   singleton.o\
-	   singleton_client.o
+OBJS = composite_iterator.o\
+	   main.o\
+	   menu.o\
+	   menu_component.o\
+	   menu_item.o\
+	   menu_test_drive.o\
+	   null_iterator.o\
+	   waitress.o
 
 .PHONY: all clean
 all: $(PROG)
 
 $(PROG): $(OBJS)
-	$(CXX) $^ -o $@ -L$(BOOST_ROOT)/stage/lib -lboost_system
+	$(CXX) $^ -o $@
 
 -include $(OBJS:.o=.d)
 
