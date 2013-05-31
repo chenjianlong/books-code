@@ -1,4 +1,4 @@
-PROJECT (mini_duck_simulator)
+PROJECT (weather_station)
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 SET (weather_station_SOURCE_FILES
