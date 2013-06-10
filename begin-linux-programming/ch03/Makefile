@@ -11,18 +11,16 @@ PROG = simple_read\
 	   copy_stdio\
 	   print_dir\
 	   mmap
-simple_read = simple_read.c
-simple_write = simple_write.c
-copy_system = copy_system.c
-copy_block = copy_block.c
-copy_stdio = copy_stdio.c
-print_dir = print_dir.c
-mmap = mmap.c
 
 all: $(PROG)
 
-$(PROG): $(PROG:%=%.c)
-	$(CC) $($@) -o $@
+simple_read: simple_read.c
+simple_write: simple_write.c
+copy_system: copy_system.c
+copy_block: copy_block.c
+copy_stdio: copy_stdio.c
+print_dir: print_dir.c
+mmap: mmap.c
 
 clean:
 	$(Q) -rm $(PROG)

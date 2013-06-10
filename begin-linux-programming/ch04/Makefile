@@ -19,26 +19,24 @@ PROG = args\
 	   syslog\
 	   logmask\
 	   limits
-args = args.c
-argopt = argopt.c
-longopt = longopt.c
-environ = environ.c
-showenv = showenv.c
-envtime = envtime.c
-gmtime = gmtime.c
-ctime = ctime.c
-strftime = strftime.c
-tmpnam = tmpnam.c
-user = user.c
-hostget = hostget.c
-syslog = syslog.c
-logmask = logmask.c
-limits = limits.c
 
 all: $(PROG)
 
-$(PROG): $(PROG:%=%.c)
-	$(CC) $($@) -o $@
+args: args.c
+argopt: argopt.c
+longopt: longopt.c
+environ: environ.c
+showenv: showenv.c
+envtime: envtime.c
+gmtime: gmtime.c
+ctime: ctime.c
+strftime: strftime.c
+tmpnam: tmpnam.c
+user: user.c
+hostget: hostget.c
+syslog: syslog.c
+logmask: logmask.c
+limits: limits.c
 
 clean:
 	$(Q) -rm $(PROG)
