@@ -22,7 +22,9 @@ copy_stdio: copy_stdio.c
 print_dir: print_dir.c
 mmap: mmap.c
 
+install:
+	$(Q) mkdir -p $(DESTDIR)/bin && cp $(PROG) $(DESTDIR)/bin/
+
 clean:
 	$(Q) -rm $(PROG)
-
 
