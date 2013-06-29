@@ -37,6 +37,7 @@ hostget: hostget.c
 syslog: syslog.c
 logmask: logmask.c
 limits: limits.c
+	$(CC) $^ -o $@ -lm
 
 install:
 	$(Q) mkdir -p $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin/
