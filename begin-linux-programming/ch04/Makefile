@@ -39,7 +39,7 @@ logmask: logmask.c
 limits: limits.c
 
 install:
-	$(Q) mkdir -p $(DESTDIR)/bin/ && cp $(PROG) $(DESTDIR)/bin/
+	$(Q) mkdir -p $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin/
 
 clean:
 	$(Q) -rm $(PROG)
