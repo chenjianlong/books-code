@@ -7,7 +7,8 @@
 export DESTDIR = $(shell pwd)
 SUB_DIRS := ch03\
 			ch04\
-			ch05
+			ch05\
+			ch06
 
 .PHONY: all clean
 all: $(SUB_DIRS)

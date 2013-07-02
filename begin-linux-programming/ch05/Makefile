@@ -20,9 +20,7 @@ menu1: menu1.c
 menu2: menu2.c
 menu3: menu3.c
 password: password.c
-	$(CC) $^ -o $@ -lcurses
 menu4: menu4.c
-	$(CC) $^ -o $@ -lcurses
 badterm: badterm.c
 	$(CC) $^ -o $@ -lcurses
 sizeterm: sizeterm.c
