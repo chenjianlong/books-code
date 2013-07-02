@@ -40,7 +40,7 @@ limits: limits.c
 	$(CC) $^ -o $@ -lm
 
 install:
-	$(Q) mkdir -p $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin/
+	$(Q) install -d $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin/
 
 clean:
 	$(Q) -rm $(PROG)

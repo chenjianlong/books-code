@@ -36,7 +36,7 @@ curses_app: curses_app.c
 	$(CC) $^ -o $@ -lcurses
 
 install:
-	$(Q) mkdir -p $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin
+	$(Q) install -d $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin
 
 clean:
 	$(Q) -rm $(PROG)

@@ -25,7 +25,7 @@ $(PROG): $(OBJS)
 -include $(OBJS:.o=.d)
 
 install:
-	mkdir -p $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin/
+	install -d $(DESTDIR)/bin/ && install $(PROG) $(DESTDIR)/bin/
 
 clean:
 	$(Q) -rm *.d *.o $(PROG)
