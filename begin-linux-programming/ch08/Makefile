@@ -1,5 +1,5 @@
 # file Makefile
-# brief this build is use to build ch03 example
+# brief this file is use to build ch08 example
 # author Jianlong Chen <jianlong99@gmail.com>
 # date 2013-06-02
 # $Id$
