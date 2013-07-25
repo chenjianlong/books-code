@@ -46,6 +46,3 @@ install:
 clean:
 	$(Q) -rm $(PROG) *.o
 
-nodbmfiles:
-	$(Q) -rm *.dir *.pag
-

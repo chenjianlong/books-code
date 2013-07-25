@@ -10,7 +10,8 @@ SUB_DIRS := ch03\
 			ch05\
 			ch06\
 			ch07\
-			ch08
+			ch08\
+			ch10
 
 .PHONY: all clean
 all: $(SUB_DIRS)
