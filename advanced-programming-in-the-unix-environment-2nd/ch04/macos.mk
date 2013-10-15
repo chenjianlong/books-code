@@ -19,4 +19,4 @@ savedid: savedid.o
 		$(LINK.c) -o savedid savedid.o $(LDLIBS)
 
 clean:
-	rm -f ${PROGS} ${TEMPFILES} file.hole test.dat
+	rm -f ${PROGS} ${TEMPFILES} bar foo
