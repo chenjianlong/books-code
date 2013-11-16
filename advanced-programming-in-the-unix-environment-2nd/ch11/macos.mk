@@ -1,18 +1,12 @@
 include ../Make.defines.macos
 
-PROGS =	fig10.2\
-		fig10.5\
-		fig10.6\
-		fig10.9\
-		fig10.10\
-		fig10.11\
-		fig10.15\
-		fig10.20\
-		fig10.22\
-		fig10.23\
-		fig10.26\
-		fig10.30\
-		ex10.6
+
+PROGS =	fig11.2\
+		fig11.3\
+		fig11.4\
+		fig11.5\
+		ex11.1\
+		ex11.3
 
 all:	${PROGS}
 
