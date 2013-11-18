@@ -1,7 +1,6 @@
 include ../Make.defines.solaris
 EXTRALIBS=-lpthread
 
-
 PROGS =	fig11.2\
 		fig11.3\
 		fig11.4\
