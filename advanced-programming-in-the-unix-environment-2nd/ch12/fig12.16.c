@@ -13,7 +13,7 @@ int			quitflag = 0;	/* set nozero by thread */
 sigset_t	mask;
 
 pthread_mutex_t	lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t	wait = PTHREAD_COND_INITIALIZER;
+pthread_cond_t	waitloc = PTHREAD_COND_INITIALIZER;
 
 void *thr_fn (void *arg)
 {
@@ -32,7 +32,7 @@ void *thr_fn (void *arg)
 				pthread_mutex_lock (&lock);
 				quitflag = 1;
 				pthread_mutex_unlock (&lock);
-				pthread_cond_signal (&wait);
+				pthread_cond_signal (&waitloc);
 				return (0);
 			default:
 				printf ("unexcepted signal %d\n", signo);
@@ -61,7 +61,7 @@ int main (void)
 
 	pthread_mutex_lock (&lock);
 	while (quitflag == 0) {
-		pthread_cond_wait (&wait, &lock);
+		pthread_cond_wait (&waitloc, &lock);
 	}
 	pthread_mutex_unlock (&lock);
 

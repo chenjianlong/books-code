@@ -1,5 +1,6 @@
 include ../Make.defines.solaris
-EXTRALIBS=-lpthread
+EXTRA=-D_POSIX_PTHREAD_SEMANTICS
+EXTRALIBS=-lrt -lpthread
 
 PROGS =	fig12.8\
 		fig12.16\

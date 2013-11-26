@@ -3,7 +3,6 @@ include ../Make.defines.solaris
 
 PROGS =	fig5.4\
 		fig5.5\
-		fig5.11\
 		fig5.12\
 		fig5.13
 

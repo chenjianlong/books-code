@@ -17,8 +17,7 @@ PROGS =	fig8.1\
 		fig8.30\
 		ex8.1\
 		ex8.2\
-		ex8.6\
-		ex8.7
+		ex8.6
 
 all:	${PROGS}
 
