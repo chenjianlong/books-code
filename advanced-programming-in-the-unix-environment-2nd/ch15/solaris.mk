@@ -1,6 +1,5 @@
 include ../Make.defines.solaris
 
-
 PROGS =	fig15.5\
 		fig15.6\
 		fig15.11\
