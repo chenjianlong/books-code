@@ -12,7 +12,7 @@ LDLIBS=../lib/libapue.a $(EXTRALIBS)
 CFLAGS=-I$(WKDIR)/include -Wall -DSOLARIS $(EXTRA)
 
 # Our library that almost every program needs.
-LIB=../libapue.a
+LIB=../lib/libapue.a
 
 # Common temp files to delete from each directory.
 TEMPFILES=core core.* *.o temp.* *.out typescript*
