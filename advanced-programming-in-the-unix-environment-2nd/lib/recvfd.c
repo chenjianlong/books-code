@@ -54,8 +54,14 @@ recv_fd(int fd, ssize_t (*userfunc)(int, const void *, size_t))
 					err_dump("message format error");
  				status = *ptr & 0xFF;	/* prevent sign extension */
  				if (status == 0) {
-					if (msg.msg_controllen != CONTROLLEN)
+					if (msg.msg_controllen < CONTROLLEN) {
 						err_dump("status = 0 but no fd");
+					}
+					if (cmptr->cmsg_len != CONTROLLEN) {
+						err_ret ("cmptr->cmsg_len != CONTROLLEN,"
+								"cmsg_len=%d, CONTROLLEN=%d\n",
+								cmptr->cmsg_len, CONTROLLEN);
+					}
 					newfd = *(int *)CMSG_DATA(cmptr);
 				} else {
 					newfd = -status;
