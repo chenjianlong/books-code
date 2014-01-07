@@ -49,8 +49,8 @@ int main (void)
 		if (ferror (stdin)) {
 			err_sys ("fgets error on stdin");
 		}
-		exit (0);			/* child */
-	} else {
+		exit (0);
+	} else {				/* child */
 		close (fd1[1]);
 		close (fd2[0]);
 		if (fd1[0] != STDIN_FILENO) {
@@ -66,7 +66,7 @@ int main (void)
 			}
 			close (fd1[0]);
 		}
-		if (execl ("./fig15.19", "fig15.17", (char *)0) < 0) {
+		if (execl ("./fig15.19", "fig15.19", (char *)0) < 0) {
 			err_sys ("execl error");
 		}
 	}
