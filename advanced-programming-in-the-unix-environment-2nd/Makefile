@@ -17,7 +17,8 @@ DIRS = lib\
 	   ch16\
 	   ch17\
 	   ch18\
-	   ch19
+	   ch19\
+	   ch20
 
 all:
 	$(MAKE) `./systype.sh`
