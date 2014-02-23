@@ -6,11 +6,15 @@
 var express = require('express')
   , routes = require('./routes')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , fs = require('fs');
 
 var settings = require('./settings');
 var MongoStore = require('connect-mongo')(express);
 var flash = require('connect-flash');
+
+var accessLogfile = fs.createWriteStream('access.log', {flags: 'a'});
+var errorLogfile = fs.createWriteStream('error.log', {flags: 'a'});
 
 
 var app = express();
@@ -33,6 +37,7 @@ app.use(express.session({
 }));
 
 app.use(flash());
+app.use(express.logger({stream: accessLogfile}));
 
 app.use(function(req, res, next){
   res.locals.user = req.session.user;
@@ -58,6 +63,18 @@ if ('development' == app.get('env')) {
 }
 
 routes(app);
+
+app.configure('production', function() {
+  app.use(function(err, req, res, next) {
+    if (err) {
+      var meta = '{' + new Date() + '} ' + req.url + '\n';
+    errorLogfile.write(meta + err.stack + '\n');
+    next(err);
+    } else {
+      next();
+    }
+  });
+});
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
