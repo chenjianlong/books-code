@@ -1,27 +1,102 @@
-<form class="form-horizontal" method="post">
-  <fieldset>
-    <legend>用戶註冊</legend>
-    <div class="control-group">
-      <label class="control-label" for="username">用戶名</label>
-      <div class="controls">
-        <input type="text" class="input-xlarge" id="username" name="username">
-        <p class="help-block">你的賬戶的名稱，用於登錄和顯示。</p>
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title><%= title %>-Microblog</title>
+    <script src="http://code.jquery.com/jquery-2.0.3.js"></script>
+    <script src="javascripts/bootstrap.js"></script>
+    <link href="stylesheets/bootstrap.css" rel="stylesheet" />
+    <link href="stylesheets/bootstrap-responsive.css" rel="stylesheet" />
+    <style type="text/css">
+      body{
+	padding-top: 60px;
+	padding-bottom: 40px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">Microblog</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="/">首頁</a></li>
+              <% if(!user){ %>
+                <li><a href="/login">登入</a></li>
+                <li><a href="/reg">註冊</a></li>
+              <% } else { %>
+                <li><a href="/logout">登出</a></li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="password">口令</label>
-      <div class="controls">
-        <input type="password" class="input-xlarge" id="password" name="password">
-      </div>
+
+    <div id="container" class="container">
+
+	<% if(success){ %>
+	  <div class="alert alert-success">
+	    <%= success %>
+	  </div>
+	<% } %>
+
+	<% if(error){ %>
+	  <div class="alert alert-error">
+	    <%= error %>
+	  </div>
+	<% } %>
+
+	<form class="form-horizontal" method="post">
+	  <fieldset>
+
+	    <legend>用户注册</legend>
+
+	    <div class="control-group">
+	      <label class="control-label" for="username">用户名</label>
+	      <div class="controls">
+		<input type="text" class="input-xlarge" id="username" name="username">
+		<p class="help-block">你的账户名称，用于登录和显示</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <label class="control-label" for="password">口令</label>
+	      <div class="controls">
+		<input type="password" class="input-xlarge" id="password" name="password">
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <label class="control-label" for="password-repeat">重复输入口令</label>
+	      <div class="controls">
+		<input type="password" class="input-xlarge" id="password-repeat" name="password-repeat">
+	      </div>
+	    </div>
+
+	    <div class="form-actions">
+	      <button type="submit" class="btn btn-primary">注册</button>
+	    </div>
+
+	  </fieldset>
+	</form>
+
+	<hr />
+
+        <footer>
+          <p><a href="http://www.byvoid.com/" target="_blank">BYVoid</a> 2012</p>
+        </footer>
+
     </div>
-    <div class="control-group">
-      <label class="control-label" for="password-repeat">重複輸入口令</label>
-      <div class="controls">
-        <input type="password" class="input-xlarge" id="password-repeat" name="password-repeat">
-      </div>
-    </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary">註冊</button>
-    </div>
-  </fieldset>
-</form>
+
+  </body>
+
+</html>

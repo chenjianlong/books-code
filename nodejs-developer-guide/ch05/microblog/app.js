@@ -1,59 +1,64 @@
+
 /**
  * Module dependencies.
  */
 
-var express = require('express');
-var routes = require('./routes');
+var express = require('express')
+  , routes = require('./routes')
+  , http = require('http')
+  , path = require('path');
+
 var settings = require('./settings');
-var MongoStore = require('connect-mongo');
+var MongoStore = require('connect-mongo')(express);
+var flash = require('connect-flash');
 
-var app = module.exports = express.createServer();
 
-// Configuration
+var app = express();
 
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'ejs');
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(express.cookieParser());
-  app.use(express.session({
-    secret: settings.cookieSecret,
-    store: new MongoStore({
-      db: settings.db
-    })
-  }));
-  app.use(express.router(routes));
-  app.use(express.static(__dirname + '/public'));
+// all environments
+app.set('port', process.env.PORT || 3000);
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+app.use(express.favicon());
+app.use(express.logger('dev'));
+app.use(express.bodyParser());
+app.use(express.methodOverride());
+app.use(express.cookieParser('keyboard cat'));
+app.use(express.session({
+  cookie: {maxAge: 60000},
+  secret: settings.cookieSecret,
+  store: new MongoStore({
+    db: settings.db
+  })
+}));
+
+app.use(flash());
+
+app.use(function(req, res, next){
+  res.locals.user = req.session.user;
+  var err = req.flash('error');
+  if(err.length)
+    res.locals.error = err;
+  else
+    res.locals.error = null;
+  var succ = req.flash('success');
+  if(succ.length)
+    res.locals.success = succ;
+  else
+    res.locals.success = null;
+  next();
 });
 
-app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-});
+app.use(app.router);
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.configure('production', function(){
+// development only
+if ('development' == app.get('env')) {
   app.use(express.errorHandler());
-});
+}
 
-app.dynamicHelpers({
-  user: function(req, res) {
-    return req.session.user;
-  },
-  error: function(req, res) {
-    var err = req.flash('error');
-    if (err.length)
-      return err;
-    else
-      return null;
-  },
-  success: function(req, res) {
-    var succ = req.flash('success');
-    if (succ.length)
-      return succ;
-    else
-      return null;
-  },
-});
+routes(app);
 
-app.listen(3000);
-console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+http.createServer(app).listen(app.get('port'), function(){
+  console.log('Express server listening on port ' + app.get('port'));
+});

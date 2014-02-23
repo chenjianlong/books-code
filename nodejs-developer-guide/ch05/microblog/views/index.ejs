@@ -1,13 +1,128 @@
-<% if (!user) { %>
-  <div class="hero-unit">
-    <h1>歡迎來到 Microblog</h1>
-    <p>Microblog 是一個基於 Node.js 的微博系統。</p>
-    <p>
-      <a class="btn btn-primary btn-large" href="/login">登錄</a>
-      <a class="btn btn-large" href="/reg">立即註冊</a>
-    </p>
-  </div>
-<% } else { %>
-  <%- partial('say') %> 
-<% } %>
-<%- partial('posts') %> 
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title><%= title %>-Microblog</title>
+    <script src="http://code.jquery.com/jquery-2.0.3.js"></script>
+    <script src="javascripts/bootstrap.js"></script>
+    <link href="stylesheets/bootstrap.css" rel="stylesheet" />
+    <link href="stylesheets/bootstrap-responsive.css" rel="stylesheet" />
+    <style type="text/css">
+      body{
+	padding-top: 60px;
+	padding-bottom: 40px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">Microblog</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="/">首頁</a></li>
+              <% if(!user){ %>
+                <li><a href="/login">登入</a></li>
+                <li><a href="/reg">註冊</a></li>
+              <% } else { %>
+                <li><a href="/logout">登出</a></li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="container" class="container">
+
+	<% if(success){ %>
+	  <div class="alert alert-success">
+	    <%= success %>
+	  </div>
+	<% } %>
+
+	<% if(error){ %>
+	  <div class="alert alert-error">
+	    <%= error %>
+	  </div>
+	<% } %>
+	
+        <div class="hero-unit">
+	  <h1>歡迎來到 Microblog</h1>
+	  <p>Microblog 是一個基於 Node.js 的微博系統。</p>
+	  <p>
+	    <a class="btn btn-primary btn-large" href="/login">登錄</a>
+	    <a class="btn btn-large" href="/reg">立即註冊</a>
+	  </p>
+	</div>
+
+	<% if(!user){ %>
+
+	<div class="row"> 
+	  <div class="span4">
+	    <h2>Carbo 說</h2>
+	     <p>東風破早梅 向暖一枝開 氷雪無人見 春從天上來</p>
+	  </div>
+	  <div class="span4">
+	    <h2>BYVoid 說</h2>
+	     <p>
+	     Open Chinese Convert（OpenCC）是一個開源的中文簡繁轉換項目，
+	     致力於製作高質量的基於統計預料的簡繁轉換詞庫。
+	     還提供函數庫(libopencc)、命令行簡繁轉換工具、人工校對工具、詞典生成程序、
+	     在線轉換服務及圖形用戶界面。</p>
+	  </div>
+	  <div class="span4">
+	    <h2>佛振 說</h2>
+	    <p>中州韻輸入法引擎 / Rime Input Method Engine 取意歷史上通行的中州韻，
+	    願寫就一部彙集音韻學智慧的輸入法經典之作。
+	    項目網站設在 http://code.google.com/p/rimeime/
+	    創造應用價值是一方面，更要堅持對好技術的追求，希望能寫出靈動而易於擴展的代碼，
+	    使其成為一款個性十足的開源輸入法。</p>
+	  </div>
+	</div>
+
+	<% }else{ %>
+
+	<% if(user){ %>
+	  <form method="post" action="/post" class="well form-inline center" style="text-align: center;">
+	    <input type="text" class="span8" name="post">
+	    <button type="submit" class="btn btn-success"><i class="icon-comment icon-white"></i> 发言</button>
+	  </form>
+	<% } %>
+
+	<% posts.forEach(function(post, index) { 
+	  if (index % 3 == 0) { %>
+	    <div class="row">
+	<% } %>
+	  <div class="span4">
+	    <h2><a href="/u/<%= post.user %>"><%= post.user %></a> 说</h2>
+	    <p><small><%= post.time %></small></p>
+	    <p><%= post.post %></p>
+	  </div>
+	<% if (index % 3 == 2) { %>
+	    </div><!-- end row -->
+	<% } %>
+	<% }) %>
+	<% if (posts.length % 3 != 0) { %>
+	  </div><!-- end row -->
+	<% } %>
+
+	<% } %>
+
+      <hr />
+      <footer>
+        <p><a href="http://www.byvoid.com/" target="_blank">BYVoid</a> 2012</p>
+      </footer>
+    </div>
+
+  </body>
+
+</html>
