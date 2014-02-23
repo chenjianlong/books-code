@@ -17,7 +17,7 @@ var accessLogfile = fs.createWriteStream('access.log', {flags: 'a'});
 var errorLogfile = fs.createWriteStream('error.log', {flags: 'a'});
 
 
-var app = express();
+var app = module.exports = express();
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -76,6 +76,8 @@ app.configure('production', function() {
   });
 });
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
+if (!module.parent) {
+  http.createServer(app).listen(app.get('port'), function(){
+    console.log('Express server listening on port ' + app.get('port'));
+  });
+}
