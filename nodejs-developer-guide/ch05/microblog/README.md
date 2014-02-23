@@ -15,4 +15,4 @@ Node.js開發指南
 
 ## 注意
 
-此項目以Express2.x爲基礎，請注意使用`package.json`中的版本。
+此項目以Express3.x爲基礎，請注意使用`package.json`中的版本。
