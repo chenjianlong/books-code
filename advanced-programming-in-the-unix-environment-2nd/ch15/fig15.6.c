@@ -1,6 +1,6 @@
 /*
  * \file fig15.6.c
- * \brief Copy file to paper program
+ * \brief Copy file to pager program
  * \author Jianlong Chen <jianlong99@gmail.com>
  * \date 2013-12-03
  */
@@ -9,7 +9,7 @@
 #include "apue.h"
 #include <sys/wait.h>
 
-#define DEF_PAGER "/bin/more"	/* *default paper program */
+#define DEF_PAGER "/bin/more"	/* *default pager program */
 
 int main (int argc, char *argv[])
 {
