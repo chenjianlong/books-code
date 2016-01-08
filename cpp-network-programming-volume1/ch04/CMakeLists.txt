@@ -23,3 +23,7 @@ SET (ils_SOURCE_FILES
 
 ADD_EXECUTABLE (iterative_logging_server ${ils_SOURCE_FILES})
 TARGET_LINK_LIBRARIES (iterative_logging_server ${ACE_LIBRARIES})
+
+SET (lc_SOURCE_FILES logging_client.cpp)
+ADD_EXECUTABLE (logging_client ${lc_SOURCE_FILES})
+TARGET_LINK_LIBRARIES (logging_client ${ACE_LIBRARIES})
