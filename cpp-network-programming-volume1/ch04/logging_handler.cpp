@@ -2,6 +2,7 @@
 #include <ace/Message_Block.h>
 #include <ace/CDR_Stream.h>
 #include <ace/Log_Record.h>
+#include <ace/Log_Msg.h>
 #include <cstring>
 
 int Logging_Handler::recv_log_record(ACE_Message_Block *&mblk)
@@ -52,7 +53,7 @@ int Logging_Handler::write_log_record(ACE_Message_Block *mblk)
         cdr >> length;
         ACE_Log_Record log_record;
         cdr >> log_record;
-        log_record.print(mblk->rd_ptr(), 1, stderr);
+        log_record.print(mblk->rd_ptr(), ACE_Log_Msg::STDERR, stderr);
     }
 
     return mblk->total_length();
