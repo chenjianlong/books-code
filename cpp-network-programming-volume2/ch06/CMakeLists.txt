@@ -1,0 +1,39 @@
+PROJECT (cppnpv2_ch06)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+
+INCLUDE_DIRECTORIES(
+	${ACE_INCLUDE_DIRS}
+	${CMAKE_SOURCE_DIR}
+)
+
+LINK_DIRECTORIES(
+	${ACE_LIBRARY_DIRS}
+)
+
+ADD_DEFINITIONS (${ACE_DEFINITIONS} -g)
+SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ACE_C_FLAGS}")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ACE_CXX_FLAGS}")
+SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ACE_LINK_FLAGS}")
+
+ADD_DEFINITIONS (-DBUILD_CLD_DLL)
+SET (cld_SOURCE_FILES
+    cld_handler.cpp
+	logging_handler.cpp
+	cld_acceptor.cpp
+	cld_connector.cpp
+	client_logging_daemon.cpp)
+
+ADD_LIBRARY (CLD SHARED ${cld_SOURCE_FILES})
+TARGET_LINK_LIBRARIES (CLD ${ACE_LIBRARIES})
+
+ADD_DEFINITIONS (-DBUILD_TPLS_DLL)
+SET (tpls_SOURCE_FILES
+	logging_acceptor.cpp
+	tp_logging_server.cpp
+	tp_logging_task.cpp
+	tp_logging_handler.cpp
+	logging_event_handler.cpp
+	logging_handler2.cpp)
+
+ADD_LIBRARY (TPLS SHARED ${tpls_SOURCE_FILES})
+TARGET_LINK_LIBRARIES (TPLS ${ACE_LIBRARIES})
