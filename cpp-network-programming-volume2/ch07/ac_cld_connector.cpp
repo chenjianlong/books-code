@@ -1,43 +1,11 @@
 #include "ac_cld_connector.h"
 #include <iostream>
 
-#ifndef CLD_CERTIFICATE_FILENAME
-#   define CLD_CERTIFICATE_FILENAME "cld-cert.pem"
-#endif /* !CLD_CERTIFICATE_FILENAME */
-
-#ifndef CLD_KEY_FILENAME
-#   define CLD_KEY_FILENAME "cld-key.pem"
-#endif /* !CLD_KEY_FILENAME */
-
 using namespace std;
 
 int AC_CLD_Connector::open(ACE_Reactor *r, int flags)
 {
-    if (PARENT::open(r, flags) != 0) return -1;
-    OpenSSL_add_ssl_algorithms();
-    ssl_ctx_ = SSL_CTX_new(SSLv3_client_method());
-    if (ssl_ctx_ == 0) return -1;
-
-    if (SSL_CTX_use_certificate_file(ssl_ctx_, CLD_CERTIFICATE_FILENAME, SSL_FILETYPE_PEM) <= 0)
-        ACE_ERROR_RETURN((LM_ERROR,
-                          "Failed to SSL_CTX_use_certificate_file, errno=%d,%m",
-                          ACE_OS::last_error()),
-                          -1);
-
-    if (SSL_CTX_use_PrivateKey_file(ssl_ctx_, CLD_KEY_FILENAME, SSL_FILETYPE_PEM) <= 0)
-        ACE_ERROR_RETURN((LM_ERROR,
-                          "Failed to SSL_CTX_use_PrivateKey_file, errno=%d,%m",
-                          ACE_OS::last_error()),
-                          -1);
-
-    if (!SSL_CTX_check_private_key(ssl_ctx_))
-        ACE_ERROR_RETURN((LM_ERROR,
-                          "Failed to SSL_CTX_check_private_key, errno=%d,%m",
-                          ACE_OS::last_error()),
-                          -1);
-
-    ssl_ = SSL_new(ssl_ctx_);
-    return ssl_ == 0 ? -1 : 0;
+    return PARENT::open(r, flags);
 }
 
 int AC_CLD_Connector::connect_svc_handler(AC_Output_Handler *svc_handler,
@@ -50,21 +18,6 @@ int AC_CLD_Connector::connect_svc_handler(AC_Output_Handler *svc_handler,
                                     timeout, local_addr,
                                     reuse_addr, flags, perms) == -1)
         return -1;
-
-    SSL_clear(ssl_);
-    SSL_set_fd(ssl_, reinterpret_cast<int>(svc_handler->get_handle()));
-    SSL_set_verify(ssl_, SSL_VERIFY_PEER, 0);
-    if (SSL_connect(ssl_) == -1)
-        ACE_ERROR_RETURN((LM_ERROR,
-                          "Failed to SSL_connect, errno=%d,%m\n",
-                          ACE_OS::last_error()),
-                          -1);
-
-    if (SSL_shutdown(ssl_) == -1)
-        ACE_ERROR_RETURN((LM_ERROR,
-                          "Failed to SSL_shutdown, errno=%d,%m\n",
-                          ACE_OS::last_error()),
-                          -1);
 
     remote_addr_ = remote_addr;
     return 0;

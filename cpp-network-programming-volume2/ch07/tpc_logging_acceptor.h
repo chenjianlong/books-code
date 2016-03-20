@@ -10,7 +10,6 @@
 #include <ace/SOCK_Acceptor.h>
 #include <ace/Reactor.h>
 #include <ace/Acceptor.h>
-#include <openssl/ssl.h>
 
 class TPC_Logging_Acceptor: public ACE_Acceptor<TPC_Logging_Handler, ACE_SOCK_Acceptor>
 {
@@ -18,12 +17,10 @@ public:
     typedef ACE_Acceptor<TPC_Logging_Handler, ACE_SOCK_Acceptor> PARENT;
     typedef ACE_SOCK_Acceptor::PEER_ADDR PEER_ADDR;
 
-    TPC_Logging_Acceptor(ACE_Reactor *r): PARENT(r), ssl_ctx_(0), ssl_(0) {
+    TPC_Logging_Acceptor(ACE_Reactor *r): PARENT(r) {
     }
 
     virtual ~TPC_Logging_Acceptor() {
-        SSL_free(ssl_);
-        SSL_CTX_free(ssl_ctx_);
     }
 
     virtual int open(const ACE_SOCK_Acceptor::PEER_ADDR &local_addr,
@@ -34,10 +31,6 @@ public:
         ACE_Reactor_Mask = ACE_Event_Handler::ALL_EVENTS_MASK);
 
     virtual int accept_svc_handler(TPC_Logging_Handler *sh);
-
-protected:
-    SSL_CTX *ssl_ctx_;
-    SSL *ssl_;
 };
 
 #endif /* !TPC_LOGGING_ACCEPTOR_H */

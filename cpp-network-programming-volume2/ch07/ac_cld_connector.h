@@ -9,7 +9,6 @@
 #include "ac_output_handler.h"
 #include <ace/Connector.h>
 #include <ace/SOCK_Connector.h>
-#include <openssl/ssl.h>
 
 class AC_CLD_Connector:
     public ACE_Connector<AC_Output_Handler, ACE_SOCK_Connector>
@@ -17,13 +16,10 @@ class AC_CLD_Connector:
 public:
     typedef ACE_Connector<AC_Output_Handler, ACE_SOCK_Connector> PARENT;
 
-    AC_CLD_Connector(AC_Output_Handler *handler = 0):
-        handler_(handler), ssl_ctx_(0), ssl_(0) {
+    AC_CLD_Connector(AC_Output_Handler *handler = 0): handler_(handler) {
     }
 
     virtual ~AC_CLD_Connector(void) {
-        SSL_free(ssl_);
-        SSL_CTX_free(ssl_ctx_);
     }
 
     virtual int open(ACE_Reactor *r = ACE_Reactor::instance(), int flags = 0);
@@ -38,8 +34,6 @@ protected:
 
     AC_Output_Handler *handler_;
     ACE_INET_Addr remote_addr_;
-    SSL_CTX *ssl_ctx_;
-    SSL *ssl_;
 };
 
 #endif /* !AC_CLD_CONNECTOR_H */
