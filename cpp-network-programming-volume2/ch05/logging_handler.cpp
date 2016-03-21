@@ -11,8 +11,9 @@ int Logging_Handler::recv_log_record(ACE_Message_Block *&mblk)
     ACE_INET_Addr peer_addr;
     logging_peer_.get_remote_addr(peer_addr);
     mblk = new ACE_Message_Block(MAXHOSTNAMELEN + 1);
+    memset(mblk->wr_ptr(), '\0', MAXHOSTNAMELEN + 1);
     peer_addr.get_host_name(mblk->wr_ptr(), MAXHOSTNAMELEN);
-    mblk->wr_ptr(strlen(mblk->wr_ptr() + 1));
+    mblk->wr_ptr(strlen(mblk->wr_ptr()) + 1);
     ACE_Message_Block *payload = new ACE_Message_Block(ACE_DEFAULT_CDR_BUFSIZE);
     ACE_CDR::mb_align(payload);
 
