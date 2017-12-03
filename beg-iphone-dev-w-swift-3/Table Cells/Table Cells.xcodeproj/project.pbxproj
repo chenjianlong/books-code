@@ -13,6 +13,7 @@
 		61BFE9C21FD2ECC700171F87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 61BFE9C11FD2ECC700171F87 /* Assets.xcassets */; };
 		61BFE9C51FD2ECC700171F87 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61BFE9C31FD2ECC700171F87 /* LaunchScreen.storyboard */; };
 		61BFE9CD1FD2EEC100171F87 /* NameAndColorCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61BFE9CC1FD2EEC100171F87 /* NameAndColorCell.swift */; };
+		61BFE9CF1FD3EFD600171F87 /* NameAndColorCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 61BFE9CE1FD3EFD600171F87 /* NameAndColorCell.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		61BFE9C41FD2ECC700171F87 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		61BFE9C61FD2ECC700171F87 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		61BFE9CC1FD2EEC100171F87 /* NameAndColorCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameAndColorCell.swift; sourceTree = "<group>"; };
+		61BFE9CE1FD3EFD600171F87 /* NameAndColorCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NameAndColorCell.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +62,7 @@
 				61BFE9BC1FD2ECC700171F87 /* ViewController.swift */,
 				61BFE9BE1FD2ECC700171F87 /* Main.storyboard */,
 				61BFE9CC1FD2EEC100171F87 /* NameAndColorCell.swift */,
+				61BFE9CE1FD3EFD600171F87 /* NameAndColorCell.xib */,
 				61BFE9C11FD2ECC700171F87 /* Assets.xcassets */,
 				61BFE9C31FD2ECC700171F87 /* LaunchScreen.storyboard */,
 				61BFE9C61FD2ECC700171F87 /* Info.plist */,
@@ -126,6 +129,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61BFE9CF1FD3EFD600171F87 /* NameAndColorCell.xib in Resources */,
 				61BFE9C51FD2ECC700171F87 /* LaunchScreen.storyboard in Resources */,
 				61BFE9C21FD2ECC700171F87 /* Assets.xcassets in Resources */,
 				61BFE9C01FD2ECC700171F87 /* Main.storyboard in Resources */,
