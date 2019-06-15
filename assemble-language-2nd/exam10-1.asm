@@ -24,6 +24,7 @@ start:
 show_str:
 	push bx
 	push dx
+	push es
 
 	mov bx,0b800h
 	mov es,bx
@@ -48,6 +49,7 @@ s:
 	jmp s
 
 ok:
+	pop es
 	pop dx
 	pop bx
 	ret

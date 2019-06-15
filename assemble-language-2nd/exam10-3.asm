@@ -30,8 +30,8 @@ dtoc:
 	push cx
 	push dx
 
-
-s1:
+	mov di, si ; for currect si for count
+dtoc_1:
 	mov cx,10
 	mov dx,0
 	div cx
@@ -42,20 +42,20 @@ s1:
 
 	mov cx,ax
 	jcxz convert
-	jmp s1
+	jmp dtoc_1
 
 convert:
 	; convert string
-	mov [si],0
-	mov cx,si
-	mov si,0
+	mov [si], 0
+	mov cx, si
+	mov si, di ; recover si
+	sub cx, si
 doconv:
 	pop ax
 	mov [si],al
 	inc si
 	loop doconv
 
-ok2:
 	pop dx
 	pop cx
 	pop ax
@@ -71,6 +71,9 @@ ok2:
 show_str:
 	push bx
 	push dx
+	push es
+	push ax
+	push cx
 
 	mov bx,0b800h
 	mov es,bx
@@ -95,6 +98,9 @@ s:
 	jmp s
 
 ok:
+	pop cx
+	pop ax
+	pop es
 	pop dx
 	pop bx
 	ret
