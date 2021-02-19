@@ -3,6 +3,10 @@ books code
 
 This repositories is the books example/exercise code i had read!
 
+### 2021 tech books
+
+* [Android 编程权威指南 第三版](android-programming-3e)
+
 ### 2020 tech books
 
 * [第一行代码 Android 第三版](first-line-of-code-android)
