@@ -3,6 +3,10 @@ books code
 
 This repositories is the books example/exercise code i had read!
 
+### 2022 tech books
+
+* [Spring实战 第四版 ISBN 978-7-115-41730-5](spring-in-action-4th)
+
 ### 2021 tech books
 
 * [Android 编程权威指南 第三版](android-programming-3e)
