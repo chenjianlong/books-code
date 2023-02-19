@@ -3,9 +3,14 @@ books code
 
 This repositories is the books example/exercise code i had read!
 
+### 2023 tech books
+
+* [游戏开发 世嘉新人培训教材 ISBN 978-7-115-52575-8](techniques-to-remember-before-becoming-game-programmer)
+
 ### 2022 tech books
 
 * [Spring实战 第四版 ISBN 978-7-115-41730-5](spring-in-action-4th)
+* [游戏开发 世嘉新人培训教材 ISBN 978-7-115-52575-8](techniques-to-remember-before-becoming-game-programmer)
 
 ### 2021 tech books
 
