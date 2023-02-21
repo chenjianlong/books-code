@@ -48,184 +48,71 @@ void setBlock(int col, int row, char c)
 	board[index] = c;
 }
 
-void moveLeft()
+inline void updatePersonCoord(int xDelta, int yDelta)
+{
+	col += xDelta;
+	row += yDelta;
+}
+
+void move(int xDelta, int yDelta)
 {
 	auto p = getBlock(col, row);
-	auto c = getBlock(col, row - 1);
+	auto c = getBlock(col + xDelta, row + yDelta);
 	if (c == ' ') {
 		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col, row - 1, 'p');
-		--row;
+		setBlock(col + xDelta, row + yDelta, 'p');
+		updatePersonCoord(xDelta, yDelta);
 	} else if (c == '.') {
 		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col, row - 1, 'P');
-		--row;
+		setBlock(col + xDelta, row + yDelta, 'P');
+		updatePersonCoord(xDelta, yDelta);
 	} else if (c == 'o') {
-		auto c2 = getBlock(col, row - 2);
+		auto c2 = getBlock(col + 2 * xDelta, row + 2 * yDelta);
 		if (c2 == ' ') {
 			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row - 1, 'p');
-			setBlock(col, row - 2, 'o');
-			--row;
+			setBlock(col + xDelta, row + yDelta, 'p');
+			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'o');
+			updatePersonCoord(xDelta, yDelta);
 		} else if (c2 == '.') {
 			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row - 1, 'p');
-			setBlock(col, row - 2, 'O');
-			--row;
+			setBlock(col + xDelta, row + yDelta, 'p');
+			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'O');
+			updatePersonCoord(xDelta, yDelta);
 		}
 	} else if (c == 'O') {
-		auto c2 = getBlock(col, row - 2);
+		auto c2 = getBlock(col + 2 * xDelta, row + 2 * yDelta);
 		if (c2 == ' ') {
 			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row - 1, 'P');
-			setBlock(col, row - 2, 'o');
-			--row;
-		}
-		else if (c2 == '.') {
+			setBlock(col + xDelta, row + yDelta, 'P');
+			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'o');
+			updatePersonCoord(xDelta, yDelta);
+		} else if (c2 == '.') {
 			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row - 1, 'P');
-			setBlock(col, row - 2, 'O');
-			--row;
+			setBlock(col + xDelta, row + yDelta, 'P');
+			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'O');
+			updatePersonCoord(xDelta, yDelta);
 		}
 	}
+}
+
+void moveLeft()
+{
+	move(0, -1);
 }
 
 void moveRight()
 {
-	auto p = getBlock(col, row);
-	auto c = getBlock(col, row + 1);
-	if (c == ' ') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col, row + 1, 'p');
-		++row;
-	}
-	else if (c == '.') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col, row + 1, 'P');
-		++row;
-	}
-	else if (c == 'o') {
-		auto c2 = getBlock(col, row + 2);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row + 1, 'p');
-			setBlock(col, row + 2, 'o');
-			++row;
-		}
-		else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row + 1, 'p');
-			setBlock(col, row + 2, 'O');
-			++row;
-		}
-	}
-	else if (c == 'O') {
-		auto c2 = getBlock(col, row + 2);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row + 1, 'P');
-			setBlock(col, row + 2, 'o');
-			++row;
-		}
-		else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col, row + 1, 'P');
-			setBlock(col, row + 2, 'O');
-			++row;
-		}
-	}
+	move(0, 1);
 }
 
 void moveUp()
 {
-	auto p = getBlock(col, row);
-	auto c = getBlock(col - 1, row);
-	if (c == ' ') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col - 1, row, 'p');
-		--col;
-	}
-	else if (c == '.') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col - 1, row, 'P');
-		--col;
-	}
-	else if (c == 'o') {
-		auto c2 = getBlock(col - 2, row);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col - 1, row, 'p');
-			setBlock(col - 2, row, 'o');
-			--col;
-		}
-		else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col - 1, row, 'p');
-			setBlock(col - 2, row, 'O');
-			--col;
-		}
-	}
-	else if (c == 'O') {
-		auto c2 = getBlock(col - 2, row);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col - 1, row, 'P');
-			setBlock(col - 2, row, 'o');
-			--col;
-		}
-		else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col - 1, row, 'P');
-			setBlock(col - 2, row, 'O');
-			--col;
-		}
-	}
+	move(-1, 0);
 }
 
 void moveDown()
 {
-	auto p = getBlock(col, row);
-	auto c = getBlock(col + 1, row);
-	if (c == ' ') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col + 1, row, 'p');
-		++col;
-	}
-	else if (c == '.') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col + 1, row, 'P');
-		++col;
-	}
-	else if (c == 'o') {
-		auto c2 = getBlock(col + 2, row);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + 1, row, 'p');
-			setBlock(col + 2, row, 'o');
-			++col;
-		}
-		else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + 1, row, 'p');
-			setBlock(col + 2, row, 'O');
-			++col;
-		}
-	}
-	else if (c == 'O') {
-		auto c2 = getBlock(col + 2, row);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + 1, row, 'P');
-			setBlock(col + 2, row, 'o');
-			++col;
-		}
-		else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + 1, row, 'P');
-			setBlock(col + 2, row, 'O');
-			++col;
-		}
-	}
+	move(1, 0);
 }
 
 void updateGame()
