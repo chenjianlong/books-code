@@ -58,38 +58,16 @@ void move(int xDelta, int yDelta)
 {
 	auto p = getBlock(col, row);
 	auto c = getBlock(col + xDelta, row + yDelta);
-	if (c == ' ') {
+	if (c == ' ' || c == '.') {
 		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col + xDelta, row + yDelta, 'p');
+		setBlock(col + xDelta, row + yDelta, c == ' ' ? 'p' : 'P');
 		updatePersonCoord(xDelta, yDelta);
-	} else if (c == '.') {
-		setBlock(col, row, p == 'P' ? '.' : ' ');
-		setBlock(col + xDelta, row + yDelta, 'P');
-		updatePersonCoord(xDelta, yDelta);
-	} else if (c == 'o') {
+	} else if (c == 'o' || c == 'O') {
 		auto c2 = getBlock(col + 2 * xDelta, row + 2 * yDelta);
-		if (c2 == ' ') {
+		if (c2 == ' ' || c2 == '.') {
 			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + xDelta, row + yDelta, 'p');
-			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'o');
-			updatePersonCoord(xDelta, yDelta);
-		} else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + xDelta, row + yDelta, 'p');
-			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'O');
-			updatePersonCoord(xDelta, yDelta);
-		}
-	} else if (c == 'O') {
-		auto c2 = getBlock(col + 2 * xDelta, row + 2 * yDelta);
-		if (c2 == ' ') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + xDelta, row + yDelta, 'P');
-			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'o');
-			updatePersonCoord(xDelta, yDelta);
-		} else if (c2 == '.') {
-			setBlock(col, row, p == 'P' ? '.' : ' ');
-			setBlock(col + xDelta, row + yDelta, 'P');
-			setBlock(col + 2 * xDelta, row + 2 * yDelta, 'O');
+			setBlock(col + xDelta, row + yDelta, c == 'o' ? 'p' : 'P');
+			setBlock(col + 2 * xDelta, row + 2 * yDelta, c2 == ' ' ? 'o' : 'O');
 			updatePersonCoord(xDelta, yDelta);
 		}
 	}
