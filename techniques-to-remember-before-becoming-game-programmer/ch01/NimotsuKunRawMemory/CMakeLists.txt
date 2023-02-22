@@ -1,0 +1,4 @@
+PROJECT(NimotsuKunRawMemory)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.1)
+
+ADD_EXECUTABLE(NimotsuKunRawMemory main.cpp)
