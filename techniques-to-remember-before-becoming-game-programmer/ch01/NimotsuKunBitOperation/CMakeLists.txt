@@ -1,4 +1,4 @@
-PROJECT(NimotsuKunBitOperation)
-CMAKE_MINIMUM_REQUIRED (VERSION 3.1)
+cmake_minimum_required(VERSION 3.15)
+project(NimotsuKunBitOperation)
 
-ADD_EXECUTABLE(NimotsuKunBitOperation main.cpp)
+add_executable(NimotsuKunBitOperation main.cpp)

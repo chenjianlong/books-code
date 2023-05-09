@@ -1,4 +1,4 @@
-PROJECT(NimotsuKunRawMemory)
-CMAKE_MINIMUM_REQUIRED (VERSION 3.1)
+cmake_minimum_required(VERSION 3.15)
+project(NimotsuKunRawMemory)
 
-ADD_EXECUTABLE(NimotsuKunRawMemory main.cpp)
+add_executable(NimotsuKunRawMemory main.cpp)

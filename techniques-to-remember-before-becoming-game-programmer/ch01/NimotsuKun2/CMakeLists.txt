@@ -1,4 +1,4 @@
-PROJECT(NimotsuKun2)
-CMAKE_MINIMUM_REQUIRED (VERSION 3.1)
+cmake_minimum_required(VERSION 3.15)
+project(NimotsuKun2)
 
-ADD_EXECUTABLE(NimotsuKun2 main.cpp)
+add_executable(NimotsuKun2 main.cpp)
