@@ -66,10 +66,6 @@ add_executable(drawPixels WIN32
 	PseudoXml/Element.cpp
 	PseudoXml/Tag.h
 	PseudoXml/Tag.cpp
-	Scene/Font.h
-	Scene/Font.cpp
-	Scene/PrimitiveRenderer.h
-	Scene/PrimitiveRenderer.cpp
 	Threading/Event.h
 	Threading/Event.cpp
 	Threading/Functions.h

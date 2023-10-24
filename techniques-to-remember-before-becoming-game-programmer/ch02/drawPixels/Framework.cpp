@@ -4,12 +4,10 @@
 #include "Graphics/Manager.h"
 #include "Graphics/Texture.h"
 #include "Math/Vector2.h"
-#include "Scene/Font.h"
 #include "Threading/Functions.h"
 #include "Threading/Manager.h"
 
 #include "Framework.h"
-#include "FontTextureGenerated.h"
 
 #include <string>
 using namespace std;
@@ -81,38 +79,7 @@ public:
 		}
 		//初始化绘制
 		Graphics::Manager::create( windowHandle, mWidth * 2, mHeight * 2, mFullScreen, mVSync, mAntiAlias );
-		//绘制文字
-		//ASCII表（ASCII（126-32 + 1 = 95个字符+ 63个字符，158个字符
-		Array< Scene::Font::BitmapChar > chars( 158 );
-		//ASCII部分填充
-		int pos = 0;
-		for ( int i = 0x20; i <= 0x7E; ++i ){
-			Scene::Font::BitmapChar& c = chars[ pos ];
-			c.mCode = static_cast< unsigned short >( i );
-			c.mX = static_cast< unsigned short >( ( i % 16 ) * 8 );
-			c.mY = static_cast< unsigned short >( ( i / 16 ) * 16 );
-			c.mTexturePage = 0;
-			c.mWidth = 8;
-			c.mHeight = 16;
-			++pos;
-		}
-		//半角假名部分
-		for ( int i = 0xA1; i <= 0xDF; ++i ){
-			Scene::Font::BitmapChar& c = chars[ pos ];
-			c.mCode = static_cast< unsigned short >( i );
-			c.mX = static_cast< unsigned short >( ( i % 16 ) * 8 );
-			c.mY = static_cast< unsigned short >( ( i / 16 ) * 16 );
-			c.mTexturePage = 0;
-			c.mWidth = 8;
-			c.mHeight = 16;
-			++pos;
-		}
-
-		ASSERT( pos == 158 );
-		int textureSize = sizeof( gFontTga );
-		const char* fontDataArray[ 1 ];
-		fontDataArray[ 0 ] = gFontTga;
-//2D图层
+		//2D图层
 		m2dTexture = Graphics::Texture::create( mWidth, mHeight, false );
 		Graphics::Manager().setTextureFilter( Graphics::TEXTURE_FILTER_POINT );
 
