@@ -1,6 +1,5 @@
 ﻿#include "GameLib.h"
 #include "WindowCreator/WindowCreator.h"
-#include "Input/Manager.h"
 #include "FileIO/Manager.h"
 #include "Sound/Manager.h"
 #include "Graphics/Manager.h"
@@ -10,10 +9,6 @@
 #include "Scene/Font.h"
 #include "Threading/Functions.h"
 #include "Threading/Manager.h"
-
-//示例类库
-#include "Input/Keyboard.h"
-
 
 #include "Framework.h"
 #include "FontTextureGenerated.h"
@@ -67,7 +62,6 @@ public:
 		mDebugStringRenderer.release();
 		mDebugFont.release();
 		Graphics::Manager::destroy();
-		Input::Manager::destroy();
 		Sound::Manager::destroy();
 		FileIO::Manager::destroy();
 		Threading::Manager::destroy();
@@ -92,8 +86,6 @@ public:
 		}
 		//声音初始化
 		Sound::Manager::create( windowHandle );
-		//输入初始化
-		Input::Manager::create( windowHandle );
 		//初始化绘制
 		Graphics::Manager::create( windowHandle, mWidth * 2, mHeight * 2, mFullScreen, mVSync, mAntiAlias );
 		//绘制文字
@@ -155,7 +147,6 @@ public:
 		float pointerScale;
 		Vector2 pointerOffset;
 		Graphics::Manager().getPointerModifier( &pointerScale, &pointerOffset );
-		Input::Manager().update( pointerScale, pointerOffset );
 	}
 	void postUpdate(){
 		//----2D处理

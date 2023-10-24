@@ -40,16 +40,6 @@ add_executable(drawPixels WIN32
 	Graphics/Texture.cpp
 	Graphics/VertexBuffer.h
 	Graphics/VertexBuffer.cpp
-	Input/Joystick.h
-	Input/Joystick.cpp
-	Input/JoystickImpl.h
-	Input/Keyboard.h
-	Input/Keyboard.cpp
-	Input/Manager.h
-	Input/Manager.cpp
-	Input/ManagerImpl.h
-	Input/Mouse.h
-	Input/Mouse.cpp
 	Math/Functions.h
 	Math/Functions.cpp
 	Math/Random.h
