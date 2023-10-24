@@ -1,7 +1,6 @@
 ﻿#include "GameLib.h"
 #include "WindowCreator/WindowCreator.h"
 #include "FileIO/Manager.h"
-#include "Sound/Manager.h"
 #include "Graphics/Manager.h"
 #include "Graphics/Texture.h"
 #include "Math/Vector2.h"
@@ -62,7 +61,6 @@ public:
 		mDebugStringRenderer.release();
 		mDebugFont.release();
 		Graphics::Manager::destroy();
-		Sound::Manager::destroy();
 		FileIO::Manager::destroy();
 		Threading::Manager::destroy();
 		//cout结束
@@ -84,8 +82,6 @@ public:
 		}else{
 			FileIO::Manager::create();
 		}
-		//声音初始化
-		Sound::Manager::create( windowHandle );
 		//初始化绘制
 		Graphics::Manager::create( windowHandle, mWidth * 2, mHeight * 2, mFullScreen, mVSync, mAntiAlias );
 		//绘制文字

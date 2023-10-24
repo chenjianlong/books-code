@@ -72,14 +72,6 @@ add_executable(drawPixels WIN32
 	Scene/PrimitiveRenderer.cpp
 	Scene/StringRenderer.h
 	Scene/StringRenderer.cpp
-	Sound/Manager.h
-	Sound/Manager.cpp
-	Sound/Player.h
-	Sound/Player.cpp
-	Sound/PlayerImpl.h
-	Sound/Wave.h
-	Sound/Wave.cpp
-	Sound/WaveImpl.h
 	Threading/Event.h
 	Threading/Event.cpp
 	Threading/Functions.h
