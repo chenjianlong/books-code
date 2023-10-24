@@ -4,7 +4,6 @@
 #include "Graphics/Manager.h"
 #include "Graphics/Texture.h"
 #include "Math/Vector2.h"
-#include "Scene/StringRenderer.h"
 #include "Scene/Font.h"
 #include "Threading/Functions.h"
 #include "Threading/Manager.h"
@@ -58,8 +57,6 @@ public:
 		if ( mArchiveNames ){
 			SAFE_DELETE_ARRAY( mArchiveNames );
 		}
-		mDebugStringRenderer.release();
-		mDebugFont.release();
 		Graphics::Manager::destroy();
 		FileIO::Manager::destroy();
 		Threading::Manager::destroy();
@@ -115,9 +112,6 @@ public:
 		int textureSize = sizeof( gFontTga );
 		const char* fontDataArray[ 1 ];
 		fontDataArray[ 0 ] = gFontTga;
-		mDebugFont = Scene::Font::create( fontDataArray, &textureSize, 1, &( chars[ 0 ] ), 158 );
-		mDebugStringRenderer = Scene::StringRenderer::create( 2048, 128 ); //这样够了吗
-		mDebugStringRenderer.setFont( mDebugFont );
 //2D图层
 		m2dTexture = Graphics::Texture::create( mWidth, mHeight, false );
 		Graphics::Manager().setTextureFilter( Graphics::TEXTURE_FILTER_POINT );
@@ -166,9 +160,6 @@ public:
 		src = 0; //使用终止
 		m2dTexture.unlock( &dst );
 		Graphics::Manager().blendToScreen( m2dTexture );
-
-		//合成文字
-		mDebugStringRenderer.draw();
 		Graphics::Manager().endDraw();
 	}
 	//示例类库
@@ -193,8 +184,6 @@ public:
 	int mFrameRate;
 	bool mEndRequested;
 	bool mStarted;
-	Scene::StringRenderer mDebugStringRenderer;
-	Scene::Font mDebugFont;
 };
 
 Impl* gImpl = 0;
@@ -258,98 +247,6 @@ void Framework::requestEnd(){
 bool Framework::isEndRequested() const {
 	return gImpl->mEndRequested;
 }
-/*
-unsigned Framework::getTime() const {
-	return gImpl->getTime();
-}
-
-void Framework::sleep( int ms ) const {
-	WindowCreator::getInstance().sleep( ms );
-}
-
-int Framework::getPreviousFrameInterval() const {
-	return gImpl->mPreviousFrameInterval;
-}
-
-int Framework::getFrameRate() const {
-	return gImpl->mFrameRate;
-}
-
-void Framework::drawDebugString( int c, int r, const char* s, unsigned col ){
-	gImpl->mDebugStringRenderer.add( c * 8, r * 16, s, col );
-}
-
-void Framework::enableFullScreen( bool f ){ 
-	if ( gImpl->mFullScreenForbidden ){ //被禁止
-		return;
-	}
-	WindowCreator wc = WindowCreator::getInstance();
-	Graphics::Manager gm = Graphics::Manager::getInstance();
-	if ( gImpl->mStarted ){
-		//中途更改
-		if ( gImpl->mFullScreen != f ){
-			//上游
-			wc.enableFullScreen( f );
-			//下游
-			gm.enableFullScreen( f );
-		}
-	}
-	gImpl->mFullScreen = f;
-}
-
-//Configuration
-void Framework::Configuration::setWidth( int width ){
-	gImpl->mWidth = width;
-}
-
-void Framework::Configuration::setHeight( int height ){
-	gImpl->mHeight = height;
-}
-
-void Framework::Configuration::setTitle( const char* title ){
-	gImpl->mTitle = title;
-}
-
-void Framework::Configuration::setArchiveNumber( int n ){
-	ASSERT( !gImpl->mArchiveNames && "you can't call twice." );
-	gImpl->mArchiveNumber = n;
-	gImpl->mArchiveNames = NEW string[ n ];
-}
-
-void Framework::Configuration::setArchiveName( int index, const char* name ){
-	ASSERT( gImpl->mArchiveNames && "you must call setArchiveNumber() before this call." );
-	ASSERT( index >= 0 && index < gImpl->mArchiveNumber );
-	gImpl->mArchiveNames[ index ] = name;
-}
-
-void Framework::Configuration::setLoadMode( LoadMode lm ){
-	using namespace FileIO;
-	Manager::AccessMode am = Manager::MODE_DIRECT_FIRST;
-	switch ( lm ){
-		case LOAD_ARCHIVE_FIRST: am = Manager::MODE_ARCHIVE_FIRST; break;
-		case LOAD_DIRECT_FIRST: am = Manager::MODE_DIRECT_FIRST; break;
-		case LOAD_ARCHIVE_ONLY: am = Manager::MODE_ARCHIVE_ONLY; break;
-		default: ASSERT( false ); break;
-	}
-	gImpl->mLoadMode = am;
-}
-
-void Framework::Configuration::enableFullScreen( bool f ){
-	gImpl->mFullScreen = f;
-}
-
-void Framework::Configuration::enableVSync( bool f ){
-	gImpl->mVSync = f;
-}
-
-void Framework::Configuration::enableAntiAlias( bool f ){
-	gImpl->mAntiAlias = f;
-}
-
-void Framework::Configuration::forbidFullScreen( bool f ){
-	gImpl->mFullScreenForbidden = f;
-}
-*/
 
 //示例类库使用的函数
 unsigned* Framework::videoMemory(){
@@ -381,18 +278,6 @@ void WindowCreator::update(){
 	if ( wc.isMinimized() ){
 		sleepFlag = true;
 	}
-	//基本上会进入睡眠状态。
-/*
-	if ( !gm.canRender() ){
-		gm.restore();
-		sleepFlag = true;
-	}
-	//来自Window的模式切换信号
-	bool wcFullScreen = wc.isFullScreen();
-	if ( f.isFullScreen() != wcFullScreen ){
-		f.enableFullScreen( wcFullScreen );
-	}
-*/
 	if ( !sleepFlag ){
 		f.preUpdate();
 	}

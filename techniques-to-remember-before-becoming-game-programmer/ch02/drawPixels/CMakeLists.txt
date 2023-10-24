@@ -70,8 +70,6 @@ add_executable(drawPixels WIN32
 	Scene/Font.cpp
 	Scene/PrimitiveRenderer.h
 	Scene/PrimitiveRenderer.cpp
-	Scene/StringRenderer.h
-	Scene/StringRenderer.cpp
 	Threading/Event.h
 	Threading/Event.cpp
 	Threading/Functions.h
