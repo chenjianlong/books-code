@@ -1,6 +1,5 @@
 ﻿#include "GameLib.h"
 #include "WindowCreator/WindowCreator.h"
-#include "FileIO/Manager.h"
 #include "Graphics/Manager.h"
 #include "Graphics/Texture.h"
 #include "Math/Vector2.h"
@@ -26,9 +25,6 @@ public:
 	mVSync( false ),
 	mAntiAlias( false ),
 	mTitle( "A GameLib Framework Application" ),
-	mArchiveNames( 0 ),
-	mArchiveNumber( 0 ),
-	mLoadMode( FileIO::Manager::MODE_DIRECT_FIRST ),
 	mPreviousFrameInterval( 0 ),
 	mFrameRate( 0 ),
 	mEndRequested( false ),
@@ -52,11 +48,7 @@ public:
 		}
 	}
 	~Impl(){
-		if ( mArchiveNames ){
-			SAFE_DELETE_ARRAY( mArchiveNames );
-		}
 		Graphics::Manager::destroy();
-		FileIO::Manager::destroy();
 		Threading::Manager::destroy();
 		//cout结束
 		cout.end();
@@ -64,19 +56,6 @@ public:
 	void start( void* windowHandle ){
 		//线程系统初始化
 		Threading::Manager::create( 0 );
-		//初始化文件加载器
-		if ( mArchiveNumber > 0 ){
-			Array< const char* > names( mArchiveNumber );
-			for ( int i = 0; i < mArchiveNumber; ++i ){
-				names[ i ] = mArchiveNames[ i ].c_str();
-			}
-			FileIO::Manager::create( &names[ 0 ], mArchiveNumber, mLoadMode );
-			//丢弃，因为不需要归档名称数组
-			SAFE_DELETE_ARRAY( mArchiveNames );
-			mArchiveNumber = 0;
-		}else{
-			FileIO::Manager::create();
-		}
 		//初始化绘制
 		Graphics::Manager::create( windowHandle, mWidth * 2, mHeight * 2, mFullScreen, mVSync, mAntiAlias );
 		//2D图层
@@ -142,9 +121,6 @@ public:
 	bool mVSync;
 	bool mAntiAlias;
 	string mTitle;
-	string* mArchiveNames;
-	int mArchiveNumber;
-	FileIO::Manager::AccessMode mLoadMode;
 	static const int TIME_HISTORY_SIZE = 60;
 	unsigned mTimeHistory[ TIME_HISTORY_SIZE ];
 	int mPreviousFrameInterval;
@@ -194,19 +170,7 @@ int Framework::width() const {
 int Framework::height() const {
 	return gImpl->mHeight;
 }
-/*
-const char* Framework::getTitle() const {
-	return gImpl->mTitle.c_str();
-}
 
-bool Framework::isFullScreen() const {
-	return gImpl->mFullScreen;
-}
-
-bool Framework::isFullScreenForbidden() const {
-	return gImpl->mFullScreenForbidden;
-}
-*/
 void Framework::requestEnd(){
 	gImpl->mEndRequested = true;
 }
@@ -226,8 +190,6 @@ void WindowCreator::configure( Configuration* config ){
 	Framework::create();
 	//用户设定
 	Framework f;
-//	Framework::Configuration fwConfig;
-//	f.configure( &fwConfig );
 	config->setWidth( f.width() * 2 );
 	config->setHeight( f.height() * 2 );
 	config->setTitle( "2D Graphics1 samples" );
