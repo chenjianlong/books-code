@@ -21,60 +21,6 @@ public:
 		EXT_DDS,
 		EXT_UNKNOWN,
 	};
-	Impl( ConstElement e, const char* path, IDirect3DDevice9* device ) :
-    mDxObject( 0 ),
-	mDxDevice( device ),
-	mIsError( false ),
-	mWidth( 0 ),
-	mHeight( 0 ),
-	mOriginalWidth( 0 ),
-	mOriginalHeight( 0 ),
-	mExtension( EXT_UNKNOWN ),
-	mName( 0 ){
-		//一旦处于错误状态。
-		mIsError = true;
-		//删除名称和文件名
-		int an = e.attributeNumber();
-		for ( int i = 0; i < an; ++i ){
-			ConstAttribute a = e.attribute( i );
-			RefString name( a.name() );
-			if ( name == "name" ){
-				RefString tmpName( a.value() );
-				mName = tmpName.copyOriginal();
-			}else if ( name == "filename" ){
-				mExtension = getExtension( a.value() );
-				if ( mExtension != EXT_UNKNOWN ){
-					string filename = ( path ) ? path : "";
-					if ( filename.size() > 0 ){
-						char last = filename[ filename.size() - 1 ];
-						if ( last != '\\' && last != '/' ){
-							filename += '/';
-						}
-					}
-					filename += a.value();
-					mFile = FileIO::InFile::create( filename.c_str() );
-					mIsError = false; //已知扩展名的文件
-				}
-			}
-		}
-	}
-	Impl( const char* filename, IDirect3DDevice9* device ) :
-    mDxObject( 0 ),
-	mDxDevice( device ),
-	mIsError( false ),
-	mWidth( 0 ),
-	mHeight( 0 ),
-	mOriginalWidth( 0 ),
-	mOriginalHeight( 0 ),
-	mExtension( EXT_UNKNOWN ),
-	mName( 0 ){
-		mExtension = getExtension( filename );
-		if ( mExtension != EXT_UNKNOWN ){
-			mFile = FileIO::InFile::create( filename );
-		}else{
-			mIsError = true; //未知文件的不予处理
-		}
-	}
 	Impl( int w, int h, bool createMipChain, IDirect3DDevice9* device ) :
     mDxObject( 0 ),
 	mDxDevice( device ),
@@ -83,26 +29,8 @@ public:
 	mHeight( 0 ),
 	mOriginalWidth( w ),
 	mOriginalHeight( h ),
-	mExtension( EXT_UNKNOWN ),
-	mName( 0 ){
+	mExtension( EXT_UNKNOWN ){
 		createDxObject( w, h, createMipChain );
-	}
-	Impl( const char* data, int size, IDirect3DDevice9* device ) :
-    mDxObject( 0 ),
-	mDxDevice( device ),
-	mIsError( false ),
-	mWidth( 0 ),
-	mHeight( 0 ),
-	mOriginalWidth( 0 ),
-	mOriginalHeight( 0 ),
-	mExtension( EXT_UNKNOWN ),
-	mName( 0 ){
-		//由于没有文件名且无法确定，因此以4字节的内容确定
-		if ( data[ 0 ] == 'D' && data[ 1 ] == 'D' && data[ 2 ] == 'S' && data[ 3 ] == ' ' ){
-			readDDS( data, size );
-		}else{ //解释为tga
-			readTGA( data, size );
-		}
 	}
 	~Impl(){
 		if ( mDxObject ){ //如果有错误，则为0
@@ -110,7 +38,6 @@ public:
 			mDxObject = 0;
 		}
 		mDxDevice = 0;
-		SAFE_DELETE_ARRAY( mName );
 	}
 	void lock( unsigned** b, int* pitch, int mipLevel ){
 		D3DLOCKED_RECT rect;
@@ -330,29 +257,6 @@ public:
 	bool isError() const {
 		return mIsError;
 	}
-	bool isReady(){
-		if ( mFile ){
-			if ( mFile.isFinished() ){
-				if ( mFile.isError() ){ //加载结束
-					mIsError = true;
-				}else{
-					if ( mExtension == EXT_DDS ){
-						readDDS( mFile.data(), mFile.size() );
-					}else if ( mExtension == EXT_TGA ){
-						readTGA( mFile.data(), mFile.size() );
-					}else{
-						ASSERT( 0 ); //这是不可能的
-					}
-					mFile.release();
-				}
-				return true; //即使出错也结束
-			}else{
-				return false; //尚未完成加载。
-			}
-		}else{
-			return true; //如果一开始没有文件，则说明文件已全部完成，或者从一开始就不是通过文件进行的。
-		}
-	}
 	void createDxObject( int w, int h, bool createMipmaps ){
 		int mipLevels = ( createMipmaps ) ? mipmapNumber( w, h ) : 1;
 		HRESULT hr;
@@ -397,288 +301,7 @@ public:
 		up = reinterpret_cast< const unsigned char* >( data );
 		return up[ 0 ];
 	}
-	void readTGA( const char* data, int size ){
-		int sw = getUnsignedShort( data + 12 );
-		int sh = getUnsignedShort( data + 14 );
-		mOriginalWidth = sw;
-		mOriginalHeight = sh;
-		int pixelSize = getUnsignedChar( data + 16 ) / 8;
-		int paletteNumber = 0;
-		int paletteDepth = 0;
-		//调色板？
-		if ( ( data[ 2 ] & 7 ) == 1 ){
-			paletteNumber = getUnsignedShort( data + 5 );
-			paletteDepth = getUnsignedChar( data + 7 ) / 8;
-			ASSERT( paletteDepth == 3 || paletteDepth == 4 );
-		}
-		const unsigned char* src = 0;
-		const unsigned char* pSrc = 0; //调色板数据
-		src = reinterpret_cast< const unsigned char* >( data );
-		pSrc = src + 18;
-		src += 18 + paletteNumber * paletteDepth; //获取数据头
-		//压缩支持
-		Array< unsigned char > uncompressed;
-		if ( data[ 2 ] & 0x8 ){ //压缩它。
-			const unsigned char* s = src;
-			const unsigned char* sEnd = reinterpret_cast< const unsigned char* >( data ) + size;
-			uncompressed.setSize( pixelSize * sw * sh );
-			int n = 0;
-			while ( s < sEnd ){
-				int l = ( *s & 0x7f ) + 1;
-				bool compressed = ( ( *s & 0x80 ) != 0 );
-				if ( n + l > sw * sh ){ //写范围检查
-					cout << "readTGA : can't read. compressed data is invalid." << endl;
-					mIsError = true;
-					return;
-				}
-				int readSize = pixelSize * ( ( compressed ) ? 1 : l );
-				if ( s + readSize > sEnd ){ //超出文件末尾。异常
-					cout << "readTGA : can't read. compressed data is invalid. it must be truncated." << endl;
-					mIsError = true;
-					return;
-				}
-				++s;
-				if ( compressed ){
-					for ( int i = 0; i < l; ++i ){
-						for ( int j = 0; j < pixelSize; ++j ){
-							uncompressed[ n * pixelSize + j ] = s[ j ];
-						}
-						++n;
-					}
-					s += pixelSize;
-				}else{
-					for ( int i = 0; i < l; ++i ){
-						for ( int j = 0; j < pixelSize; ++j ){
-							uncompressed[ n * pixelSize + j ] = *s;
-							++s;
-						}
-						++n;
-					}
-				}
-				if ( n == sw * sh ){ //完成阅读
-					break;
-				}
-			}
-			src = &uncompressed[ 0 ]; //数据指针替换
-		}else if ( size < ( sh * sw * pixelSize + 18 + paletteNumber + paletteDepth ) ){ 
-			//如果未压缩，则文件大小有一个下限。
-			cout << "readTGA : file must be collapsed." << endl;
-			mIsError = true; //文件已损坏
-			return;
-		}
-		//Y反转
-		int yBegin;
-		int yEnd;
-		int dy;
-		int dSrc;
-		if ( ( data[ 0x11 ] & 0x20 ) == 0 ){
-			yBegin = sh - 1;
-			yEnd = -1;
-			dy = -1;
-			dSrc = -sw * pixelSize;
-			src += sw * pixelSize * ( sh - 1 ); //必须从后面开始
-		}else{
-			yBegin = 0;
-			yEnd = sh;
-			dy = 1;
-			dSrc = sw * pixelSize;
-		}
-		//不支持的类型检查
-		if ( ( data[ 2 ] & 0x7 ) == 0 ){
-			cout << "readTGA : this file contains no image." << endl;
-			mIsError = true;
-			return;
-		}
-		//2重新创建纹理
-		int dh = powerOfTwo( sh );
-		int dw = powerOfTwo( sw );
-		createDxObject( dw, dh, true );
 
-		//锁定并写入
-		unsigned* surface;
-		int pitch;
-		lock( &surface, &pitch, 0 );
-		pitch /= 4;
-		unsigned* dst = surface;
-
-		if ( pixelSize == 4 ){
-			for ( int y = yBegin; y != yEnd; y += dy ){
-				for ( int x = 0; x < sw; ++x ){
-					dst[ x ] = src[ x * 4 + 0 ];
-					dst[ x ] |= src[ x * 4 + 1 ] << 8;
-					dst[ x ] |= src[ x * 4 + 2 ] << 16;
-					dst[ x ] |= src[ x * 4 + 3 ] << 24;
-				}
-				for ( int x = sw; x < pitch / 4; ++x ){ //X太黑
-					dst[ x ] = 0;
-				}
-				dst += pitch;
-				src += dSrc;
-			}
-		}else if ( pixelSize == 3 ){
-			for ( int y = yBegin; y != yEnd; y += dy ){
-				for ( int x = 0; x < sw; ++x ){
-					dst[ x ] = src[ x * 3 + 0 ];
-					dst[ x ] |= src[ x * 3 + 1 ] << 8;
-					dst[ x ] |= src[ x * 3 + 2 ] << 16;
-					dst[ x ] |= 0xff000000; //A是255
-				}
-				for ( int x = sw; x < pitch; ++x ){ //X太黑
-					dst[ x ] = 0;
-				}
-				dst += pitch;
-				src += dSrc;
-			}
-		}else if ( pixelSize == 2 ){ //灰度+ Alpha
-			for ( int y = yBegin; y != yEnd; y += dy ){
-				for ( int x = 0; x < sw; ++x ){
-					unsigned t = src[ x * 2 + 0 ];
-					dst[ x ] = t | ( t << 8 ) | ( t << 16 );
-					dst[ x ] |= src[ x * 2 + 1 ] << 24;
-				}
-				for ( int x = sw; x < pitch; ++x ){ //X太黑
-					dst[ x ] = 0;
-				}
-				dst += pitch;
-				src += dSrc;
-			}
-		}else if ( pixelSize == 1 ){
-			if ( paletteNumber > 0 ){ //如果有调色板
-				Array< unsigned > palette( paletteNumber ); 
-				if ( paletteDepth == 3 ){
-					for ( int i = 0; i < paletteNumber; ++i ){
-						palette[ i ] = pSrc[ i * 3 + 0 ];
-						palette[ i ] |= pSrc[ i * 3 + 1 ] << 8;
-						palette[ i ] |= pSrc[ i * 3 + 2 ] << 16;
-						palette[ i ] |= 0xff000000; //A是255
-					}
-				}else if ( paletteDepth == 4 ){
-					for ( int i = 0; i < paletteNumber; ++i ){
-						palette[ i ] = pSrc[ i * 4 + 0 ];
-						palette[ i ] |= pSrc[ i * 4 + 1 ] << 8;
-						palette[ i ] |= pSrc[ i * 4 + 2 ] << 16;
-						palette[ i ] |= pSrc[ i * 4 + 3 ] << 24;
-					}
-				}
-				for ( int y = yBegin; y != yEnd; y += dy ){
-					for ( int x = 0; x < sw; ++x ){
-						dst[ x ] = palette[ src[ x ] ];
-					}
-					for ( int x = sw; x < pitch; ++x ){ //X太黑
-						dst[ x ] = 0;
-					}
-					dst += pitch;
-					src += dSrc;
-				}
-			}else{
-				for ( int y = yBegin; y != yEnd; y += dy ){
-					for ( int x = 0; x < sw; ++x ){
-						dst[ x ] = 0x00ffffff;
-						dst[ x ] |= src[ x ] << 24;
-					}
-					for ( int x = sw; x < pitch; ++x ){ //Xあまりは真っ黒
-						dst[ x ] = 0;
-					}
-					dst += pitch;
-					src += dSrc;
-				}
-			}
-		}
-		//Y
-		for ( int y = sh; y < dh; ++y ){
-			for ( int x = 0; x < pitch; ++x ){
-				dst[ x ] = 0;
-			}
-			dst += pitch;
-		}
-		createMipmapChain( surface, pitch, dw, dh, 1 );
-		unlock( 0 );
-		src = 0;
-		dst = 0;
-	}
-
-	void readDDS( const char* data, int size ){
-		int sh = getUnsigned( data + 12 );
-		int sw = getUnsigned( data + 16 );
-		mOriginalWidth = sw;
-		mOriginalHeight = sh;
-		int pixelSize = getUnsigned( data + 88 ) / 8;
-		//文件大小可以吗？
-		if ( size < ( sh * sw * pixelSize + 128 ) ){
-			mIsError = true; //文件已损坏
-			return;
-		}
-		//2重新创建纹理
-		int dh = powerOfTwo( sh );
-		int dw = powerOfTwo( sw );
-		createDxObject( dw, dh, true );
-
-		//锁定并写入
-		unsigned* surface;
-		int pitch;
-		lock( &surface, &pitch, 0 );
-		pitch /= 4;
-		unsigned* dst = surface;
-		const unsigned char* src;
-		src = reinterpret_cast< const unsigned char* >( data );
-		src += 128; //获取数据头
-
-		if ( pixelSize == 4 ){
-			unsigned alphaMask = getUnsigned( data + 0x68 );
-			unsigned alphaOr = ( alphaMask == 0 ) ? 0xff000000 : 0;
-			for ( int y = 0; y < sh; ++y ){
-				for ( int x = 0; x < sw; ++x ){
-					dst[ x ] = src[ x * 4 + 0 ];
-					dst[ x ] |= src[ x * 4 + 1 ] << 8;
-					dst[ x ] |= src[ x * 4 + 2 ] << 16;
-					dst[ x ] |= src[ x * 4 + 3 ] << 24;
-					dst[ x ] |= alphaOr; //兼容XRGB
-				}
-				for ( int x = sw; x < pitch / 4; ++x ){ //Xあまりは真っ黒
-					dst[ x ] = 0;
-				}
-				dst += pitch;
-				src += ( sw * pixelSize + 3 ) & ( ~3 ); //4字节参数
-			}
-		}else if ( pixelSize == 3 ){
-			for ( int y = 0; y < sh; ++y ){
-				for ( int x = 0; x < sw; ++x ){
-					dst[ x ] = src[ x * 3 + 0 ];
-					dst[ x ] |= src[ x * 3 + 1 ] << 8;
-					dst[ x ] |= src[ x * 3 + 2 ] << 16;
-					dst[ x ] |= 0xff000000; //A是255
-				}
-				for ( int x = sw; x < pitch; ++x ){ //Xあまりは真っ黒
-					dst[ x ] = 0;
-				}
-				dst += pitch;
-				src += ( sw * pixelSize + 3 ) & ( ~3 ); //4字节参数
-			}
-		}else if ( pixelSize == 1 ){
-			for ( int y = 0; y < sh; ++y ){
-				for ( int x = 0; x < sw; ++x ){
-					dst[ x ] = 0x00ffffff;
-					dst[ x ] |= src[ x ] << 24;
-				}
-				for ( int x = sw; x < pitch; ++x ){ //Xあまりは真っ黒
-					dst[ x ] = 0;
-				}
-				dst += pitch;
-				src += ( sw * pixelSize + 3 ) & ( ~3 ); //4字节参数
-			}
-		}
-		//Y
-		for ( int y = sh; y < dh; ++y ){
-			for ( int x = 0; x < pitch; ++x ){
-				dst[ x ] = 0;
-			}
-			dst += pitch;
-		}
-		createMipmapChain( surface, pitch, dw, dh, 1 );
-		unlock( 0 );
-		src = 0;
-		dst = 0;
-	}
 	//递归调用，因为它很麻烦。pitch以DWORD为单位。也就是/4
 	void createMipmapChain( const unsigned* src, int srcPitch, int sw, int sh, int level ){
 		int dw = sw >> 1;
@@ -740,9 +363,6 @@ public:
 		}
 		return levels;
 	}
-	const char* name() const {
-		return mName;
-	}
 	IDirect3DTexture9* mDxObject;
 	IDirect3DDevice9* mDxDevice;
 	FileIO::InFile mFile;
@@ -752,7 +372,6 @@ public:
 	int mOriginalWidth;
 	int mOriginalHeight;
 	Extension mExtension;
-	char* mName;
 };
 
 } //namespace Graphics

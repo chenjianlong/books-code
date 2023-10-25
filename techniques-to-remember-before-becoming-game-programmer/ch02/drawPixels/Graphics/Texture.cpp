@@ -10,27 +10,9 @@
 namespace GameLib{
 namespace Graphics{
 
-Texture Texture::create( PseudoXml::ConstElement e, const char* path ){
-	Texture r;
-	r.mImpl = NEW Impl( e, path, gManagerImpl->dxDevice() );
-	return r;
-}
-
 Texture Texture::create( int w, int h, bool createMipChain ){
 	Texture r;
 	r.mImpl = NEW Texture::Impl( w, h, createMipChain, gManagerImpl->dxDevice() );
-	return r;
-}
-
-Texture Texture::create( const char* filename ){
-	Texture r;
-	r.mImpl = NEW Texture::Impl( filename, gManagerImpl->dxDevice() );
-	return r;
-}
-
-Texture Texture::create( const char* ddsData, int size ){
-	Texture r;
-	r.mImpl = NEW Texture::Impl( ddsData, size, gManagerImpl->dxDevice() );
 	return r;
 }
 
@@ -56,10 +38,6 @@ void Texture::unlock( unsigned** p, int mipLevel ){
 	ASSERT( mImpl && "Graphics::Texture : This is empty object." );
 	mImpl->unlock( mipLevel );
 	*p = 0;
-}
-
-bool Texture::isReady(){
-	return ( mImpl && mImpl->isReady() );
 }
 
 bool Texture::isError() const {
@@ -92,20 +70,11 @@ int Texture::mipmapNumber() const {
 	return Impl::mipmapNumber( mImpl->mWidth, mImpl->mHeight );
 }
 
-void Texture::write( const char* filename ){
-	ASSERT( mImpl && "Graphics::Texture : This is empty object." );
-	mImpl->write( filename );
-}
-
 Texture::Texture( const Impl* ) : mImpl( 0 ){ //自动生成
 }
 
 bool Texture::operator<( const Texture& o ) const {
 	return ( mImpl < o.mImpl );
-}
-
-const char* Texture::name() const {
-	return mImpl->name();
 }
 
 #define TYPE Texture
