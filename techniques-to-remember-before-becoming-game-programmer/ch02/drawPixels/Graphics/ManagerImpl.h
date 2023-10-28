@@ -64,7 +64,6 @@ public:
 	mLightPositionXs( 0.f ),
 	mLightPositionYs( 0.f ),
 	mLightPositionZs( 0.f ),
-	mEyePosition( 0.f, 0.f, 0.f ),
 	mDiffuseColor( 1.f ),
 	mSpecularColor( 1.f ),
 	mEmissionColor( 0.f ),
@@ -480,49 +479,6 @@ public:
 		}
 		++mFrameId; //帧编号增加
 	}
-	void restore(){
-		if ( mCanRender ){
-			return; //无需重置
-		}
-		HRESULT hr = mDevice->TestCooperativeLevel();
-		STRONG_ASSERT( hr != D3DERR_DRIVERINTERNALERROR && "TestCooperativeLevel : DRIVER INTERNAL ERROR" );
-		if ( hr == D3D_OK || hr == D3DERR_DEVICENOTRESET ){ //重设
-			//区分全屏和窗口
-			if ( mFullScreen ){
-				mPresentParameters.Windowed = FALSE;
-				mPresentParameters.BackBufferWidth = mFullScreenWindowWidth; 
-				mPresentParameters.BackBufferHeight = mFullScreenWindowHeight;
-				if ( mMsaaQualityFullScreen > 0 ){
-					mPresentParameters.MultiSampleType = D3DMULTISAMPLE_NONMASKABLE;
-					mPresentParameters.MultiSampleQuality = mMsaaQualityFullScreen - 1;
-				}else{
-					mPresentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
-					mPresentParameters.MultiSampleQuality = 0;
-				}
-			}else{
-				mPresentParameters.Windowed = TRUE;
-				mPresentParameters.BackBufferWidth = mWidth; 
-				mPresentParameters.BackBufferHeight = mHeight;
-				if ( mMsaaQualityWindowed > 0 ){
-					mPresentParameters.MultiSampleType = D3DMULTISAMPLE_NONMASKABLE;
-					mPresentParameters.MultiSampleQuality = mMsaaQualityWindowed - 1;
-				}else{
-					mPresentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
-					mPresentParameters.MultiSampleQuality = 0;
-				}
-			}
-			hr = mDevice->Reset( &mPresentParameters );
-			STRONG_ASSERT( hr != D3DERR_DRIVERINTERNALERROR && "Reset : DRIVER INTERNAL ERROR" );
-			STRONG_ASSERT( hr != D3DERR_OUTOFVIDEOMEMORY && "Reset : OUT OF VIDEO MEMORY" );
-			if ( SUCCEEDED( hr ) ){
-				setInitialStates(); //
-				mCanRender = true; //OK
-				cout << "Graphics-restore() : Direct3D Device Reset Succeeded" << endl;
-			}else{
-				cout << "Graphics-restore() : Direct3D Device Reset Failed" << endl;
-			}
-		}
-	}
 	void setTexture( Texture::Impl* o ){
 		if ( mCurrentTexture == o ){
 			return;
@@ -645,22 +601,6 @@ public:
 			STRONG_ASSERT( SUCCEEDED( hr ) && "SetSamplerState : INVALID CALL" );
 		}
 	}
-	void setCullMode( CullMode c ){
-		D3DCULL mode = D3DCULL_NONE;
-		switch ( c ){
-			case CULL_NONE: mode = D3DCULL_NONE; break;
-			case CULL_BACK: mode = D3DCULL_CW; break;
-			case CULL_FRONT: mode = D3DCULL_CCW; break;
-		}
-		if ( mCurrentCullMode == mode ){
-			return;
-		}
-		HRESULT hr;
-		hr = mDevice->SetRenderState( D3DRS_CULLMODE, mode );
-		STRONG_ASSERT( SUCCEEDED( hr ) && "SetRenderState : INVALID CALL" );
-
-		mCurrentCullMode = mode;
-	}
 	void setProjectionViewMatrix( const Matrix44& m ){
 		if ( mProjectionViewMatrix != m ){ //如果有点不同
 			mProjectionViewMatrix = m;
@@ -769,20 +709,6 @@ public:
 		HRESULT hr = mDevice->SetViewport( &vp );
 		STRONG_ASSERT( hr != D3DERR_INVALIDCALL && "SetViewport : INVALID CALL" );
 	}
-	void getViewport( int* x, int* y, int* w, int* h ){
-		if ( x ){
-			*x = mViewport.X;
-		}
-		if ( y ){
-			*y = mViewport.Y;
-		}
-		if ( w ){
-			*w = mViewport.Width;
-		}
-		if ( h ){
-			*h = mViewport.Height;
-		}
-	}
 	void blendToScreen( Texture::Impl* t ){
 		setTexture( t );
 		setBlendMode( BLEND_LINEAR );
@@ -797,12 +723,6 @@ public:
 		setVertexBuffer( mFullScreenQuadVertexBuffer );
 		draw( 0, 1 );
 		setTexture( 0 ); //清理
-	}
-	void enableFullScreen( bool f ){
-		if ( f != mFullScreen ){
-			mFullScreen = f;
-			mCanRender = false; //
-		}
 	}
 	void getPointerModifier( float* scale, Vector2* offset ){
 		float dw = static_cast< float >( mPresentParameters.BackBufferWidth );
@@ -820,56 +740,6 @@ public:
 			offset->x = ( dw - ( rw / hRatio ) ) * -0.5f;
 			offset->y = 0.f;
 		}
-	}
-	void setLightPosition( int index, const Vector3& position ){
-		mLightPositionXs[ index ] = position.x;
-		mLightPositionYs[ index ] = position.y;
-		mLightPositionZs[ index ] = position.z;
-		mLightChanged = true;
-	}
-	void setLightIntensity( int index, float intensity ){
-		mLightIntensities[ index ] = intensity;
-		mLightChanged = true;
-	}
-	void setLightColor( int index, const Vector3& color ){
-		mLightColors[ index ] = color;
-		mLightChanged = true;
-	}
-	void setEyePosition( const Vector3& position ){
-		mEyePosition = position;
-		mLightChanged = true;
-	}
-	void setDiffuseColor( const Vector3& c ){
-		mDiffuseColor.x = c.x;
-		mDiffuseColor.y = c.y;
-		mDiffuseColor.z = c.z;
-		mLightChanged = true;
-	}
-	void setSpecularColor( const Vector3& c ){
-		mSpecularColor.x = c.x;
-		mSpecularColor.y = c.y;
-		mSpecularColor.z = c.z;
-		mLightChanged = true;
-	}
-	void setEmissionColor( const Vector3& c ){
-		mEmissionColor.x = c.x;
-		mEmissionColor.y = c.y;
-		mEmissionColor.z = c.z;
-		mLightChanged = true;
-	}
-	void setAmbientColor( const Vector3& c ){
-		mAmbientColor.x = c.x;
-		mAmbientColor.y = c.y;
-		mAmbientColor.z = c.z;
-		mLightChanged = true;
-	}
-	void setTransparency( float t ){
-		mDiffuseColor.w = t;
-		mLightChanged = true;
-	}
-	void setSpecularSharpness( float e ){
-		mSpecularColor.w = e;
-		mLightChanged = true;
 	}
 	void sendLightingParameters(){
 		//光源每次都会使强度和颜色相乘。
@@ -892,8 +762,6 @@ public:
 			hr = mDevice->SetPixelShaderConstantF( 2, &mLightPositionYs.x, 1 );
 			STRONG_ASSERT( SUCCEEDED( hr ) && "SetPixelShaderConstantF : INVALID CALL" );
 			hr = mDevice->SetPixelShaderConstantF( 3, &mLightPositionZs.x, 1 );
-			STRONG_ASSERT( SUCCEEDED( hr ) && "SetPixelShaderConstantF : INVALID CALL" );
-			hr = mDevice->SetPixelShaderConstantF( 4, &mEyePosition.x, 1 );
 			STRONG_ASSERT( SUCCEEDED( hr ) && "SetPixelShaderConstantF : INVALID CALL" );
 			//镜面色彩可调节强度2 + e / 2pi
 			Vector4 sc;
@@ -1000,7 +868,6 @@ public:
 	Vector4 mLightPositionZs;
 	Vector3 mLightColors[ 4 ];
 	float mLightIntensities[ 4 ];
-	Vector4 mEyePosition;
 	Vector4 mDiffuseColor;
 	Vector4 mSpecularColor;
 	Vector4 mEmissionColor;
