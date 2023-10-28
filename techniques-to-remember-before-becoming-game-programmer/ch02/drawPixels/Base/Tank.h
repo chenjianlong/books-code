@@ -1,8 +1,6 @@
 ﻿#ifndef INCLUDED_GAMELIB_TANK_H
 #define INCLUDED_GAMELIB_TANK_H
 
-#include "Base/Array.h"
-
 namespace GameLib{
 
 ///在添加完之前无法访问，要添加多少并不清楚
@@ -33,8 +31,6 @@ public:
 	void rewind();
 	///转换成简单的数组。根据size()的尺寸申请的空间
 	void copyTo( T* ) const;
-	//复制到Arry。不允许为空
-	void copyTo( Array< T >* ) const;
 private:
 	struct Block{
 		Block* mNext; //下一个节点

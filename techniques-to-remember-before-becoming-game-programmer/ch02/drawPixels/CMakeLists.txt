@@ -9,21 +9,15 @@ add_executable(drawPixels WIN32
 	Framework.h
 	Framework.cpp
 	main.cpp
-	Base/Compressor.h
-	Base/Compressor.cpp
 	Base/Conversion.h
 	Base/Conversion.cpp
 	Base/DebugStream.h
 	Base/DebugStream.cpp
 	Base/Halt.cpp
-	Base/IBinaryStream.h
-	Base/IBinaryStream.cpp
 	Base/MemoryManager.h
 	Base/MemoryManager.cpp
 	Base/OStringStream.h
 	Base/OStringStream.cpp
-	Base/PrimeNumber.h
-	Base/PrimeNumber.cpp
 	Base/RefString.h
 	Base/RefString.cpp
 	Graphics/Manager.h

@@ -138,13 +138,6 @@ template< class T > inline void Tank< T >::copyTo( T* o ) const {
 	}
 }
 
-template< class T > inline void Tank< T >::copyTo( Array< T >* o ) const {
-	o->setSize( mSize );
-	if ( mSize > 0 ){
-		copyTo( &( ( *o )[ 0 ] ) );
-	}
-}
-
 } //namespace GameLib
 
 #endif

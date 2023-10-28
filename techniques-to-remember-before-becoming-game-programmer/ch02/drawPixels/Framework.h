@@ -41,6 +41,4 @@ extern StandardInput cin;
 
 } //namespace GameLib
 
-#include "Base/DebugStream.h"
-
 #endif

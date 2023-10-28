@@ -31,7 +31,6 @@ namespace GameLib{
 #include "Base/DebugStream.h"
 #include "Base/Array.h"
 #include "Base/AutoPtr.h"
-#include "Base/SharedPtr.h"
 #include "Base/MemoryManager.h"
 #include <new>
 
