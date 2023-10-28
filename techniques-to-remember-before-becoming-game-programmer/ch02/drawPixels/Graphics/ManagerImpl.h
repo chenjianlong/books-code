@@ -13,11 +13,9 @@
 #include "Graphics/Enum.h"
 #include "Graphics/Texture.h"
 #include "Graphics/VertexBuffer.h"
-#include "Graphics/IndexBuffer.h"
 #include "Threading/Manager.h"
 #include "Graphics/TextureImpl.h"
 #include "Graphics/VertexBufferImpl.h"
-#include "Graphics/IndexBufferImpl.h"
 
 namespace GameLib{
 using namespace Math;
@@ -48,7 +46,6 @@ public:
 	mWhiteTexture( 0 ),
 	mCurrentTexture( 0 ),
 	mCurrentVertexBuffer( 0 ),
-	mCurrentIndexBuffer( 0 ),
 	mCurrentDepthTest( TRUE ),
 	mCurrentDepthWrite( TRUE ),
 	mCurrentCullMode( D3DCULL_CW ),
@@ -315,7 +312,6 @@ public:
 	~ManagerImpl(){
 		setTexture( 0 );
 		setVertexBuffer( 0 );
-		setIndexBuffer( 0 );
 
 		mWhiteTexture->release(); //直接new Impl却调用release就会有问题
 		SAFE_DELETE( mWhiteTexture );
@@ -419,10 +415,6 @@ public:
 		if ( mCurrentVertexBuffer ){
 			mCurrentVertexBuffer->release();
 			mCurrentVertexBuffer = 0;
-		}
-		if ( mCurrentIndexBuffer ){
-			mCurrentIndexBuffer->release();
-			mCurrentIndexBuffer = 0;
 		}
 		mLightChanged = true; //
 		mMatricesChanged = true; //
@@ -565,25 +557,6 @@ public:
 			}
 		}
 		mCurrentVertexBuffer = o;
-		if ( o ){
-			o->refer();
-		}
-	}
-	void setIndexBuffer( IndexBuffer::Impl* o ){
-		if ( mCurrentIndexBuffer == o ){
-			return;
-		}
-		HRESULT hr;
-		IDirect3DIndexBuffer9* dxObj = ( o ) ? o->mDxObject : 0;
-		hr = mDevice->SetIndices( dxObj ); 
-		STRONG_ASSERT( SUCCEEDED( hr ) && "SetIndices : INVALID CALL" );
-		if ( mCurrentIndexBuffer ){
-			mCurrentIndexBuffer->release();
-			if ( mCurrentIndexBuffer->referenceCount() == 0 ){
-				SAFE_DELETE( mCurrentIndexBuffer );
-			}
-		}
-		mCurrentIndexBuffer = o;
 		if ( o ){
 			o->refer();
 		}
@@ -758,36 +731,6 @@ public:
 		HRESULT hr;
 		hr = mDevice->DrawPrimitive( 
 			dxPrim,
-			offset,
-			primitiveNumber );
-		STRONG_ASSERT( SUCCEEDED( hr ) && "DrawPrimitive : INVALID CALL" );
-	}
-	void drawIndexed( int offset, int primitiveNumber, PrimitiveType prim = PRIMITIVE_TRIANGLE ){
-		if ( mLightChanged ){
-			sendLightingParameters();
-		}
-		if ( mMatricesChanged ){
-			sendMatrices();
-		}
-		STRONG_ASSERT( mCurrentIndexBuffer && "IndexBuffer is not set." );
-		STRONG_ASSERT( mCurrentVertexBuffer && "VertexBuffer is not set." );
-		if ( !mCurrentTexture ){ //如果没有纹理，插入一个dummy。
-			setTexture( mWhiteTexture );
-		}
-		int vertexNumber = mCurrentVertexBuffer->mVertexNumber;
-		D3DPRIMITIVETYPE dxPrim = D3DPT_TRIANGLELIST;
-		switch ( prim ){
-			case PRIMITIVE_TRIANGLE: dxPrim = D3DPT_TRIANGLELIST; break;
-			case PRIMITIVE_LINE: dxPrim = D3DPT_LINELIST; break;
-			case PRIMITIVE_POINT: dxPrim = D3DPT_POINTLIST; break;
-			default: STRONG_ASSERT( 0 ); break;
-		}
-		HRESULT hr;
-		hr = mDevice->DrawIndexedPrimitive( 
-			dxPrim,
-			0, 
-			0,
-			vertexNumber,
 			offset,
 			primitiveNumber );
 		STRONG_ASSERT( SUCCEEDED( hr ) && "DrawPrimitive : INVALID CALL" );
@@ -1036,7 +979,6 @@ public:
 	//状态变量
 	Texture::Impl* mCurrentTexture;
 	VertexBuffer::Impl* mCurrentVertexBuffer;
-	IndexBuffer::Impl* mCurrentIndexBuffer;
 	BOOL mCurrentDepthTest;
 	BOOL mCurrentDepthWrite;
 	D3DCULL mCurrentCullMode;

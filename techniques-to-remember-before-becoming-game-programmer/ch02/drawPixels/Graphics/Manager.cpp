@@ -60,10 +60,6 @@ void Manager::setVertexBuffer( VertexBuffer o ){
 	gManagerImpl->setVertexBuffer( o.mImpl );
 }
 
-void Manager::setIndexBuffer( IndexBuffer o ){
-	gManagerImpl->setIndexBuffer( o.mImpl );
-}
-
 void Manager::enableDepthTest( bool f ){
 	gManagerImpl->enableDepthTest( f );
 }
@@ -106,10 +102,6 @@ void Manager::blendToScreen( Texture t ){
 
 void Manager::draw( int offset, int primitiveNumber, PrimitiveType p ){
 	gManagerImpl->draw( offset, primitiveNumber, p );
-}
-
-void Manager::drawIndexed( int offset, int primitiveNumber, PrimitiveType p ){
-	gManagerImpl->drawIndexed( offset, primitiveNumber, p );
 }
 
 int Manager::width() const { 

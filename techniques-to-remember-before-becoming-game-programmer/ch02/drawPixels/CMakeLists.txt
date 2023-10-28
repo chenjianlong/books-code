@@ -32,8 +32,6 @@ add_executable(drawPixels WIN32
 	FileIO/OutFile.cpp
 	FileIO/Manager.h
 	FileIO/Manager.cpp
-	Graphics/IndexBuffer.h
-	Graphics/IndexBuffer.cpp
 	Graphics/Manager.h
 	Graphics/Manager.cpp
 	Graphics/Texture.h

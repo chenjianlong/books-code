@@ -25,7 +25,6 @@ public:
 	static Manager instance();
 
 	void setVertexBuffer( VertexBuffer );
-	void setIndexBuffer( IndexBuffer );
 	void setTexture( Texture );
 
 	void enableDepthTest( bool );
