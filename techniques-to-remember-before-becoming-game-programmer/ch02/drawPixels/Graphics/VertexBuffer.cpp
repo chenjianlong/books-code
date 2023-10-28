@@ -10,13 +10,6 @@
 namespace GameLib{
 namespace Graphics{
 
-VertexBuffer VertexBuffer::create( PseudoXml::ConstElement e ){
-	VertexBuffer r;
-	r.mImpl = NEW Impl( e, gManagerImpl->dxDevice() );
-	return r;
-}
-
-
 VertexBuffer VertexBuffer::create( int vertexNumber ){
 	VertexBuffer r;
 	r.mImpl = NEW Impl( vertexNumber, gManagerImpl->dxDevice() );

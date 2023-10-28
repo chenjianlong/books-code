@@ -2,16 +2,12 @@
 #define INCLUDED_GAMELIB_GRAPHICS_VERTEXBUFFER_H
 
 namespace GameLib{
-namespace PseudoXml{
-	class ConstElement;
-}
 namespace Graphics{
 
 class Vertex;
 
 class VertexBuffer{
 public:
-	static VertexBuffer create( PseudoXml::ConstElement );
 	static VertexBuffer create( int vertexNumber );
 	Vertex* lock();
 	void unlock( Vertex** );

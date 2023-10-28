@@ -2,9 +2,6 @@
 #define INCLUDED_GAMELIB_GRAPHICS_TEXTURE_H
 
 namespace GameLib{
-namespace PseudoXml{
-	class ConstElement;
-}
 namespace Graphics{
 
 class Texture{

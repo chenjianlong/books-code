@@ -54,16 +54,6 @@ add_executable(drawPixels WIN32
 	Math/Vector3.cpp
 	Math/Vector4.h
 	Math/Vector4.cpp
-	PseudoXml/Attribute.h
-	PseudoXml/Attribute.cpp
-	PseudoXml/Document.h
-	PseudoXml/Document.cpp
-	PseudoXml/DocumentImpl.h
-	PseudoXml/DocumentImpl.cpp
-	PseudoXml/Element.h
-	PseudoXml/Element.cpp
-	PseudoXml/Tag.h
-	PseudoXml/Tag.cpp
 	Threading/Event.h
 	Threading/Event.cpp
 	Threading/Functions.h
