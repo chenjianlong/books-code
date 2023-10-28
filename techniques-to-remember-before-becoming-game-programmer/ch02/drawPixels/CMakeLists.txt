@@ -26,12 +26,6 @@ add_executable(drawPixels WIN32
 	Base/PrimeNumber.cpp
 	Base/RefString.h
 	Base/RefString.cpp
-	FileIO/InFile.h
-	FileIO/InFile.cpp
-	FileIO/OutFile.h
-	FileIO/OutFile.cpp
-	FileIO/Manager.h
-	FileIO/Manager.cpp
 	Graphics/Manager.h
 	Graphics/Manager.cpp
 	Graphics/Texture.h
