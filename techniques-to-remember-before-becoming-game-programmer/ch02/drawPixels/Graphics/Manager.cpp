@@ -148,11 +148,6 @@ unsigned Manager::frameId() const {
 	return gManagerImpl->mFrameId;
 }
 
-void Manager::captureScreen( const char* filename ){
-	gManagerImpl->mCaptureRequest = true;
-	gManagerImpl->mCaptureFilename = filename;
-}
-
 void Manager::getPointerModifier( float* scale, Vector2* offset ) const {
 	gManagerImpl->getPointerModifier( scale, offset );
 }

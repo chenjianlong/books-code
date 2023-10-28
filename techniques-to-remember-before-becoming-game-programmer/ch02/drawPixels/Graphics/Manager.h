@@ -66,8 +66,6 @@ public:
 	int fullScreenWindowHeight() const;
 	///返回帧的编号
 	unsigned frameId() const;
-	///截图（自动判断扩展名DDS、TGA）。保存时间在绘图结束后。
-	void captureScreen( const char* filename );
 
 	//光照关系
 	///启用阴影

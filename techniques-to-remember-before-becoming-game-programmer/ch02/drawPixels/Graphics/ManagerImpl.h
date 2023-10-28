@@ -467,10 +467,6 @@ public:
 		setViewport( mViewport.X, mViewport.Y, mViewport.Width, mViewport.Height );
 	}
 	void endDraw(){
-		//截屏处理
-		if ( mCaptureRequest && ( mCaptureFilename.size() > 0 ) ){
-			capture();
-		}
 		HRESULT hr;
 		hr = mDevice->EndScene();
 		STRONG_ASSERT( SUCCEEDED( hr ) && "EndScene : DRIVER INTERNAL ERROR" );
@@ -491,53 +487,6 @@ public:
 			STRONG_ASSERT( hr != D3DERR_DRIVERINTERNALERROR && "Present : DRIVER INTERNAL ERROR" );
 		}
 		++mFrameId; //帧编号增加
-	}
-	void capture(){
-		int w = mPresentParameters.BackBufferWidth;
-		int h = mPresentParameters.BackBufferHeight;
-
-		HRESULT hr;
-		IDirect3DSurface9* srcSurface;
-		hr = mDevice->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &srcSurface );
-		STRONG_ASSERT( hr != D3DERR_INVALIDCALL && "GetBackBuffer : INVALID CALL" );
-		//写入方
-		IDirect3DSurface9* tmpSurface;
-		hr = mDevice->CreateRenderTarget(
-			w,
-			h,
-			D3DFMT_X8R8G8B8,
-			D3DMULTISAMPLE_NONE,
-			0,
-			TRUE,
-			&tmpSurface,
-			NULL );
-		STRONG_ASSERT( hr != D3DERR_NOTAVAILABLE && "CreateRenderTarget : NOT AVAILABLE" );
-		STRONG_ASSERT( hr != D3DERR_INVALIDCALL && "CreateRenderTarget : INVALID CALL" );
-		STRONG_ASSERT( hr != D3DERR_OUTOFVIDEOMEMORY && "CreateRenderTarget : OUT OF VIDEO MEMORY" );
-		STRONG_ASSERT( hr != E_OUTOFMEMORY && "CreateRenderTarget : OUT OF MEMORY" );
-		//清除MSAA
-		hr = mDevice->StretchRect( srcSurface, NULL, tmpSurface, NULL, D3DTEXF_POINT );
-		STRONG_ASSERT( hr != D3DERR_INVALIDCALL && "StretchRect : INVALID CALL" );
-		//
-		IDirect3DSurface9* dstSurface;
-		hr = mDevice->CreateOffscreenPlainSurface( w, h, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &dstSurface, NULL );
-		//数据传输到内存
-		hr = mDevice->GetRenderTargetData( tmpSurface, dstSurface );
-		//接下来，锁住一边读取并写入
-		D3DLOCKED_RECT rect;
-		hr = dstSurface->LockRect( &rect, NULL, D3DLOCK_READONLY );
-		STRONG_ASSERT( hr != D3DERR_INVALIDCALL && "LockRect : INVALID CALL" );
-		Texture::Impl::write( mCaptureFilename.c_str(), w, h, rect.Pitch, static_cast< const unsigned* >( rect.pBits ) );
-		hr = dstSurface->UnlockRect();
-		STRONG_ASSERT( hr != D3DERR_INVALIDCALL && "UnlockRect : INVALID CALL" );
-		//清理工作
-		dstSurface->Release();
-		dstSurface = 0;
-		tmpSurface->Release();
-		tmpSurface = 0;
-		srcSurface->Release();
-		srcSurface = 0;
-		mCaptureRequest = false;
 	}
 	void restore(){
 		if ( mCanRender ){
@@ -1119,8 +1068,6 @@ public:
 	Matrix44 mProjectionViewMatrix;
 	Matrix34 mWorldMatrix;
 	bool mMatricesChanged;
-	bool mCaptureRequest;
-	string mCaptureFilename;
 };
 extern ManagerImpl* gManagerImpl; //唯一的实例
 
