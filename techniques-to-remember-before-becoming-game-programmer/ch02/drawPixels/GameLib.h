@@ -30,7 +30,6 @@ namespace GameLib{
 //基本服务标头
 #include "Base/DebugStream.h"
 #include "Base/Array.h"
-#include "Base/AutoPtr.h"
 #include "Base/MemoryManager.h"
 #include <new>
 
