@@ -28,8 +28,6 @@ add_executable(drawPixels WIN32
 	Graphics/VertexBuffer.cpp
 	Math/Functions.h
 	Math/Functions.cpp
-	Math/Random.h
-	Math/Random.cpp
 	Math/Matrix33.h
 	Math/Matrix33.cpp
 	Math/Matrix34.h

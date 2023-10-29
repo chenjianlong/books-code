@@ -1,6 +1,5 @@
 ﻿#include "GameLib.h"
 #include "Math/Functions.h"
-#include "Math/Random.h"
 #include <cmath>
 
 namespace GameLib{
