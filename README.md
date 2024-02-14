@@ -5,7 +5,7 @@ This repositories is the books example/exercise code i had read!
 
 ### 2024
 
-* [陈天 - rust  编程第一课](陈天_Rust编程第一课)
+* [陈天 - rust  编程第一课](tyrchen-geektime-rust)
 
 ### 2023 tech books
 
