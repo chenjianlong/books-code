@@ -3,6 +3,10 @@ books code
 
 This repositories is the books example/exercise code i had read!
 
+### 2024
+
+* [陈天 - rust  编程第一课](陈天_Rust编程第一课)
+
 ### 2023 tech books
 
 * [游戏开发 世嘉新人培训教材 ISBN 978-7-115-52575-8](techniques-to-remember-before-becoming-game-programmer)
