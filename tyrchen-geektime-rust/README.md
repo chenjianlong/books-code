@@ -20,3 +20,7 @@
 * [HTTPie添加主体功能](04/httpie3/)
 * [HTTPie添加高亮显示](04/httpie4/)
 * [HTTPie body 显示优化](04/httpie5/)
+
+### 05 get hands dirty：做一个图片服务器有多难？
+
+* [Thumbor](05/thumbor/)
