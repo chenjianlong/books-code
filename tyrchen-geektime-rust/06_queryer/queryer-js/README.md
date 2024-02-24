@@ -15,7 +15,7 @@ undefined
 undefined
 > sql
 'SELECT location name, total_cases, new_cases, total_deaths, new_deaths FROM https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/latest/owid-covid-latest.csv where new_deaths >= 500 ORDER BY new_cases DESC LIMIT 6 OFFSET 5'
-> console.log(q.query(sql))
+> console.log(q.query(sql, "csv"))
 name,total_cases,new_cases,total_deaths,new_deaths
 India,32649947.0,46759.0,437370.0,509.0
 Iran,4869414.0,36279.0,105287.0,571.0
