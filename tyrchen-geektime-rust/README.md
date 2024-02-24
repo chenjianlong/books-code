@@ -31,3 +31,8 @@
 * [queryer-js](06_queryer/queryer-js)
 * [queryer-py](06_queryer/queryer-py)
 * [data-viewer](06_queryer/data-viewer)
+
+
+### 07 所有权：值的生杀大权到底在谁手上？
+
+* [ownership](07_ownership)
