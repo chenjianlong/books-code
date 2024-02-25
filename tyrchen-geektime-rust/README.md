@@ -36,3 +36,11 @@
 ### 07 所有权：值的生杀大权到底在谁手上？
 
 * [ownership](07_ownership)
+
+### 08 所有权：值的借用是如何工作的？
+
+* [borrow](08_borrow)
+
+### 09 所有权：一个值可以有多个所有者么？
+
+* [multi owner](09_multi_owner)
