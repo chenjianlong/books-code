@@ -44,3 +44,7 @@
 ### 09 所有权：一个值可以有多个所有者么？
 
 * [multi owner](09_multi_owner)
+
+### 10 生命周期：你创建的值究竟能活多久？
+
+* [lifetime](10_lifetime)
