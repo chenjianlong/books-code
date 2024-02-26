@@ -52,3 +52,7 @@
 ### 11 内存管理：从创建到消亡，值都经历了什么？
 
 * [memory](11_memory)
+
+### 12 类型系统：Rust的类型系统有什么特点？
+
+* [type system](12_type_system)
