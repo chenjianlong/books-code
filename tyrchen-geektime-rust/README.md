@@ -56,3 +56,7 @@
 ### 12 类型系统：Rust的类型系统有什么特点？
 
 * [type system](12_type_system)
+
+### 13 类型系统：如何使用trait来定义接口？
+
+* [traits](13_traits)
