@@ -60,3 +60,7 @@
 ### 13 类型系统：如何使用trait来定义接口？
 
 * [traits](13_traits)
+
+### 14 类型系统：有哪些必须掌握的Trait？
+
+* [sys\_traits](14_sys_traits)
