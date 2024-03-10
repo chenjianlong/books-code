@@ -64,3 +64,84 @@
 ### 14 类型系统：有哪些必须掌握的Trait？
 
 * [sys\_traits](14_sys_traits)
+
+#### Send/Sync
+
+Send/Sync 是 Rust 并发安全的基础:
+
+* 如果一个类型 T 实现了 Send trait，意味着 T 可以安全地从一个线程移动到另一个线程也就是说所有权可以在线程间移动。
+* 如果一个类型 T实现了 Sync trait，则意味着 &T 可以安全地在多个线程中共享。一个类型T 满足 Sync trait，当且仅当 &T 满足 Send trait。
+
+对于 Send/Sync 在线程安全中的作用，可以这么看，**如果一个类型 T::Send，那么T在某个线程中的独占访问是线程安全的;如果一个类型T::Sync，那么T在线程间的只读共享是安全的。**
+
+#### 思考题
+
+1. Vec\<T\> 可以实现 Copy trait 么？为什么？
+
+不可以，Vec 含有指向了堆数据的指针，并且假定了对堆数据拥有所有权，当 drop Vec 时，它会回收相应的堆数据，实现 Copy 会导致多个 Vec 实例 drop 时对堆数据进行回收。
+
+2. 在使用 Arc\<Mutex\<T\>\> 时，为什么下面这段代码可以直接使用 shared\.lock()?
+
+```rust
+use std::sync::{Arc, Mutex};
+let shared = Arc::new(Mutex::new(1));
+let mut g = shared.lock().unwrap();
+*g += 1;
+```
+
+Arc 实现了 Deref trait
+
+3. 有余力的同学可以尝试一下，为下面的 List\<T\> 类型实现 Index，使得所有的测试都能 通过。这段代码使用了 std::collections::LinkedList，你可以参考官方文档阅读它支持的方法
+
+```rust
+use std::{
+    collections::LinkedList,
+    ops::{Deref, DerefMut, Index},
+};
+
+struct List<T>(LinkedList<T>);
+
+impl<T> Deref for List<T> {
+    type Target = LinkedList<T>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for List<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> Default for List<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<T> Index<isize> for List<T> {
+    type Output = T;
+    fn index(&self, index: isize) -> &Self::Output {
+        todo!();
+    }
+}
+
+#[test]
+fn it_works() {
+    let mut list: List<u32> = List::default();
+    for i in 0..16 {
+        list.push_back(i);
+    }
+
+    assert_eq!(list[0], 0);
+    assert_eq!(list[5], 5);
+    assert_eq!(list[15], 15);
+    assert_eq!(list[16], 0);
+    assert_eq!(list[-1], 15);
+    assert_eq!(list[128], 0);
+    assert_eq!(list[-128], 0);
+}
+```
+
+* [sys\_traits](14_sys_traits/src/linked_list.rs)
