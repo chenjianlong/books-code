@@ -144,4 +144,28 @@ fn it_works() {
 }
 ```
 
-* [sys\_traits](14_sys_traits/src/linked_list.rs)
+### 15 数据结构：这些浓眉大眼的结构竟然都是智能指针？
+
+* [smart\_pointers](15_smart_pointers)
+
+文章中提到
+
+```rust
+let boxed = Box::new([0u8; 1 << 24]);
+println!("len: {}", boxed.len());
+```
+
+使用 release 编译运行不会导致栈溢出，实际在 1.76 版本，尝试 release 编译运行依然会
+出现栈溢出，估计相关实现修改了，Box::new 的实现也跟文章提到的有所差异。
+
+```rust
+#[cfg(not(no_global_oom_handling))]
+#[inline(always)]
+#[stable(feature = "rust1", since = "1.0.0")]
+#[must_use]
+#[rustc_diagnostic_item = "box_new"]
+pub fn new(x: T) -> Self {
+	#[rustc_box]
+	Box::new(x)
+}
+```
