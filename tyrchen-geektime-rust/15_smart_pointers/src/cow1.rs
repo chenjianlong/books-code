@@ -12,7 +12,8 @@ fn main() {
     // 此刻，他们都是 Borrowed
     println!("key: {}, v: {}", k, v);
     // 当修改发生时，k 变成 Owned
-    k.to_mut().push_str("_lala");
+    let xxx=k.to_mut();
+    xxx.push_str("_lala");
 
     print_pairs((k, v));
 

@@ -35,6 +35,11 @@ fn main() {
     node2.update_downstream(node1.get_downstream().unwrap());
     println!("node1: {:?}, node2: {:?}", node1, node2);
 
+    // 可以看出，无法使从 node1 还是 node2 获取的 node3 地址都相同
+    println!("node3 from node1: {:p}, node3 from node2: {:p}",
+        node1.get_downstream().unwrap().as_ref(),
+        node2.get_downstream().unwrap().as_ref());
+
     // 无法编译通过
     // let node5 = Node::new(5);
     // let node3 = node1.get_downstream().unwrap();

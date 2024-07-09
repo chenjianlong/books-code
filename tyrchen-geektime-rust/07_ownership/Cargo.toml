@@ -15,6 +15,10 @@ path = "src/ownership_error.rs"
 name = "check_copy"
 path = "src/check_copy.rs"
 
+[[bin]]
+name = "heap_ref_stack"
+path = "src/heap_ref_stack.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
