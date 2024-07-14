@@ -94,6 +94,124 @@ fn main() {
 
 * [multi owner](09_multi_owner)
 
+外部可变性和内部可变性的区别：
+
+||**使用方法**|**所有权检查**|
+|-|-|-|
+|**外部可变性**|let mut或者 &mut|编译时，如果不符合规则，产生编译错误|
+|**内部可变性**|使用 Cell/RefCell|运行时，如果不符合规则，产生 panic|
+
+Rc/Arc 是不可变的，如果想要修改内部的数据，**需要引入内部可变性**，在单线程环境下，可以在 Rc 内部使用 RefCell；在多线程环境下，可以使用 Arc 嵌套 Mutex 或者 RwLock 的方法。
+
+<table>
+    <thead>
+        <tr>
+            <th colspan=2>访问方式</th>
+            <th>数据</th>
+            <th>不可变借用</th>
+            <th>可变借用</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan=2>单一所有权</td>
+            <td>T</td>
+            <td>&T</td>
+            <td>&mut T</td>
+        </tr>
+        <tr>
+            <td rowspan=5>共享所有权</td>
+            <td rowspan=2>单线程</td>
+            <td>Rc&lt;T&gt;</td>
+            <td>&Rc&lt;T&gt;</td>
+            <td>无法得到可变借用</td>
+        </tr>
+        <tr>
+            <td>Rc&lt;RefCell&lt;T&gt;&gt;</td>
+            <td>v.borrow()</td>
+            <td>v.borrow_mut()</td>
+        </tr>
+        <tr>
+            <td rowspan=3>多线程</td>
+            <td>Arc&lt;T&gt;</td>
+            <td>&Arc&lt;T&gt;</td>
+            <td>无法得到可变借用</td>
+        </tr>
+        <tr>
+            <td>Arc&lt;Mutex&lt;T&gt;&gt;</td>
+            <td>v.lock()</td>
+            <td>v.lock()</td>
+        </tr>
+        <tr>
+            <td>Arc&lt;RwLock&lt;T&gt;&gt;</td>
+            <td>v.read()</td>
+            <td>v.write()</td>
+        </tr>
+    </tbody>
+</table>
+
+#### 思考题
+
+1. 运行下面的代码，查看错误，并阅读 std::thread::spawn 的文档，找到问题原因后，修改代码使其编译通过。
+
+```rust
+fn main() {
+    let arr = vec![1];
+
+    std::thread::spawn(|| {
+        println!(":?", arr);
+    });
+}
+```
+
+答案：使用 move，具体请看 exam1.rs
+
+2. 你可以写一段代码，在 main() 函数里生成一个字符串，然后通过 std::thread::spawn 创建一个线程，让 main() 函数所在的主线程和新的线程共享这个字符串么？提示：使用 std::sync::Arc。
+
+答案：具体请看 exam2.rs
+
+3. 我们看到了 Rc 的 clone() 方法的实现：
+
+```rust
+fn clone(&self) -> Rc<T> {
+    // 增加引用计数
+    self.inner().inc_strong();
+    // 通过 self.ptr 生成一个新的 Rc 结构
+    Self::from_inner(self.ptr);
+}
+```
+
+你有没有注意到，这个方法传入的参数是 &self，是个不可变引用，然而它调用了 self.inner().inc_string()，光看函数名字，它用来增加 self 的引用计数，可是，为什么这里对 self 的不可变引用可以改变 self 的内部数据呢？
+
+答：这里引入了内部可变性，inner() 获取了 RcBox&lt;T&gt;，而 inc\_strong 的实现为：
+
+```rust
+#[inline]
+fn inc_strong(&self) {
+    let strong = self.strong();
+
+    // We insert an `assume` here to hint LLVM at an otherwise
+    // missed optimization.
+    // SAFETY: The reference count will never be zero when this is
+    // called.
+    unsafe {
+        hint::assert_unchecked(strong != 0);
+    }
+
+    let strong = strong.wrapping_add(1);
+    self.strong_ref().set(strong);
+
+    // We want to abort on overflow instead of dropping the value.
+    // Checking for overflow after the store instead of before
+    // allows for slightly better code generation.
+    if core::intrinsics::unlikely(strong == 0) {
+        abort();
+    }
+}
+```
+
+strong 为 Cell&lt;T&gt;，是内部可变的，可以使用 set 函数改变内部的引用计数
+
 ### 10 生命周期：你创建的值究竟能活多久？
 
 * [lifetime](10_lifetime)
