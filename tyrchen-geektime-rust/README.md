@@ -248,6 +248,20 @@ pub fn strtok<'a>(s: &'a mut &str, delimiter: char) -> &'a str {...}
 
 * [memory](11_memory)
 
+Rust的创造者们，重新审视了堆内存的生命周期，发现大部分堆内存的需求在于动态大小，小部分需求是更长的生命周期。
+
+下图是大部分编程语言和 Rust 语言的生命周期对比
+
+![](images/lifetime_compare.png)
+
+Drop trait 类似面向对象编程中的析构函数，当一个值要被释放，它的 Drop trait 会被调用。
+
+#### 思考题
+
+Result&lt;String, ()&gt; 占用多少内存？为什么？
+
+答：还是 24 个字节，首先 () 不占内存，而 String 的第一个字段是指针，有值时不会是 0，因而 Rust 对其进行了优化，当它为空时可以表述为 ()。
+
 ### 12 类型系统：Rust的类型系统有什么特点？
 
 * [type system](12_type_system)
