@@ -266,6 +266,58 @@ Result&lt;String, ()&gt; 占用多少内存？为什么？
 
 * [type system](12_type_system)
 
+从内存的角度看，类型安全是指代码，只能按照被允许的方法，访问它被授权访问的内存。
+
+Rust 下的内存安全更严格：代码只能按照被允许的方法和被允许的权限，访问它被授权访问的内存。
+
+为了做到这么严格的类型安全，Rust 中除了 let/fn/static/const 这些定义性的语句外，都是表达式，而一切表达式都有类型，所以可以说在 Rust 中，类型无处不在。
+
+在声明一个函数的时候，我们可以不指定具体的参数或返回值的类型，而是由泛型参数来代替。
+
+对于泛型函数，Rust 会进行单态化处理，也就是在编译时，把所有用到的泛型函数的泛型参数展开，生成若干个函数。
+
+单态化的好处是，泛型函数的调用是静态分派，在编译时就一一对应，既保有多态的灵活性，又没有任何效率的损失，和普通函数调用一样高效。
+
+因为单态化，代码以二进制分发会损失泛型的信息。
+
+![](images/type_system.png)
+
+按类型定义、检查以及检查时能否被推导出来，Rust 是强类型+静态类型+显式类型
+
+#### 思考题
+
+下面这段代码为什么不能编译通过？你可以修改它使其正常工作么？
+
+```rust
+use std::io::{BufWriter, Write};
+use std::net::TcpStream;
+
+#[derive(Debug)]
+struct MyWriter<W> {
+    writer: W,
+}
+
+impl<W: Write> MyWriter<W> {
+    pub fn new(addr: &str) -> Self {
+        let stream = TcpStream::connect("127.0.0.1:8080").unwrap();
+        Self {
+            writer: BufWriter::new(stream),
+        }
+    }
+
+    pub fn write(&mut self, buf: &str) -> std::io::Result<()> {
+        self.writer.write_all(buf.as_bytes())
+    }
+}
+
+fn main() {
+    let writer = MyWriter::new("127.0.0.1:8080");
+    writer.write("hello world!");
+}
+```
+
+参考 src/writer.rs
+
 ### 13 类型系统：如何使用trait来定义接口？
 
 * [traits](13_traits)
