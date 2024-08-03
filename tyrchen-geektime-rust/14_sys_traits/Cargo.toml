@@ -28,7 +28,7 @@ name = "deref"
 path = "src/deref.rs"
 
 [[bin]]
-name = "default"
+name = "default_value"
 path = "src/default.rs"
 
 [[bin]]

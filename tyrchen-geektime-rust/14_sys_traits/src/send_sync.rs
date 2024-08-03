@@ -43,9 +43,9 @@ fn refcell_is_not_sync() {
     // });
 }
 
-// Arc<Mutext<T>> 可以多线程共享且修改数据
+// Arc<Mutex<T>> 可以多线程共享且修改数据
 #[allow(dead_code)]
-fn arc_mutext_is_send_sync() {
+fn arc_mutex_is_send_sync() {
     let a = Arc::new(Mutex::new(1));
     let b = a.clone();
     let c = a.clone();

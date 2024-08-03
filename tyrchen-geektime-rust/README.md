@@ -457,6 +457,96 @@ Send/Sync 是 Rust 并发安全的基础:
 
 对于 Send/Sync 在线程安全中的作用，可以这么看，**如果一个类型 T::Send，那么T在某个线程中的独占访问是线程安全的;如果一个类型T::Sync，那么T在线程间的只读共享是安全的。**
 
+基本上原生数据结构都支持 Send/Sync，也就是说，绝大多数自定义的数据结构都是满足 Send/Sync 的。
+标准库中，不支持 Send/Sync 的数据结构主要有：
+
+* 裸指针 *const/*mut T。它们是不安全的，所以既不是 Send 也不是 Sync。
+* UnsafeCell&lt;T&gt; 不支持Sync。也就是说，任何使用了 Cell 或者 RefCell 的数据结构不支持 Sync。
+* 引用计数 Rc 不支持 Send 也不支持 Sync。所以 Rc 无法跨线程。
+
+#### From&lt;T&gt; / Into&lt;T&gt;
+
+```rust
+pub trait From<T> {
+    fn from(T) -> Self;
+}
+
+pub trait Into<T> {
+	fn into(self) -> T;
+}
+```
+
+在实现 From<T> 的时候会自动实现 Into<T>。这是因为：
+
+```rust
+// 实现 From 会自动实现 Into
+impl<T, U> Into<U> for T where U: From<T> {
+	fn into(self) -> U {
+		U::from(self)
+	}
+}
+```
+
+此外，From&lt;T&gt; 和 Info&lt;T&gt; 是自反的：把类型 T 的值转换成类型 T，会直接返回。
+这是因为标准库有如下的实现：
+
+```rust
+// From（以及 Into）是自反的
+impl<T> from<T> for T {
+	fn from(t: T) -> T {
+		t
+	}
+}
+```
+
+#### AsRef&lt;T&gt;
+
+```rust
+pub trait AsRef<T> where T: ?Sized {
+	fn as_ref(&self) -> &T;
+}
+
+pub trait AsMut<T> where T: ?Sized {
+	fn as_mut(&mut self) -> &mut T;
+}
+```
+
+#### Deref 和 DerefMut
+
+```rust
+pub trait Deref {
+	// 解引用出来的结果类型
+	type Target: ?Sized;
+	fn deref(&self) -> &self::Target;
+}
+
+pub trait DerefMut: Deref {
+	fn deref_mut(&mut self) -> &mut self::Target;
+}
+```
+
+![](images/ops.png)
+
+#### 其他：Debug / Display / Default
+
+```rust
+pub trait Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>;
+}
+
+pub trait Display {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>;
+}
+
+pub trait Default {
+    fn default() -> Self;
+}
+```
+
+Debug 是为开发者调式打印数据结构所涉及的，而 Display 是给用户显示数据结构所涉及的。Debug trait 的实现可以通过派生宏直接生产，而 Display 必须手工实现。
+
+![](images/trait_types.png)
+
 #### 思考题
 
 1. Vec\<T\> 可以实现 Copy trait 么？为什么？
@@ -526,6 +616,8 @@ fn it_works() {
     assert_eq!(list[-128], 0);
 }
 ```
+
+答：参考 src/linked_list.rs
 
 ### 15 数据结构：这些浓眉大眼的结构竟然都是智能指针？
 
