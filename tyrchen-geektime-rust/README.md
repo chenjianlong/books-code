@@ -316,11 +316,133 @@ fn main() {
 }
 ```
 
+1. MyWriter 为泛型数据结构，writer 为满足 Write trait 的任意类型，new 中将 BufWriter 赋值给 writer，相当于将 writer 的泛型窄化成特定类型了，因此会报错
+2. write 方法需要 &mut self，因此 let writer = xx 需要修改为 let mut writer = xxx
+
 参考 src/writer.rs
 
 ### 13 类型系统：如何使用trait来定义接口？
 
 * [traits](13_traits)
+
+trait 是 Rust 中的接口，它定义了类型使用这个接口的行为。trait 对于 Rust 而言，相当于 interface 之于 Java、protocol 之于 Swift、type class 之于 Haskell。
+
+* self 代表当前的类型，比如 File 类型实现了 Write，那么实现过程中使用到的 Self 就指代 File。
+* self 在用作方法的第一个参数时，实际上是 self::Self 的简写，所以 &self 是 self: &Self，而 &mut self 是 self: &mut Self
+
+在实现 trait 的时候，也可以用泛型参数来实现 trait，需要注意的是要对泛型参数做一定的限制。
+
+trait 的定义也支持泛型。标准库中 std::ops::Add 这个 trait 用于提供加法运算：
+
+```rust
+pub trait Add<Rhs = Self> {
+    type Output;
+    #[must_use]
+    fn add(self, rhs: Rhs) -> Self::Output;
+}
+```
+
+这个 trait 有一个泛型参数 Rhs，代表加号右边的值，默认类型是 Self，就是说你实现 Add trait 的时候，如果不提供泛型参数，那么加号右值和左值都要是相同的类型。
+
+在 Rust 中，一个 trait 可以 "继承" 另一个 trait 的关联类型和关联函数。比如 trait B: A 是说任何类型 T，如果实现了 trait B，它也必须实现 trait A，换句话说，trait B 在定义时可以使用 trait A 中的关联类型和方法。
+
+Rust 虽然没有父类和子类，但 trait 和实现 trait 的类型之间也是类型的关系，所以 Rust 也可以做子类型多态。
+
+我们要有一种手段，告诉编译器，此处需要并且仅需要任何实现了 Formatter 接口的数据类型。在 Rust 里，这种类型叫 Trait Object，表现为 &dyn Trait 或者 Box\<dyn Trait\>。
+
+Trait Object 的底层逻辑就是胖指针。其中一个指针指向数据本身，另一个则指向虚函数表。
+
+Rust 里的 Trait Object 没什么神秘的，它不过是我们熟知的 C++/Java 中 vtable 的一个变体而已。
+
+在使用 trait object 的时候，要注意对象安全。只有满足对象安全的 trait 才能使用 trait object。如果 trait 所有的方法，返回值是 Self 或者携带泛型参数，那么这个 trait 就不能产生 trait object。
+
+不允许返回 Self，是因为 trait object 产生时，原来的类型会被抹去，所以 Self 究竟是谁不知道。
+
+不允许携带泛型参数，是因为 Rust 里带泛型的类型在编译时会做单态化，而 trait object 是运行时的产物，两者不能兼容。
+
+![](images/traits.png)
+
+trait作为对不同数据结构中相同行为的一种抽象，它可以让我们在开发时，
+通过用户需求，先敲定系统的行为，把这些行为抽象成 trait，之后再慢慢确定要使用的数据结构，
+以及如何为数据结构实现这些 trait。
+
+#### 思考题
+
+1. 对于 Add&lt;Rhs&gt; trait，如果我们不用泛型，把 Rhs 作为 Add trait 的关联类型，
+可以么？为什么？
+
+答：不可以，同一个类型对同一个 trait 只能有一个实现，以 String 为例，如果我们为 String+String 实现了 Add trait,
+将无法再实现 String + u64，或者 String 和其他任何类型的 Add trait。
+
+2. 如下代码能通过编译么，为什么？
+
+```rust
+use std::{fs::File, io::Write};
+fn main() {
+	let mut f = File::create("/tmp/test_write_trait").unwrap();
+	let w: &mut dyn Write = &mut f;
+	w.write_all(b"hello ").unwrap();
+	let w1 = w.by_ref();
+	w1.write_all(b"world").unwrap();
+}
+```
+
+答：不能，by_ref 方法返回的类型是 &mut Self,无法在 trait object 中使用。
+
+3. 在 Complex 的例子中，c1 + c2 会导致所有权移动，所以我们使用了 &c1 + &c2 来避免这种行为。
+除此之外，你还有什么方法能够让 c1 + c2 执行完之后还能继续使用么？
+如果修改 Complex 的代码来实现这个功能呢？
+
+```rust
+// c1、c2 已经被移动，所以下面这句无法编译
+// println!("{:?}", c1 + c2);
+```
+
+答：可以为 Complex 实现 Copy trait
+
+4. 学有余力的同学可以挑战一下，Iterator 是 Rust 下的迭代器 trait，
+你可以阅读 Iterator 的文档来获得更多的信息。它有一个关联类型 Item
+和一个方法 next() 需要实现，每次调用 next，如果迭代器中还能得到一个值，则返回 Some(Item)，
+否则返回 None。请阅读如下代码，想想如何实现 SentenceIter 这个结构的迭代器？
+
+```rust
+struct SentenceIter<'a> {
+    s: &'a mut &'a str,
+	delimiter: char,
+}
+
+impl<'a> SentenceIter<'a> {
+  pub fn new(s: &'a mut &'a str, delimiter: char) -> Self {
+      Self { s, delimiter }
+  }
+}
+
+impl<'a> Iterator for SentenceIter<'a> {
+	type Item; // 想想 Item 应该是什么类型？
+
+	fn next(&mut self) -> Option<Self::Item> {
+	    // 如何实现 next 方法让下面的测试通过？
+		todo!()
+	}
+}
+
+#[test]
+fn it_works() {
+	let mut s = "This is the 1st sentence. This is the 2nd sentence.";
+	let mut iter = SentenceIter::new(&mut s, '.');
+	assert_eq!(iter.next(), Some("This is the 1st sentence."));
+	assert_eq!(iter.next(), Some("This is the 2nd sentence."));
+	assert_eq!(iter.next(), None);
+}
+
+fn main() {
+	let mut s = "a。b。c";
+	let sentences: Vec<_> = SentenceIter::new(&mut s, '。').collect();
+	println!("sentences: {:?}", sentences);
+}
+```
+
+答：参考 src/iterator.rs
 
 ### 14 类型系统：有哪些必须掌握的Trait？
 
