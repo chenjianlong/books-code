@@ -24,6 +24,10 @@ name = "cow2"
 path = "src/cow2.rs"
 
 [[bin]]
+name = "cow3"
+path = "src/cow3.rs"
+
+[[bin]]
 name = "guard"
 path = "src/guard.rs"
 

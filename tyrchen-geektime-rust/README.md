@@ -623,3 +623,159 @@ fn it_works() {
 
 * [smart\_pointers](15_smart_pointers)
 
+在 Rust 中，凡是需要做资源回收的数据结构，且实现了 Deref/DerefMut/Drop，都是智能指针。
+
+
+#### Cow&lt;'a, B&gt;
+
+Cow 的定义：
+
+```rust
+pub enum Cow<'a, B: ?Sized + 'a> where B: ToOwned {
+    Borrowed(&'a B),
+    Owned(<B as ToOwned>::Owned),
+}
+
+pub trait ToOwned {
+    type Owned: Borrow<Self>;
+    fn to_owned(&self) -> Self::Owned;
+
+    fn clone_into(&self, target: &mut Self::Owned) {
+        *target = self.to_owned();
+    }
+}
+
+pub trait Borrow<Borrowed: ?Sized> {
+    fn borrow(&self) -> &Borrowed;
+}
+
+impl<T> ToOwned for T where T: Clone, {
+    type Owned = T;
+    fn to_owned(&self) -> T {
+        self.clone()
+    }
+
+    fn clone_into(&self, target: &mut T) {
+        target.clone_from(self);
+    }
+}
+
+impl<B: ?Sized + ToOwned> Clone for Cow<'_, B> {
+    fn clone(&self) -> Self {
+        match *self {
+            Borrowed(b) => Borrowed(b),
+            Owned(ref o) => {
+                let b: &B = o.borrow();
+                Owned(b.to_owned())
+            }
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        match (self, source) {
+            (&mut Owned(ref mut dest), &Owned(ref o)) => o.borrow().clone_into(dest),
+            (t, s) => *t = s.clone(),
+        }
+    }
+}
+
+impl<B: ?Sized + ToOwned> Cow<'_, B> {
+    pub fn to_mut(&mut self) -> &mut <B as ToOwned>::Owned {
+        match *self {
+            Borrowed(borrowed) => {
+                *self = Owned(borrowed.to_owned());
+                match *self {
+                    Borrowed(..) => unreachable!(),
+                    Owned(ref mut owned) => owned,
+                }
+            }
+            Owned(ref mut owned) => owned,
+        }
+    }
+
+    pub fn into_owned(self) -> <B as ToOwned>::Owned {
+        match self {
+            Borrowed(borrowed) => borrowed.to_owned(),
+            Owned(owned) => owned,
+        }
+    }
+}
+```
+
+关系图，以 Cow&lt;str&gt; 为例子：
+
+![](images/cow.png)
+
+需要注意由于 impl&lt;T&gt; ToOwned for T where T: Clone 的存在，对一个 borrowed cow 调用 to\_owned 仍会得到 borrowed cow，
+以 Cow&lt;str&gt; 为例，若想得到 String 需要调用 into\_owned 或者 (*cow).to\_owned()，参考源码中的 cow3.rs
+
+#### MutexGuard&lt;T&gt;
+
+MutexGuard 不但通过 Deref 提供良好的用户体验，还通过 Drop trait 来确保，使用到的内存以外的资源在退出时进行释放。
+
+MutexGuard 这个结构是在调用 Mutex::lock 时生成的：
+
+```rust
+pub fn lock(&self) -> LockResult<MutexGuard<'_, T>> {
+    unsafe {
+        self.inner.raw_lock();
+        MutexGuard::new(self)
+    }
+}
+```
+
+MutexGuard 的定义以及它的 Deref 和 Drop 实现如下：
+
+```rust
+// 这里用 must use，当你得到了却不使用 MutexGuard 时会报警
+#[must_use = "if unused the Mutex will immediately unlock"]
+pub struct MutexGuard<'a, T: ?Sized + 'a> {
+    lock: &'a Mutex<T>,
+    poison: poison::Guard
+}
+
+impl<T: ?Sized> Deref for MutexGuard<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        unsafe { &*self.lock.data.get() }
+    }
+}
+
+impl<T: ?Sized> DerefMut for MutexGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.lock.data.get() }
+    }
+}
+
+impl<T: ?Sized> Drop for MutexGuard<'_, T> {
+    #[inline]
+    fn drop(&mut self) {
+        unsafe {
+            self.lock.poison.done(&self.poison);
+            self.lock.inner.raw_unlock();
+        }
+    }
+}
+```
+#### 实现自己的智能指针
+
+我们设计的 MyString 使用一个字节表示字符串的长度，用 30 个字节表示字符串的内容，再加上 1 个字节的 tag，正好是 32 字节,具体实现请看 mystring.rs
+
+![](images/MyString.png)
+
+#### 思考题
+
+1. 目前 MyString 只能从 &str 生成。如果要支持从 String 中生成一个 MyString，该怎么做？
+
+答：实现 impl&lt;T&gt; From&lt;T&gt; for MyString where T: AsRef&lt;str&gt;，详看 mystring.rs
+
+2. 目前 MyString 只能读取，不能修改，能不能给加上类型 String 的 push_str 接口
+
+答：详看 mystring.rs
+
+3. 你知道 Cow&lt;[u8]&gt; 和 Cow&lt;str&gt; 的大小吗，试着打印一下看看。想想，为什么它的大小是这样呢？
+
+答：都是 24字节，Cow 的大小由 &lt;B as ToOwned&gt;::Owned 和 &'a B 决定，引用的大小总是 16 字节，
+&lt;[u8]&gt; 的 ToOwned&gt;::Owned 是 Vec&lt;u8&gt; （通过源码 slice.rs 可知）大小是 24 字节，
+str 的 ToOwned&gt;::Owned 是 String（通过源码 str.rs 可知），大小也是 24字节
