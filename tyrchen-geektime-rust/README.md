@@ -779,3 +779,57 @@ impl<T: ?Sized> Drop for MutexGuard<'_, T> {
 答：都是 24字节，Cow 的大小由 &lt;B as ToOwned&gt;::Owned 和 &'a B 决定，引用的大小总是 16 字节，
 &lt;[u8]&gt; 的 ToOwned&gt;::Owned 是 Vec&lt;u8&gt; （通过源码 slice.rs 可知）大小是 24 字节，
 str 的 ToOwned&gt;::Owned 是 String（通过源码 str.rs 可知），大小也是 24字节
+
+### 16 数据结构：Vec&lt;T&gt;、&[T]、Box&lt;[T]&gt; ，你真的了解集合容器么？
+
+* [data\_structure](16_data_structure)
+
+**只要把某种特定的数据封装在某个数据结构中，这个数据结构就是一个容器**
+
+#### 切片究竟是什么？
+
+在 Rust 里，切片是描述一组属于同一类型、长度不确定的、在内存中连续存放的数据结构，用 [T] 来表述。
+
+切片一般只出现在数据结构的定义中，不能直接访问，在使用中主要用以下形式：
+
+* &[T]：表示一个只读的切片引用
+* &mut [T]：表示一个可写的切片引用
+* Box&lt;[T]&gt;：一个在堆上分配的切片
+
+切片之于具体的数据结构，就像数据库中的视图之于表。
+
+![](images/slice_vec_arr.png)
+
+图1：切片和数据之间的关系
+
+#### 小结
+
+![](images/slice_vec_box_arr_ref.png)
+
+图2：小结
+
+#### 思考题
+
+1. 在讲 &str 时，里面的 print_slice1 函数，如果写成这样可不可以？你可以尝试一下，然后说明理由。
+
+```rust
+// fn print_slice1<T: AsRef<str>>(s: T) {
+//     println!("{:?}", s.as_ref());
+// }
+
+fn print_slice1<T, U>(s: T)
+where
+    T: AsRef<U>,
+    U: fmt::Debug,
+{
+    println!("{:?}", s.as_ref());
+}
+```
+
+答：不可以，String 有多个 AsRef 的实现，会产生歧义
+
+2. 类似 itertools，你可以试着开发一个 Iterator trait IteratorExt，为其提供 window_count 函数，使其可以做下图中的动作
+
+![](images/itertools.png)
+
+答：参考源码 iter_ext.rs
