@@ -3,6 +3,10 @@ books code
 
 This repositories is the books example/exercise code i had read!
 
+### 2025
+
+* [深入理解计算机系统 Computer System: A Programmer's Perspectiv, Second Edition ISBN 978-7-111-321330-0](csapp)
+
 ### 2024
 
 * [陈天 - rust  编程第一课](tyrchen-geektime-rust)
