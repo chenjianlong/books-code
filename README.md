@@ -7,6 +7,7 @@ This repositories is the books example/exercise code i had read!
 
 * [深入理解计算机系统 Computer System: A Programmer's Perspectiv, Second Edition ISBN 978-7-111-321330-0](csapp)
 * [GTK3 documentation](gtk3-doc)
+* [Foundations of GTK+ Development ISBN-13 (pbk): 978-1-59059-793-4](foundations-of-gtk+-development)
 
 ### 2024
 
