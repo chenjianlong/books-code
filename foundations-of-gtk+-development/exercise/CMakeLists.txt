@@ -3,3 +3,5 @@ project(exercise)
 
 add_subdirectory(ex02-01)
 add_subdirectory(ex02-02)
+add_subdirectory(ex03-01)
+add_subdirectory(ex03-02)
