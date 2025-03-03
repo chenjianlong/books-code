@@ -87,7 +87,7 @@ previous_page (GtkButton *button,
   gtk_notebook_set_current_page (notebook, page == 0 ? 3 : page - 1);
 }
 
-void
+static void
 quit_cb (GtkWidget *window, gpointer data)
 {
     gtk_main_quit();

@@ -60,3 +60,9 @@ gtk_paned_pack2 (
 * shrink
     * Type: gboolean
     * 这个子控件是否可以被缩小到小于其需求尺寸
+
+### ch04
+
+gtk_button_new_from_stock 在 gk3 已经废弃
+
+gtkrc 在 gtk3 已经废弃，建议使用 CSS 来定义样式，可以查看 [Migrating Themes from GTK 2.x to GTK 3](https://docs.gtk.org/gtk3/migrating-themes.html)

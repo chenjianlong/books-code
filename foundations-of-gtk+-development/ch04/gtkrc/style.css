@@ -1,0 +1,40 @@
+* {
+  padding: 2px;
+
+  color: #666666;
+  background-color: #CCCCCC;
+}
+
+*:hover {
+  color: #FFFFFF;
+  background-color: #003366;
+}
+
+*:selected {
+  color: #003366;
+  background-color: #FFFFFF;
+}
+
+*:disabled {
+  color: #999999;
+  background-color: #666666;
+}
+
+*:active {
+  color: #003366;
+  background-color: #FFFFFF;
+}
+
+.label {
+  font: 14px bold sans;
+}
+
+.button {
+  border-style: solid;
+  border-width: 10px;
+}
+
+checkbutton check {
+  min-width: 25px;
+  min-height: 25px;
+}
