@@ -22,7 +22,6 @@ set(SOURCE_FILES helloworld.c)
 set (LIBS ${GTK3_LIBRARIES})
 
 add_executable(helloworld ${SOURCE_FILES})
-#add_dependencies(sync-tool-client ws_api)
 target_link_libraries(helloworld PRIVATE ${LIBS})
 install(TARGETS helloworld
 	BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR}
