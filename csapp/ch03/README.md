@@ -143,3 +143,155 @@ dest_t *p;
 |int|char|movb %al, (%edx)|
 |unsigned|unsigned char|movb %al, (%edx)|
 |unsigned|int|movl %eax, (%edx)|
+
+### 练习题 3.5 已知信息如下。将一个原型为
+
+```c
+void decode1(int *xp, int *yp, int *zp);
+```
+
+的函数编译成汇编代码。代码体如下：
+
+```asm
+    xp at %ebp+8, yp at %ebp+12, zp at %ebp+16
+1   movl    8(%ebp), %edi
+2   movl    12(%ebp), %edx
+3   movl    16(%ebp), %ecx
+4   movl    (%edx), %ebx
+5   movl    (%ecx), %esi
+6   movl    (%edi), %eax
+7   movl    %eax, (%edx)
+8   movl    %ebx, (%ecx)
+9   movl    %esi, (%edi)
+```
+
+参数 xp、yp 和 zp 分别存储在相对于寄存器 %ebp 中地址值的偏移 8、12 和 16 的地方。
+请写出以上汇编代码的 decode1 等效的 C 代码。
+
+答案：
+
+```asm
+    xp at %ebp+8, yp at %ebp+12, zp at %ebp+16
+1   movl    8(%ebp), %edi # xp
+2   movl    12(%ebp), %edx # yp
+3   movl    16(%ebp), %ecx # zp
+4   movl    (%edx), %ebx # ebx = *yp
+5   movl    (%ecx), %esi # esi = *zp
+6   movl    (%edi), %eax # eax = *xp
+7   movl    %eax, (%edx) # *yp = *xp
+8   movl    %ebx, (%ecx) # *zp = *yp
+9   movl    %esi, (%edi) # *xp = *zp
+```
+
+```c
+void decode1(int *xp, int *yp, int *zp)
+{
+    int t = *yp;
+    *yp = *xp;
+    *xp = *zp;
+    *zp = t;
+}
+```
+
+### 练习题 3.6 假设寄存器 %eax 的值为 x，%ecx 的值为 y。填写下表，指明下面每条汇编代码指令存储在寄存器 %edx 中的值：
+
+|指令|结果|
+|-|-|
+|leal 6(%eax),%edx||
+|leal (%eax,%ecx),%edx||
+|leal (%eax,%ecx,4),%edx||
+|leal 7(%eax,%eax,8),%edx||
+|leal 0xA(,%eax,4),%edx||
+|leal 9(%eax,%ecx,2),%edx||
+
+答案：
+
+|指令|结果|
+|-|-|
+|leal 6(%eax),%edx|x+6|
+|leal (%eax,%ecx),%edx|2x|
+|leal (%eax,%ecx,4),%edx|5x|
+|leal 7(%eax,%eax,8),%edx|9x+7|
+|leal 0xA(,%eax,4),%edx|4x+0xA|
+|leal 9(%eax,%ecx,2),%edx|3x+9|
+
+### 练习题 3.8 假设我们想生成以下 C 函数的汇编代码：
+
+```c
+int shift_left2_rightn(int x, int n)
+{
+    x <<= 2;
+    x >>= n;
+    return x;
+}
+```
+
+下面这段汇编代码执行实际的移位，并将最后的结果放在寄存器 %eax 中。
+此处省略了两条关键的指令。
+参数 x 和 n 分别存放在存储器中相对于寄存器 %ebp 中地址偏移 8 和 12 的地方。
+
+```asm
+1   movl 8(%ebp), %eax      Get x
+2   __________________      x <<= 2
+3   movl 12(%ebp), %ecx     Get n
+4   __________________      x >>= n
+```
+
+答案：
+
+```asm
+1   movl 8(%ebp), %eax      Get x
+2   sall 2, %eax            x <<= 2
+3   movl 12(%ebp), %ecx     Get n
+4   sarl %ecx, %eax         x >>= n
+```
+
+### 练习题 3.9 图 3-8a 中函数有以下变种，有些表达式用空格替代：
+
+```c
+1   int arith(int x,
+2             int y,
+3             int z)
+4   {
+5       int t1 = ___________;
+6       int t2 = ___________;
+7       int t3 = ___________;
+8       int t4 = ___________;
+9       return t4;
+10  }
+```
+
+实现这些表达式对应的汇编代码如下：
+
+```asm
+    x at %ebp+8, y at %ebp+12, z at %ebp+16
+1   movl 12(%ebp), %eax
+2   xorl 8(%ebp), %eax
+3   sarl $3, %eax
+4   notl %eax
+5   subl 16(%ebp), %eax
+```
+
+基于这些汇编代码，填写 C 语言代码中缺失的部分。
+
+答案：
+
+```c
+1   int arith(int x,
+2             int y,
+3             int z)
+4   {
+5       int t1 = x ^ y;
+6       int t2 = t1 << 3;
+7       int t3 = ~t2;
+8       int t4 = t3 - z;
+9       return t4;
+10  }
+```
+
+### 练习题 3.10 常常可以看见以下形式的汇编代码行：
+
+```asm
+xorl %edx,%edx
+```
+
