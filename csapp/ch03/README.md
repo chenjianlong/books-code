@@ -1,6 +1,24 @@
 # 第 3 章 程序的机器级表示
 
-## 要点
+## 常见操作命令
+
+* 将 c 文件编译成汇编语言，指定为 32 位，i386 兼容
+
+```sh
+gcc -m32 -mtune=i386 -S code.c
+```
+
+* 将汇编语言编译成机器码，同样是 32 位，i386 兼容
+
+```sh
+as --32 -march=i386 code.s -o code.o
+```
+
+* 将 object 文件反汇编成机器码和汇编语言
+
+```sh
+objdump -d code.o
+```
 
 ### 3.4.2 数据传送指令
 
@@ -12,7 +30,9 @@
 
 ## 练习题
 
-### 练习题 3.1 假设下面的值存放在指明的存储器地址和寄存器中：
+### 练习题 3.1
+
+假设下面的值存放在指明的存储器地址和寄存器中：
 
 |地址|值|
 |-|-|
@@ -55,7 +75,9 @@
 |0xFC(,%ecx,4)|0xFF|地址 0x100|
 |(%eax,%edx,4)|0x11|地址 0x10C|
 
-### 练习题 3.2 对于下面汇编代码的每一行，根据操作数，确定适当的指令后缀。（例如，move 可以被重写成 movb、movw 或者 movl。）
+### 练习题 3.2
+
+对于下面汇编代码的每一行，根据操作数，确定适当的指令后缀。（例如，move 可以被重写成 movb、movw 或者 movl。）
 
 ```asm
 1   mov %eax, (%esp)
@@ -79,7 +101,9 @@
 7   popl %edi
 ```
 
-### 练习题 3.3 当我们调用汇编器的时候，下面代码的每一行都会产生一个错误消息。解释每一行都是哪里出了错。
+### 练习题 3.3
+
+当我们调用汇编器的时候，下面代码的每一行都会产生一个错误消息。解释每一行都是哪里出了错。
 
 ```asm
 1   movb $0xF, (%bl)
@@ -103,7 +127,9 @@
 7   movb %si,8(%ebp) // si 为字寄存器,指令需要改为 movw
 ```
 
-### 练习题 3.4 假设变了 v 和 p 被声明为类型
+### 练习题 3.4
+
+假设变了 v 和 p 被声明为类型
 
 ```c
 src_t v;
@@ -144,7 +170,9 @@ dest_t *p;
 |unsigned|unsigned char|movb %al, (%edx)|
 |unsigned|int|movl %eax, (%edx)|
 
-### 练习题 3.5 已知信息如下。将一个原型为
+### 练习题 3.5
+
+已知信息如下。将一个原型为
 
 ```c
 void decode1(int *xp, int *yp, int *zp);
@@ -193,7 +221,9 @@ void decode1(int *xp, int *yp, int *zp)
 }
 ```
 
-### 练习题 3.6 假设寄存器 %eax 的值为 x，%ecx 的值为 y。填写下表，指明下面每条汇编代码指令存储在寄存器 %edx 中的值：
+### 练习题 3.6
+
+假设寄存器 %eax 的值为 x，%ecx 的值为 y。填写下表，指明下面每条汇编代码指令存储在寄存器 %edx 中的值：
 
 |指令|结果|
 |-|-|
@@ -215,7 +245,48 @@ void decode1(int *xp, int *yp, int *zp)
 |leal 0xA(,%eax,4),%edx|4x+0xA|
 |leal 9(%eax,%ecx,2),%edx|3x+9|
 
-### 练习题 3.8 假设我们想生成以下 C 函数的汇编代码：
+### 练习题 3.7
+
+假设下面的值存放在指定的存储器地址和寄存器中：
+
+|地址|值|
+|-|-|
+|0x100|0xFF|
+|0x104|0xAB|
+|0x108|0x13|
+|0x10C|0x11|
+
+|寄存器|值|
+|-|-|
+|%eax|0x100|
+|%ecx|0x1|
+|%edx|0x3|
+
+填写下表，给出下面指令的效果，说明将被更新的寄存器或存储器的位置，以及得到的值。
+
+|指令|目的|值|
+|-|-|-|
+|addl %ecx,(%eax)|||
+|subl %edx,4(%eax)|||
+|imull $16,(%eax,%edx,4)|||
+|incl 8(%eax)|||
+|decl %ecx|||
+|subl %edx,%eax|||
+
+答案：
+
+|指令|目的|值|
+|-|-|-|
+|addl %ecx,(%eax)|0x100|0x100|
+|subl %edx,4(%eax)|0x104|0xA8|
+|imull $16,(%eax,%edx,4)|0x10C|0x110|
+|incl 8(%eax)|0x108|0x14|
+|decl %ecx|%ecx|0x0|
+|subl %edx,%eax|%eax|0xFD|
+
+### 练习题 3.8
+
+假设我们想生成以下 C 函数的汇编代码：
 
 ```c
 int shift_left2_rightn(int x, int n)
@@ -295,3 +366,386 @@ int shift_left2_rightn(int x, int n)
 xorl %edx,%edx
 ```
 
+但是在产生这段汇编代码的 C 代码中，并没有出现 EXCLUSIVE-OR 操作。
+
+* A 解释这条特殊的 EXCLUSIVE-OR 指令的效果，它实现了什么有用的操作。
+* B 更直接表达这个操作的汇编代码是什么？
+* C 比较一下同样一个操作的两种不同实现的编码字节长度。
+
+答案：
+
+* A 将 %edx 置为 0
+* B movl 0, %edx
+* C 通过反汇编可知：
+
+xor 占用两个字节
+
+```
+0:   31 d2                   xor    %edx,%edx
+```
+
+movl 0, %edx 占用 5 个字节
+
+```
+0:   8b 15 00 00 00 00       mov    0x0,%edx
+```
+
+### 练习题 3.11
+
+修改有符号除法的汇编代码，使它计算数 x 和 y 的无符号商和余数，并将结果存放在栈上。
+
+```asm
+; x at %ebp+8, y at %ebp+12
+movl    8(%ebp),%edx    Put x in %edx
+cltd                    Sign extend into %edx
+idivl   12(%ebp)        Divide by y
+movl    %eax, 4(%esp)   Store x/y
+movl    %edx, (%esp)    Store x%y
+```
+
+答案：
+
+```asm
+; x at %ebp+8, y at %ebp+12
+movl    8(%ebp),%edx    Put x in %edx
+xorl    %edx,%edx       Set %edx to 0
+divl    12(%ebp)        Divide by y
+movl    %eax, 4(%esp)   Store x/y
+movl    %edx, (%esp)    Store x%y
+```
+
+### 练习题 3.12
+
+考虑下面的 C 函数原型，其中，num_t 是用 typedef 声明的数据类型。
+
+```c
+void store_prod(num_t *dest, unsigned x, num_t y) {
+    *dest = x*y;
+}
+```
+
+GCC 产生以下汇编代码来实现计算的主体：
+
+```asm
+dest at %ebp+8, x at %ebp+12, y at %ebp+16
+1   movl    12(%ebp),%eax
+2   movl    20(%ebp),%ecx
+3   imull   %eax,%ecx
+4   mull    16(%ebp)
+5   leal    (%ecx,%edx),%edx
+6   movl    8(%ebp),%ecx
+7   movl    %eax,(%ecx)
+8   movl    %edx,4(%ecx)
+```
+
+可以看到，这段代码需要读两次内存来取参数 y（第2行和第4行），两个乘法（第3行和第4行），
+以及两次内存写来存储结果（第7行和第8行）。
+
+* A. num_t 是什么数据类型的。
+* B. 描述用来计算乘积的算法，并证明它是正确的。
+
+答案：
+
+* A. 我们可以看到，这个程序是在 64 位数据上进行多精度操作。还可以看到，64位乘法操作（第4行）使用的是无符号运算，因此我们可以确定 num_t 是 unsigned long long。（PS：不要被第 3 行的 imull 指令迷惑了，两个 32 位无符号乘法和补码乘法结果的低 32 位级表示是一样的,可以复习了第2章的整数乘法部分，或者查看：[整数运算](https://cs-cjl.com/2025/02_01_integer_operations#sideNavTitle4)）
+* B. y = y<sub>h</sub> ∙ 2<sup>32</sup>+y<sub>l</sub>，这里 y<sub>h</sub> 和 y<sub>l</sub> 分别是高 32 位和低 32 位表示的值。因此我们可以计算 x ∙ y = x ∙ y<sub>h</sub> ∙ 2<sup>32</sup>+x ∙ y<sub>l</sub>。
+乘积的完整表示是 96 位长，但是我们值需要低 64 位。
+因此可以设 s 为 x ∙ y<sub>h</sub> 的低 32 位，而 t 为 x ∙ y<sub>l</sub> 的完整的 64 位乘积，可以将之划分为高位部分 t<sub>h</sub> 和低位部分 t<sub>l</sub>。
+最终的结果是 t<sub>l</sub> 是低位部分，而 s + t<sub>h</sub> 是高位部分。
+
+这里是添加了注释的汇编代码：
+
+```asm
+dest at %ebp+8, x at %ebp+12, y at %ebp+16
+1   movl    12(%ebp),%eax           Get x
+2   movl    20(%ebp),%ecx           Get y_h
+3   imull   %eax,%ecx               Compute s = x*y_h
+4   mull    16(%ebp)                Compute t = x*y_h
+5   leal    (%ecx,%edx),%edx        Add s to t_h
+6   movl    8(%ebp),%ecx            Get dest
+7   movl    %eax,(%ecx)             Store t_l
+8   movl    %edx,4(%ecx)            Store s+t_h
+```
+
+### 练习题 3.13
+
+考虑以下 C 语言代码：
+
+```c
+int comp(data_t a, data_t b) {
+    return a COMP b;
+}
+```
+
+它给出了参数 a 和 b 之间比较的一般形式。
+这里，我们可以用 typedef 来声明 data_t，从而设置参数的数据类型：用一条 #define 声明来定义 COMP，从而设置比较。
+
+假设 a 在 %edx 中，b 在 %eax 中。对于下面每个指令序列，确定哪种数据类型 data_t 和比较 COMP 会导致编译器产生这样的代码。（可能有多个正确答案，请列出所有的正确答案。）
+
+* A.
+```asm
+cmpl    %eax,%edx
+setl    %al
+```
+* B.
+```asm
+cmpw    %ax,%dx
+setge   %al
+```
+* C.
+```asm
+cmpb    %al,%dl
+setb    %al
+```
+* D.
+```asm
+cmpl    %eax,%edx
+setne   %al
+```
+
+答案：
+
+* A data_t 为 int COMP 为 &lt;
+* B data_t 为 short COMP 为 &gt;=
+* C data_t 为 unsigned char COMP 为 &lt;
+* D data_t 为 int 或者 unsigned 或者指针 COMP 为 !=
+
+### 练习题 3.14
+
+考虑以下 C 语言代码：
+
+```c
+int test(data_t a) {
+    return a TEST 0;
+}
+```
+
+它给出了参数 a 和 0 之间比较的一般形式。
+这里，我们可以用 typedef 来声明 data_t，从而设置参数的数据类型；通过用 #define 来声明 TEST，从而设置比较的类型。
+对于下面每个指令序列，确定哪种数据类型 data_t 和比较 TEST 会导致编译器产生这样的代码。
+（可能有多个正确答案，请列出所有正确答案。）
+
+* A.
+```asm
+testl   %eax,%eax
+setne   %al
+```
+* B.
+```asm
+testw   %ax,%ax
+sete    %al
+```
+* C.
+```asm
+testb   %al,%al
+setg    %al
+```
+* D.
+```asm
+testw   %ax,%ax
+seta    %al
+```
+
+答案：
+
+* A. data_t 为 unsigned或int TEST 为 !=
+* B. data_t 为 unsigned short或short TEST 为 =
+* C. data_t 为 char TEST 为 &gt;
+* D. data_t 为 unsigned short，TEST 为 &gt;
+
+### 练习题 3.15
+
+在下面这些反汇编二进制代码节选中，有些信息被 X 代替了。
+回答下列关于这些指令的问题。
+
+A. 下面 je 指令的目标是什么？（在此，你不需要知道任何有关 call 指令的信息。）
+
+```
+804828f:    74 05                   je      XXXXXXX
+8048291:    e8 1e 00 00 00          call    80482b4
+```
+
+B. 下面 jb 指令的目标是什么？
+
+```
+8048357:    72 e7                   jb      XXXXXXX
+8048359:    c6 05 10 a0 04 08 01    movb    0x1,0x804a010
+```
+
+C. mov 指令的地址是多少？
+
+```
+XXXXXXX:    74 12                   je      8048391
+XXXXXXX:    b8 00 00 00 00          mov     $0x0,%eax
+```
+
+D. 在下面的代码中，跳转目标的编码是 PC 相关的，且是一个 4 字节的补码数。
+字节按照从最低位到最高位的顺序列出，反映在 IA32 的小端法字节顺序。
+跳转目标的地址是什么？
+
+```
+80482bf:    e9 e0 ff ff ff          jmp     XXXXXXX
+80482c4:    90                      nop
+```
+
+E. 请解释右边的注释与左边的字节代码之间的关系。
+
+```
+80482aa:    ff 25 fc 9f 04 08       jmp     *0x8049ffc
+```
+
+答案：
+
+A. 下面 je 指令的目标是什么？（在此，你不需要知道任何有关 call 指令的信息。）
+
+```
+804828f:    74 05                   je      8048296
+8048291:    e8 1e 00 00 00          call    80482b4
+```
+
+B. 下面 jb 指令的目标是什么？
+
+```
+8048357:    72 e7                   jb      8048340
+8048359:    c6 05 10 a0 04 08 01    movb    0x1,0x804a010
+```
+
+C. mov 指令的地址是多少？
+
+```
+804837d:    74 12                   je      8048391
+804837f:    b8 00 00 00 00          mov     $0x0,%eax
+```
+
+D. 在下面的代码中，跳转目标的编码是 PC 相关的，且是一个 4 字节的补码数。
+字节按照从最低位到最高位的顺序列出，反映在 IA32 的小端法字节顺序。
+跳转目标的地址是什么？
+
+```
+80482bf:    e9 e0 ff ff ff          jmp     00000020
+80482c4:    90                      nop
+```
+
+E. 请解释右边的注释与左边的字节代码之间的关系。
+
+```
+80482aa:    ff 25 fc 9f 04 08       jmp     *0x8049ffc
+```
+
+jmp 星号表示进行绝对地址跳转,对应字码中前两位 ff 25，地址为：0x8049ffc，对应字节代码中的 fc 9f 04 08，字节码中的地址是以小端形式给出的。
+
+参考：[AT&T x86 Assembly](https://daksh.github.io/ATT-Assembly/)
+
+### 练习题 3.16
+
+已知下列 C 代码：
+
+```c
+void cond(int a, int *p)
+{
+    if (p && a > 0)
+        *p += a;
+}
+```
+
+GCC 对函数体产生的汇编代码如下：
+
+```asm
+a %ebp+8，p at %ebp+12
+
+    movl        8(%ebp),%edx
+    movl        12(%ebp),%eax
+    testl       %eax,%eax
+    je          .L3
+    testl       %edx,%edx
+    jle         .L3
+    addl        %edx,(%eax)
+.L3:
+```
+
+A. 按照图 3-13 b 中所示的风格，用 C 语言写一个 goto 版本，执行同样的计算，并模拟汇编代码的控制流。
+像示例中那样给汇编代码加上注解可能会有帮助。
+
+B. 请说明为什么 C 语言代码中只有一个 if 语句，而汇编代码包含两个条件分支。
+
+答案：
+
+A.
+
+汇编加注释：
+
+```asm
+a %ebp+8，p at %ebp+12
+
+    movl        8(%ebp),%edx        Get a
+    movl        12(%ebp),%eax       Get p
+    testl       %eax,%eax           test p
+    je          .L3                 if p == 0 goto L3
+    testl       %edx,%edx           test a
+    jle         .L3                 if a <= 0 goto L3
+    addl        %edx,(%eax)         *p += a
+.L3:
+```
+
+等效 C 语言：
+
+```c
+void cond(int a, int *p)
+{
+    if (!p) goto L3;
+    if (a<=0) goto L3;
+
+    *p += a;
+L3:
+}
+```
+
+B. C 代码中的 if 语句有两个条件判断并将这两个条件判断的结果做了与操作，对应到汇编语言至少需要两次条件判断
+
+### 练习题 3.17
+
+将 if 语句翻译成 goto 代码的另一种可行的规则如下：
+
+```
+    t = test-expr;
+    if (t)
+        goto true;
+    else-statement
+    goto done;
+true:
+    then-statement
+done:
+```
+
+* A. 基于这种规则，重写 absdiff 的 goto 版本。
+* B. 你能想出选用一种规则而不选用另一种规则的理由吗？
+
+答案：
+
+A.
+
+```c
+int yagotodiff(int x, int y)
+{
+    int result;
+    if (x < y)
+        goto x_lt_y;
+    result = x - y;
+    goto done;
+x_lt_y:
+    result = y - x;
+done:
+    return result;
+}
+```
+
+B. 大多数情况下，可在这两种方式中任意选择。
+但是原来的方法对常见的没有 else 语句的情况更好一些。
+对于这种情况，我们只简单地将翻译规则修改如下：
+
+```
+    t = test-expr;
+    if (!t)
+        goto done;
+    then-statement
+done:
+```
