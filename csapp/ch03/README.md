@@ -749,3 +749,457 @@ B. 大多数情况下，可在这两种方式中任意选择。
     then-statement
 done:
 ```
+
+基于替代规则的翻译更麻烦一些。
+
+### 练习题 3.18
+
+从如下形式的 C 语言代码开始：
+
+```c
+int test(int x, int y) {
+    int val = ___________;
+    if (___________) {
+        if (___________)
+            val = ___________;
+        else
+            val = ___________;
+    } else if (___________)
+        val = ___________;
+    return val;
+}
+```
+
+GCC 产生如下汇编代码：
+
+```asm
+x at %ebp+8, y at %ebp+12
+
+    movl    8(%ebp), %eax
+    movl    12(%ebp), %edx
+    cmpl    $-3, %eax
+    jge     .L2
+    cmpl    %edx, %eax
+    jle     .L3
+    imull   %edx, %eax
+    jmp     .L4
+.L3:
+    leal    (%edx,%eax), %eax
+    jmp     .L4
+.L2:
+    cmpl    $2, %eax
+    jg      .L5
+    xorl    %edx, %eax
+    jmp     .L4
+.L5:
+    subl    %edx, %eax
+.L4:
+```
+
+填写 C 代码中缺失的表达式。为了让代码能够符合 C 语言代码模板，你需要还原 GCC 对计算所做的某些重排序。
+
+答案：
+
+```asm
+x at %ebp+8, y at %ebp+12
+
+    movl    8(%ebp), %eax           Load x to %eax
+    movl    12(%ebp), %edx          Load y to %edx
+    cmpl    $-3, %eax
+    jge     .L2                     if x >= -3 goto .L2
+    cmpl    %edx, %eax
+    jle     .L3                     if x <= y goto .L3
+    imull   %edx, %eax              val = x * y
+    jmp     .L4
+.L3:
+    leal    (%edx,%eax), %eax       val = x + y
+    jmp     .L4
+.L2:
+    cmpl    $2, %eax
+    jg      .L5                     if x > 2 goto .L5
+    xorl    %edx, %eax              val = x ^ y
+    jmp     .L4
+.L5:
+    subl    %edx, %eax              val = x - y
+.L4:
+```
+
+对应的 C 代码为：
+
+```c
+int test(int x, int y) {
+    int val = x - y;
+    if (x < -3) {
+        if (x > y)
+            val = x * y;
+        else
+            val = x + y;
+    } else if (x <= 2)
+        val = x - y;
+    return val;
+}
+```
+
+### 练习题 3.19
+
+* A. 用一个 32 位 int 表示 n!，最大的 n 的值是多少？
+* B. 如果用一个 64 位 long long int 表示，最大的 n 的值是多少？
+
+答案：
+
+参考代码：[ex3.19.c](ex3.19.c)
+
+* A. 13
+* B. 20
+
+### 练习题 3.20
+
+已知 C 代码如下：
+
+```c
+1 int dw_loop(int x, int y, int n) {
+2     do {
+3        x += n;
+4        y *= n;
+5        n--;
+6     } while ((n > 0) && (y < n>));
+7     return x;
+8 }
+```
+
+GCC 产生的汇编代码如下：
+
+```asm
+x at %ebp+8, y at %ebp+12, n at %ebp+16
+
+1       movl    8(%ebp), %eax
+2       movl    12(%ebp), %ecx
+3       movl    16(%ebp), %edx
+4   .L2:
+5       addl    %edx, %eax
+6       imull   %edx, %ecx
+7       subl    $1, %edx
+8       testl   %edx, %edx
+9       jle     .L5
+10      cmpl    %edx, %ecx
+11      jl      .L2
+12  .L5:
+```
+
+* A. 创建一个寄存器使用表，参考图 3-14b。
+* B. 指出 C 代码中的 test-expr 和 body-statement，以及汇编代码中相应的行。
+* C. 给汇编代码添加一些注释，描述程序的操作，参考图 3-14c。
+
+答案：
+
+A.
+
+|寄存器|变量|初始值|
+|-|-|-|
+|%eax|x|x|
+|%ecx|y|y|
+|%edx|n|n|
+
+B.
+
+C 代码中的 test-expr 为第 6 行中的 `(n > 0) && (y < n)` 对应汇编代码中的 8-11 行。
+C 代码中的 body-statement 为 3-5 行，对应汇编代码中的 5-7 行。
+
+C.
+
+```asm
+Argument x at %ebp+8, y at %ebp+12, n at %ebp+16
+Registers: x at %eax y at %ecx n at %edx, result in %eax
+
+1       movl    8(%ebp), %eax           Get x
+2       movl    12(%ebp), %ecx          Get y
+3       movl    16(%ebp), %edx          Get n
+4   .L2:                            loop:
+5       addl    %edx, %eax              Compute x += n
+6       imull   %edx, %ecx              Compute y *= n
+7       subl    $1, %edx                Compute n--
+8       testl   %edx, %edx              test n
+9       jle     .L5                     if n <= 0 exit loop
+10      cmpl    %edx, %ecx              compare y:n
+11      jl      .L2                     if y<n goto loop
+12  .L5:
+```
+
+### 练习题 3.21
+
+对于下面的 C 代码：
+
+```c
+1   int loop_while(int a, int b)
+2   {
+3       int result = 1;
+4       while (a < b) {
+5           result *= (a+b);
+6           a++;
+7       }
+8       return result;
+9   }
+```
+
+GCC产生如下汇编代码：
+
+```asm
+a at %ebp+8, b at %ebp+12
+
+1       movl    8(%ebp), %ecx
+2       movl    12(%ebp), %ebx
+3       movl    $1, %eax
+4       cmpl    %ebx, %ecx
+5       jge     .L11
+6       leal    (%ebx,%ecx), %edx
+7       movl    $1, %eax
+8   .L12:
+9       imull   %edx, %eax
+10      addl    $1, %ecx
+11      addl    $1, %edx
+12      cmpl    %ecx, %ebx
+13      jg      .L12
+14  .L11:
+```
+
+在产生这段代码的过程中，GCC 做了一个有趣的转换，实际上是引入了一个新的程序变量。
+
+* A. 在第 6 行初始化寄存器 %edx，在第 11 行循环体内更新它的值。
+让我们认为这是一个新的程序变量。请描述它与 C 代码中的变量之间的关系。
+* B. 创建该函数的寄存器使用表。
+* C. 给汇编代码添加一些注释，描述它的操作。
+* D. (用C语言)写一个该函数的 goto 版本，用它模仿汇编代码程序如何运行。
+
+答案：
+
+A. %edx 对应 a+b
+
+B.
+
+|寄存器|变量|初始值|
+|-|-|-|
+|%eax|result|1|
+|%ebx|b|b|
+|%ecx|a|a|
+|%edx|a+b|a+b|
+
+C.
+
+```asm
+a at %ebp+8, b at %ebp+12
+
+1       movl    8(%ebp), %ecx           Get a
+2       movl    12(%ebp), %ebx          Get b
+3       movl    $1, %eax                Set result = 1
+4       cmpl    %ebx, %ecx              Compare a:b
+5       jge     .L11                    if a >= b goto end
+6       leal    (%ebx,%ecx), %edx       tmp = a + b
+7       movl    $1, %eax                result = 1
+8   .L12:                               loop:
+9       imull   %edx, %eax              result *= tmp
+10      addl    $1, %ecx                tmp++;
+11      addl    $1, %edx                a++;
+12      cmpl    %ecx, %ebx              Compare b:a
+13      jg      .L12                    if b > a goto loop
+14  .L11:                               end:
+```
+
+D.
+
+```c
+int loop_goto(int a, int b)
+{
+    int result = 1;
+    if (a >= b) goto end;
+loop:
+    result *= (a+b);
+    a++;
+    if (b > a) goto loop;
+end:
+    return result
+}
+```
+
+### 练习题 3.22
+
+函数 fun_a 有如下整体结果：
+
+```c
+int fun_a(unsigned x) {
+    int val = 0;
+    while (________) {
+        ________;
+    }
+    return ________;
+}
+```
+
+GCC C编译器产生如下汇编代码：
+
+```asm
+    x at %ebp+8
+
+1       movl    8(%ebp), %edx
+2       movl    $0, %eax
+3       testl   %edx, %edx
+4       je      .L7
+5   .L10:
+6       xorl    %edx, %eax
+7       shrl    %edx                Shift right by 1
+8       jne     .L10
+9   .L7:
+10      andl    $1, %eax
+```
+
+逆向工程这段代码的操作，然后完成下面的作业：
+
+* A. 更好汇编代码版本填写 C 代码中缺失的部分。
+* B. 用自然语言描述这个函数是计算什么的。
+
+答案：
+
+* A.
+
+汇编注释版：
+```asm
+    x at %ebp+8
+
+1       movl    8(%ebp), %edx       Get x
+2       movl    $0, %eax            Set val = 0
+3       testl   %edx, %edx
+4       je      .L7                 if x == 0 goto end
+5   .L10:                           loop:
+6       xorl    %edx, %eax          val ^= x
+7       shrl    %edx                Shift right by 1（x >>= 1）
+8       jne     .L10                if x != 0 goto loop
+9   .L7:                            end:
+10      andl    $1, %eax            val &= 1
+```
+
+对应 C 语言：
+
+```c
+int fun_a(unsigned x) {
+    int val = 0;
+    while (x) {
+        val ^= x;
+        x >>= 1;
+    }
+    return val & 0x1;
+}
+```
+
+B. 判断 x 的二进制表示形式中 1 的个数的奇偶性，如果是奇数个 1 返回 1，如果是偶数个 1 返回 0。
+
+### 练习题 3.23
+
+函数 fun_b 有如下整体结构：
+
+```c
+int fun_b(unsigned x) {
+    int val = 0;
+    int i;
+    for (________;________;________) {
+        ________
+    }
+    return val;
+}
+```
+
+GCC C编译器产生如下汇编代码：
+
+```asm
+    x at %ebp+8
+1       movl    8(%ebp), %ebx
+2       movl    $0, %eax
+3       movl    $0, %ecx
+4   .L13:
+5       leal    (%eax,%eax), %edx
+6       movl    %ebx, %eax
+7       andl    $1, %eax
+8       orl     %edx, %eax
+9       shrl    %ebx                Shift right by 1
+10      addl    $1, %ecx
+11      cmpl    $32, %ecx
+12      jne     .L13
+```
+
+逆向工程这段代码的操作，然后完成下面的作业：
+
+* A. 根据汇编代码版本填写 C 代码中缺失的部分。
+* B. 用自然语言描述这个函数是计算什么的。
+
+答案：
+
+TODO
+
+### 练习题 3.24
+
+在 C 语言中执行 continue 语句会导致程序跳到当前循环迭代的结尾。
+当处理 continue 语句时，将 for 循环翻译成 while 循环的描述规则需要一些改进。
+例如，考虑下面的代码：
+
+```c
+/* Example of for loop using a continue statement */
+/* Sum even numbers between 0 and 9 */
+int sum = 0;
+int i;
+for (int i = 0; i < 10; i++) {
+    if (i & 1)
+        continue;
+    sum += i;
+}
+```
+
+* A. 如果我们天真地直接应用将 for 循环翻译到 while 循环的规则，会得到什么呢？产生的代码会有什么错误呢？
+* B. 如何用 goto 语句来替代 continue 语句，保证 while 循环的行为同 for 循环的行为完全一样。
+
+答案：
+
+TODO
+
+### 练习题 3.25
+
+在 Pentium 4 上运行，当分支行为模式非常容易预测时，我们的代码需要大约 16 个时钟周期，而当模式是随机时，需要大约 31 个时钟周期。
+
+* A. 预测错误处罚大约是多久？
+* B. 当分支预测错误时，这个函数需要多少个时钟周期？
+
+答案：
+
+TODO
+
+### 练习题 3.26
+
+在下面的 C 函数中，我们对 OP 操作的定义是不完整的：
+
+```c
+#define OP ________ /* Unknown operator */
+
+int arith(int x) {
+    return x OP 4;
+}
+```
+
+当编译时，GCC 会产生如下汇编代码：
+
+```asm
+    Register x in %edx
+
+1   leal    3(%edx), %eax
+2   testl   %edx, %edx
+3   cmovns  %edx, %eax
+4   sarl    $2, %eax            Return value in %eax
+```
+
+* A. OP 进行的是什么操作？
+* B. 给代码添加注释，解释它是如何工作的。
+
+答案：
+
+TODO
+
+### 练习题 3.27
+
+C 代码开始的形式如下：
+
