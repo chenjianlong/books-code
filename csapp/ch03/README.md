@@ -1131,7 +1131,44 @@ GCC C编译器产生如下汇编代码：
 
 答案：
 
-TODO
+A.
+
+
+汇编加注释
+
+```asm
+    x at %ebp+8
+1       movl    8(%ebp), %ebx       Get x
+2       movl    $0, %eax            val = 0
+3       movl    $0, %ecx            i = 0
+4   .L13:                           loop:
+5       leal    (%eax,%eax), %edx   tmp=2*val
+6       movl    %ebx, %eax          val = x
+7       andl    $1, %eax            val &= 0x1
+8       orl     %edx, %eax          val |= tmp
+9       shrl    %ebx                x >>= 1
+10      addl    $1, %ecx            i++
+11      cmpl    $32, %ecx           Compare i:32
+12      jne     .L13                if i != 32 goto loop
+```
+
+C语言版：
+
+```c
+int fun_b(unsigned x) {
+    int val = 0;
+    int i;
+    for (i=0; i != 32; i++) {
+        int tmp = val << 1;
+        val = x & 0x1;
+        val |= tmp;
+        x >>= 1;
+    }
+    return val;
+}
+```
+
+B. 二进制比特翻转
 
 ### 练习题 3.24
 
