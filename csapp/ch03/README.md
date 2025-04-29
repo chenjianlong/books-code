@@ -1193,7 +1193,39 @@ for (int i = 0; i < 10; i++) {
 
 答案：
 
-TODO
+* A
+
+如果我们直接应用 将 for 循环翻译到 while 循环的规则，会得到如下代码：
+
+```c
+int sum = 0;
+int i = 0
+while (i < 10) {
+    if (i & 1)
+        continue;
+
+    sum += i;
+    i++;
+}
+```
+
+产生的代码会是个无限循环。
+
+* B
+
+```c
+int sum = 0;
+int i = 0
+while (i < 10) {
+    if (i & 1)
+        goto update_expr;
+
+    sum += i;
+
+update_expr:
+    i++;
+}
+```
 
 ### 练习题 3.25
 
@@ -1204,7 +1236,16 @@ TODO
 
 答案：
 
-TODO
+* A.
+
+T<sub>OK</sub>=16
+T<sub>OK</sub>+0.5*T<sub>MP</sub>=31
+
+得到：
+
+T<sub>MP</sub>=30
+
+* B 46个周期
 
 ### 练习题 3.26
 
@@ -1234,9 +1275,245 @@ int arith(int x) {
 
 答案：
 
-TODO
+* A. 运算符是 '/'。我们看到这个例子是通过右移来实现除以 2 的幂，参见 [除以 2 的幂](https://cs-cjl.com/2025/02_01_integer_operations#sideNavTitle7)
+
+* B
+
+```asm
+    Register x in %edx
+
+1   leal    3(%edx), %eax       tmp = x+3
+2   testl   %edx, %edx          Test x
+3   cmovns  %edx, %eax          if x >= 0, x = tmp
+4   sarl    $2, %eax            Return temp >> 2 (=x/4)
+```
 
 ### 练习题 3.27
 
 C 代码开始的形式如下：
 
+```c
+1   int test(int x, int y) {
+2       int val = ________;
+3       if (________) {
+4           if (________)
+5               val = ________;
+6           else
+7               val = ________;
+8       } else if (________)
+9           val = ________;
+10      return val;
+11  }
+```
+
+GCC 带命令行设置 '-march=i686'，产生如下汇编代码：
+
+```asm
+    x at %ebp+8, y at %ebp+12
+
+1       movl    8(%ebp), %ebx
+2       movl    12(%ebp), %ecx
+3       testl   %ecx, %ecx
+4       jle     .L2
+5       movl    %ebx, %ecx
+6       subl    %ecx, %edx
+7       movl    %ecx, %eax
+8       xorl    %ebx, %eax
+9       cmpl    %ecx, %ebx
+10      comvl   %edx, %eax
+11      jmp     .L4
+12  .L2:
+13      leal    0(,%ebx,4), %edx
+14      leal    (%ecx, %ebx), %eax
+15      cmpl    $-2, %ecx
+16      cmovge  %edx, %eax
+17  .L4:
+```
+
+填补C 代码中缺失的表达式。
+
+答案：
+
+```asm
+    x at %ebp+8, y at %ebp+12
+
+1       movl    8(%ebp), %ebx           Get x
+2       movl    12(%ebp), %ecx          Get y
+3       testl   %ecx, %ecx              Test y
+4       jle     .L2                     if y <= 0 goto .L2
+5       movl    %ebx, %edx              tmp = x;
+6       subl    %ecx, %edx              tmp -= y
+7       movl    %ecx, %eax              result = y
+8       xorl    %ebx, %eax              result ^= x
+9       cmpl    %ecx, %ebx              Compare x:y
+10      comvl   %edx, %eax              if x < y, result = tmp
+11      jmp     .L4                     Goto end
+12  .L2:
+13      leal    0(,%ebx,4), %edx        tmp = 4 * x
+14      leal    (%ecx, %ebx), %eax      result = x + y
+15      cmpl    $-2, %ecx               Compare y:-2
+16      cmovge  %edx, %eax              if y >= -2, result = tmp
+17  .L4:                                end:
+```
+
+C 代码补全：
+
+```c
+1   int test(int x, int y) {
+2       int val = 4 * x;
+3       if (y > 0) {
+4           if (x >= y)
+5               val = x - y;
+6           else
+7               val = x ^ y;
+8       } else if (y < -2)
+9           val = x + y;
+10      return val;
+11  }
+```
+
+### 练习题 3.28
+
+下面 C 函数省略了 switch 语句的主体。
+在 C 代码中，情况标号是不连续的，并且有些情况还有多个标号。
+
+```c
+int switch2(int x) {
+    int result = 0;
+    switch (x) {
+        /* Body of switch statement omitted */
+    }
+    return result;
+}
+```
+
+在编译函数时，GCC 为程序的初始部分以及跳转表生成了以下汇编代码。
+变量 x 开始时位于相对于寄存器 %ebp 偏移量为 8 的地方。
+
+```asm
+    x at %ebp+8
+
+1   movl    8(%ebp), %eax
+    Setup jump table access
+2   addl    $2, %eax
+3   cmpl    $6, %eax
+4   ja      .L2
+5   jmp     *.L8(,%eax,4)
+```
+
+跳转表
+
+```asm
+    Jump table for switch2
+
+1   .L8:
+2       .long   .L3
+3       .long   .L2
+4       .long   .L4
+5       .long   .L5
+6       .long   .L6
+7       .long   .L6
+8       .long   .L7
+```
+
+根据上述信息回答下列问题：
+
+* A. switch 语句体内情况标号的值是多少？
+* B. C 代码中哪些情况有多个标号？
+
+答案：
+
+* A 对应跳转表，标号值分别为：-2、0、1、2、3、4、5、default
+* B 2、3
+
+### 练习题 3.29
+
+已知一个通用结构的 C 函数 switcher:
+
+```c
+1   int switcher(int a, int b, int c)
+2   {
+3       int answer;
+4       switch (a) {
+5       case ________:          /* Case A */
+6           c = ________;
+7           /* Fall through */
+8       case ________:          /* Case B */
+9           answer = ________;
+10          break;
+11      case ________:          /* Case C */
+12      case ________:          /* Case D */
+13          answer = ________;
+14          break;
+15      case ________:          /* Case E */
+16          answer = ________;
+17          break;
+18      default:
+19          answer = ________;
+20      }
+21      return answer;
+22  }
+```
+
+GCC 产生如下所示的汇编代码和跳转表。
+
+填写 C 代码中缺失的部分。
+除了情况标号 C 和 D 的顺序之外，将不同情况填入这个模板的方式是唯一的。
+
+```asm
+    a at %ebp+8, b at %ebp+12, c at %ebp+16
+
+1       movl    8(%ebp), %eax       1   .L7:
+2       cmpl    $7, %eax            2       .long   .L3
+3       ja      .L2                 3       .long   .L2
+4       jmp     *.L7(,%eax,4)       4       .long   .L4
+5   .L2:                            5       .long   .L2
+6       movl    12(%ebp), %eax      6       .long   .L5
+7       jmp     .L8                 7       .long   .L6
+8   .L5:                            8       .long   .L2
+9       movl    $4, $eax            9       .long   .L4
+10      jmp     .L8
+11  .L6:
+12      movl    12(%ebp), %eax
+13      xorl    $15, %eax
+14      movl    %eax, 16(%ebp)
+15  .L3:
+16      movl    16(%ebp), %eax
+17      addl    $112, %eax
+18      jmp     .L8
+19  .L4:
+20      movl    16(%ebp), %eax
+21      addl    12(%ebp), %eax
+22      sall    $2, %eax
+23  .L8:
+```
+
+答案：
+
+只有 .L6 没有 jmp 语句，因此 .L6 对应 Case A，.L3 对应 Case B。
+只有 .L4 是有两种情况下都跳转到此分支，因此对应了 Case C和D。
+
+```c
+1   int switcher(int a, int b, int c)
+2   {
+3       int answer;
+4       switch (a) {
+5       case 5:                     /* Case A */
+6           c = b ^ 15;
+7           /* Fall through */
+8       case 0:                     /* Case B */
+9           answer = c + 112;
+10          break;
+11      case 2:                     /* Case C */
+12      case 7:                     /* Case D */
+13          answer = (c + b) << 2;
+14          break;
+15      case 4:                     /* Case E */
+16          answer = 4;             /* 或者是 answer = a */
+17          break;
+18      default:
+19          answer = b;
+20      }
+21      return answer;
+22  }
+```
