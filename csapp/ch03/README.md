@@ -1517,3 +1517,96 @@ GCC 产生如下所示的汇编代码和跳转表。
 21      return answer;
 22  }
 ```
+
+### 练习题 3.30
+
+下面的代码片段常常出现在库函数的编译版本中：
+
+```asm
+1       call next
+2   next:
+3       popl %eax
+```
+
+* A. 寄存器 %eax 被设置成了什么值？
+* B. 解释为什么这个调用没有与之匹配的 ret 指令。
+* C. 这段代码完成了什么功能？
+
+答案：
+
+* A. popl %eax 在内存中的地址
+* B. 这个代码片段的目的是为了获取指令所在的内存地址，而不是为了进行过程调用
+* B. 获取指令所在的内存地址 ,这是 IA32 中将程序计数器的值放到整数寄存器中的唯一方法。
+
+### 练习题 3.31
+
+在 GCC 为一个 C 过程产生的汇编代码的前部有下面这段代码：
+
+```asm
+1   subl    $12, %esp
+2   movl    %ebx, (%esp)
+3   movl    %esi, 4(%esp)
+4   movl    %edi, 8(%esp)
+5   movl    8(%ebp), %ebx
+6   movl    12(%ebp), %edi
+7   movl    (%ebx), %esi
+8   movl    (%edi), %eax
+9   movl    16(%ebp), %edx
+10  movl    (%edx), %ecx
+```
+
+我们看到，将三个寄存器（%ebx、%esi 和 %edi）保存到了栈中（第2~4行）。
+程序会修改它们，以及另外三个寄存器（%eax、%ecx和%edx）。
+在过程结尾，寄存器 %edi、%esi和%ebx的值被恢复（没有显示出来），而其他三个寄存器就保持修改后的状态。
+
+请解释在保存和恢复寄存器状态时表现出来的明显的矛盾。
+
+答案：
+
+这个练习是对寄存器使用规则的具体化讨论。
+寄存器 %edi、%esi和%ebx 是被调用者保存的。
+改变它们的值之前，过程必须将它们保存在栈中，在返回之前，要恢复它们。
+其他三个寄存器是调用者保存的，改变它们不会影响调用者的行为。
+
+### 练习题 3.22
+
+一个 C 函数 fun 具有如下代码体：
+
+```c
+*p = d;
+return x-c;
+```
+
+执行这个函数体的 IA32 代码如下：
+
+```asm
+1   movsbl  12(%ebp), %edx
+2   movl    16(%ebp), %eax
+3   movl    %edx, (%eax)
+4   movswl  8(%ebp), %eax
+5   movl    20(%ebp), %edx
+6   subl    %eax, %edx
+7   movl    %edx, %eax
+```
+
+写出函数 fun 的原型，给出参数 p、d、x 和 c 的类型和顺序。
+
+答案：
+
+汇编代码注释：
+
+```asm
+1   movsbl  12(%ebp), %edx      Get d
+2   movl    16(%ebp), %eax      Get p
+3   movl    %edx, (%eax)        *p = d
+4   movswl  8(%ebp), %eax       Get c
+5   movl    20(%ebp), %edx      Get x
+6   subl    %eax, %edx          x-c
+7   movl    %edx, %eax          return x-c
+```
+
+函数 fun 的原型为：
+
+```c
+int fun(short c, char d, int *p, int x);
+```
