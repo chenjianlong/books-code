@@ -1568,7 +1568,7 @@ GCC 产生如下所示的汇编代码和跳转表。
 改变它们的值之前，过程必须将它们保存在栈中，在返回之前，要恢复它们。
 其他三个寄存器是调用者保存的，改变它们不会影响调用者的行为。
 
-### 练习题 3.22
+### 练习题 3.32
 
 一个 C 函数 fun 具有如下代码体：
 
@@ -1610,3 +1610,109 @@ return x-c;
 ```c
 int fun(short c, char d, int *p, int x);
 ```
+
+### 练习题 3.33
+
+给定 C 函数如下：
+
+```c
+1   int proc(void)
+2   {
+3       int x, y;
+4       scanf("%x %x", &y, &x);
+5       return x-y;
+6   }
+```
+
+GCC 产生以下汇编代码：
+
+```asm
+1   proc:
+2       pushl   %ebp
+3       movl    %esp, %ebp
+4       subl    $40, %esp
+5       leal    -4(%ebp), %eax
+6       movl    %eax, 8(%esp)
+7       leal    -8(%ebp), %eax
+8       movl    %eax, 4(%esp)
+9       movl    $.LC0, (%esp)               Pointer to string "%x %x"
+10      call    scanf
+        Diagram stack fram at this point
+11      movl    -4(%ebp), %eax
+12      subl    -8(%ebp), %eax
+13      leave
+14      ret
+```
+
+假设过程 proc 开始执行时，寄存器的值如下：
+
+|寄存器|值|
+|-|-|
+|%esp|0x800040|
+|%ebp|0x800060|
+
+如果 proc 调用 scanf（第10行），而 scanf 从标准输入读入值 0x46 和 0x53。
+假设字符串 "%x %x" 存放在存储器位置 0x300070 处。
+
+* A. 第 3 行 %ebp 的值被设置成了多少？
+* B. 第 4 行 %esp 的值被设置成了多少？
+* C. 局部变量 x  和 y 的存放地址是什么？
+* D. 画出就在 scanf 返回后 proc 的栈帧图。请包括尽可能多的关于栈帧元素的地址和内容的信息。
+* E. 指出 proc 未使用的栈帧区域。
+
+答案：
+
+* A 0x80003C
+* B 0x800014
+* C y 的存放地址是 0x800034，x的存放地址是 0x800038
+* D 
+
+```
+地址            内容            寄存器
+0x800014    "%x %x" 地址        %esp 新值
+0x800018    0x800034
+0x80001C    0x800038
+...
+0x800034    0x46
+0x800038    0x53
+0x80003C    0x800060            %ebp
+0x800040                        %esp 旧值
+```
+
+* E 0x800020~0x800033 的字节地址没有使用
+
+### 练习题 3.34
+
+一个具有通用结构的 C 函数如下：
+
+```c
+int rfun(unsigned x) {
+    if (________)
+        return ________;
+    unsigned nx = ________;
+    int rv = rfun(nx);
+    return ________;
+}
+```
+
+GCC 产生如下汇编代码（省略了建立和完成代码）：
+
+```asm
+1       movl    8(%ebp), %ebx
+2       movl    $0, %eax
+3       testl   %ebx, %ebx
+4       je      .L3
+5       movl    %ebx, %eax
+6       shrl    %eax                Shift right by 1
+7       movl    %eax, (%esp)
+8       call    rfun
+9       movl    %ebx, %edx
+10      andl    $1, %edx
+11      leal    (%edx, %eax), %eax
+12  .L3:
+```
+
+* A. rfun 存储在被调用者保存寄存器 %ebx 中的值是什么？
+* B. 填写上述 C 代码中缺失的表达式。
+* C. 用自然语言描述这段代码计算的功能。
+
