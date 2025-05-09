@@ -1716,3 +1716,75 @@ GCC 产生如下汇编代码（省略了建立和完成代码）：
 * B. 填写上述 C 代码中缺失的表达式。
 * C. 用自然语言描述这段代码计算的功能。
 
+答案：
+
+* A 入参 x
+* B
+
+```c
+int rfun(unsigned x) {
+    if (!x)
+        return 0;
+    unsigned nx = x >> 1;
+    int rv = rfun(nx);
+    return (nx & 1) + rv;
+}
+```
+
+* C 计算 x 二进制 1 的个数
+
+### 练习题 3.35
+
+考虑下面的声明：
+
+```c
+short           S[7];
+short          *T[3];
+short         **U[6];
+long double     V[8];
+long double    *W[4];
+```
+
+填写下表，描述每个数组的元素大小、整个数组的大小以及元素 i 的地址：
+
+|数组|元素大小|整个数组的大小|起始地址|元素 i|
+|-|-|-|-|-|
+|S|||x<sub>S</sub>||
+|T|||x<sub>T</sub>||
+|U|||x<sub>U</sub>||
+|V|||x<sub>V</sub>||
+|W|||x<sub>W</sub>||
+
+答案：
+
+|数组|元素大小|整个数组的大小|起始地址|元素 i|
+|-|-|-|-|-|
+|S|2|14|x<sub>S</sub>|x<sub>S</sub>+2\*i|
+|T|4|12|x<sub>T</sub>|x<sub>T</sub>+4\*i|
+|U|4|24|x<sub>U</sub>|x<sub>U</sub>+4\*i|
+|V|12|96|x<sub>V</sub>|x<sub>V</sub>+12\*i|
+|W|4|16|x<sub>W</sub>|x<sub>W</sub>+4\*i|
+
+### 练习题 3.36
+
+假设 short 短整型数组 S 的地址和整数索引 i 分别存放在寄存器 %edx 和 %ecx 中。
+对下面每个表达式，给出它的类型、值表达式和汇编代码实现。
+如果结果是指针的话，要保存在寄存器 %eax 中，如果是短整数，就保存在寄存器元素 %ax 中。
+
+|表达式|类型|值|汇编代码|
+|-|-|-|-|
+|S+1||||
+|S[3]||||
+|&S[i]||||
+|S[4*i+1]||||
+|S+i-5||||
+
+答案：
+
+|表达式|类型|值|汇编代码|
+|-|-|-|-|
+|S+1|short*|x<sub>S</sub>+2|leal 2(%edx),%eax|
+|S[3]|short|M[x<sub>S</sub>+6]|movw 6(%edx),%ax|
+|&S[i]|short*|x<sub>S</sub>+2\*i|leal (%edx,%ecx,2), %eax|
+|S[4*i+1]|short|M[x<sub>S</sub>+i\*i+2]|movw 2(%edx,%ecx,8), %ax|
+|S+i-5|short*|x<sub>S</sub>+2\*i-10|leal -10(%edx,%ecx,2), %eax|
