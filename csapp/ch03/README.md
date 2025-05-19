@@ -1788,3 +1788,386 @@ long double    *W[4];
 |&S[i]|short*|x<sub>S</sub>+2\*i|leal (%edx,%ecx,2), %eax|
 |S[4*i+1]|short|M[x<sub>S</sub>+i\*i+2]|movw 2(%edx,%ecx,8), %ax|
 |S+i-5|short*|x<sub>S</sub>+2\*i-10|leal -10(%edx,%ecx,2), %eax|
+
+### 练习题 3.37
+
+考虑下面的源代码，其中 M 和 N 是用 #define 声明的常数：
+
+```c
+1   int mat1[M][N];
+2   int mat2[N][M];
+3
+4   int sum_element(int i, int j) {
+5       return mat1[i][j] + mat2[j][i];
+6   }
+```
+
+在编译这个程序中，GCC 产生如下汇编代码：
+
+```asm
+    i at %ebp+8, j at %ebp+12
+1       movl        8(%ebp), %ecx
+2       movl        12(%ebp), %edx
+3       leal        0(,%ecx,8), %eax
+4       subl        %ecx, %eax
+5       addl        %edx, %eax
+6       leal        (%edx,%edx,4), %edx
+7       addl        %ecx, %edx
+8       movl        mat1(,%eax,4), %eax
+9       addl        mat2(,%edx,4), %eax
+```
+
+运用你的逆向工程技能，根据这段汇编代码，确定 M 和 N 的值。
+
+答案：
+
+给汇编代码添加注释：
+
+```asm
+    i at %ebp+8, j at %ebp+12
+1       movl        8(%ebp), %ecx           Get i
+2       movl        12(%ebp), %edx          Get j
+3       leal        0(,%ecx,8), %eax        t1 = 8 * i
+4       subl        %ecx, %eax              t1 = t1 - i = 7 * i
+5       addl        %edx, %eax              t1 = 7 * i + j
+6       leal        (%edx,%edx,4), %edx     t2 = 5 * j
+7       addl        %ecx, %edx              t2 = 5 * j + i
+8       movl        mat1(,%eax,4), %eax     result = mat1 + t1 * 4
+9       addl        mat2(,%edx,4), %eax     result += mat2 + t2 * 4
+```
+
+mat1[i][j] = mat1 + L(C<sub>1</sub> \* i + j) = mat1 + (7 * i + j) \* 4
+
+根据公式 3-1 可知 N = 7
+
+mat2[j][i] = mat2 + L(C<sub>2</sub> \* j + i) = mat1 + (5 * j + i) \* 4
+
+根据公式 3-1 可知 M = 5
+
+### 练习题 3.38
+
+下面的 C 代码将定长数组的对角线上的元素设置为 val：
+
+```c
+1   /* Set all diagonal elements to val */
+2   void fix_set_diag(fix_matrix A, int val) {
+3       int i;
+4       for (i = 0; i < N; i++)
+5           A[i][i] = val;
+6   }
+```
+
+当编译时，GCC 产生如下汇编代码：
+
+```asm
+    A at %ebp+8, val at %ebp+12
+1       movl    8(%ebp), %ecx
+2       movl    12(%ebp), %edx
+3       movl    $0, %eax
+4   .L14:
+5       movl    %edx, (%ecx, %eax)
+6       addl    $68, %eax
+7       cmpl    $1088, %eax
+8       jne     .L14
+```
+
+创建一个 C 代码程序 fix-set-diag-opt，参考这段汇编代码中所使用的优化，风格与图 3-28b 中的代码一致。
+使用含有参数 N 的表达式，而不是整数常量，使得如果重新定义了 N，你的代码仍能够正确地工作。
+
+答案：
+
+```c
+1   /* Set all diagonal elements to val */
+2   void fix_set_diag_opt(fix_matrix A, int val) {
+        int *Aptr = &A[0][0];
+3       int i;
+4       for (i = 0; i < N; i++) {
+5           *Aptr = val;
+6           Aptr += (N + 1);
+7       }
+8   }
+```
+
+### 练习题 3.39
+
+考虑下面的结构声明：
+
+```c
+struct prob {
+    int *p;
+    struct {
+        int x;
+        int y;
+    } s;
+    struct prob *next;
+}
+```
+
+这个声明说明一个结构可以嵌套在另一个结构中，就像数组可以嵌套在结构中、数组可以嵌套在数组中一样。
+
+下面的过程（省略了某些表达式）对这个结构进行操作：
+
+```c
+void sp_init(struct prob *sp)
+{
+    sp->s.x     = ________;
+    sp->p       = ________;
+    sp->next    = ________;
+}
+```
+
+A. 下列字段的偏移量是多少（以字节为单位）？
+
+```
+   p: ________;
+ s.x: ________;
+ s.y: ________;
+next: ________;
+```
+
+B. 这个结构总共需要多少字节？
+
+C. 编译器为 sp\_init 的主体产生的汇编代码如下：
+
+```
+    sp at %ebp+8
+1       movl    8(%ebp), %eax
+2       movl    8(%eax), %edx
+3       movl    %edx, 4(%eax)
+4       leal    4(%eax), %edx
+5       movl    %edx, (%eax)
+6       movl    %eax, 12(%eax)
+```
+
+根据这些信息，填写 sp\_init 代码中缺失的表达式。
+
+答案：
+
+A.
+
+```
+   p: 0;
+ s.x: 4;
+ s.y: 8;
+next: 12;
+```
+
+B. 16个字节
+
+C.
+
+给汇编代码添加注释：
+
+```
+    sp at %ebp+8
+1       movl    8(%ebp), %eax       Get sp
+2       movl    8(%eax), %edx       Get s.y
+3       movl    %edx, 4(%eax)       s.x = s.y
+4       leal    4(%eax), %edx       Get s.x
+5       movl    %edx, (%eax)        sp.p = &s.x
+6       movl    %eax, 12(%eax)      sp.next = sp
+```
+
+填写 sp\_init 代码中缺失的表达式：
+
+```c
+void sp_init(struct prob *sp)
+{
+    sp->s.x     = sp->s.y;
+    sp->p       = &(sp->s.x);
+    sp->next    = sp;
+}
+```
+
+### 练习题 3.40
+
+假设给你个任务，检查一下 C 编译器为结构和联合的访问产生正确的代码。
+你写了下面的结构声明：
+
+```c
+typedef union {
+    struct {
+        short v;
+        short d;
+        int   s;
+    } t1;
+    struct {
+        int a[2];
+        char *p;
+    } t2;
+} u_type;
+```
+
+你写了一组具有下面这种形式的函数：
+
+```c
+void get(u_type *up, TYPE *dest) {
+    *dest = EXPR;
+}
+```
+
+这组函数有不一样的访问表达式 EXPR，而且根据 EXPR 的类型来设置目的数据类型 TYPE。
+然后再检查编译这些函数时产生的代码，看看它们是否与你预期的一样。
+
+假设在这些函数中，up 和 dest 分别被加载到寄存器 %eax 和 %edx 中。
+填写下表中的数据类型 TYPE，并用 1\~3 条指令序列在计算表达式，将结构存储到 dest 中。
+试着只用寄存器 %eax 和 %edx，不够用的时候，再用寄存器 %ecx
+
+|EXPR|TYPE|Code|
+|-|-|-|
+|up-&gt;t1\.s|int|movl 4(%eax), %eax</br>movl %eax, (%edx)|
+|up-&gt;t1\.v|||
+|up-&gt;t1\.d|||
+|up-&gt;t2\.a|||
+|up-&gt;t2\.a[up-&gt;t1\.s]|||
+|*up-&gt;t1\.p|||
+
+答案：
+
+|EXPR|TYPE|Code|
+|-|-|-|
+|up-&gt;t1\.s|int|movl 4(%eax), %eax</br>movl %eax, (%edx)|
+|up-&gt;t1\.v|short|movw (%eax), %ax</br>movw %ax, (%edx)|
+|&up-&gt;t1\.d|short*|leal 2(%eax), %eax</br>movl %eax, (%edx)|
+|up-&gt;t2\.a|int*|movl %eax, (%edx)|
+|up-&gt;t2\.a[up-&gt;t1\.s]|int|movl 4(%eax), %ecx</br>movl (%eax,%ecx,4), %eax</br>movl %eax, (%edx)|
+|*up-&gt;t1\.p|char|movl 8(%eax), %eax</br>movb (%eax), %al</br>movb %al, (%edx)|
+
+### 练习题 3.41
+
+对下面每个结构声明，确定每个字段的偏移量、结构总的大小，以及在 Linux/IA32 下它的对齐要求。
+
+* A. struct P1 { int i; char c; int j; char d; };
+* B. struct P2 { int i; char c; char d; int j; };
+* C. struct P3 { short w[3]; char c[3] };
+* D. struct P4 { short w[3]; char *c[3] };
+* E. struct P3 { struct P1 a[2]; struct P2 *p };
+
+答案：
+
+* A. 总大小为：16字节，i的偏移是：0，c的偏移是4，j的偏移是 8，d的偏移是 12，对齐 4
+* B. 总大小位：12字节，i的偏移是：0，c的偏移是4，d的偏移是 5，j的偏移是 8，对齐 4
+* C. 总大小是：10字节，w的偏移是：0，c的偏移是：6，对齐 2
+* D. 总大小是：20字节，w的偏移是：0，c的偏移是：8，对齐 4
+* E. 总大小是：36字节，a的偏移是：0，p的偏移是：32，对齐 4
+
+### 练习题 3.42
+
+对于结构声明
+
+```c
+struct {
+    char *a;
+    short b;
+    double c;
+    char d;
+    float e;
+    char f;
+    long long g;
+    void *h;
+} foo;
+```
+
+假设在 Windows 机器上编译它，这里每个 K 字节的基本数据类型的偏移量必须是 K 的倍数。
+
+* A. 这个结构中所有字段的字节偏移量是多少？
+* B. 这个结构总的大小是多少？
+* C. 重新排列这个结构中的字段，以最小化浪费的空间，然后再给出重新排过的结构的字节偏移量和总的大小。
+
+答案：
+
+* A. 如下：
+
+```c
+struct {
+    char *a;            // 0
+    short b;            // 4
+    double c;           // 8
+    char d;             // 16
+    float e;            // 20
+    char f;             // 24
+    long long g;        // 32
+    void *h;            // 40
+} foo;
+```
+
+* B. 总大小为 48 字节，结构的结尾必须填充 4 个字节以满足 8 字节的对齐要求。
+
+* C. 如下，总大小为 32 字节
+
+```c
+struct {
+    char d;             // 0
+    char f;             // 1
+    short b;            // 2
+    char *a;            // 4
+    void *h;            // 8
+    float e;            // 12
+    double c;           // 16
+    long long g;        // 24
+} foo;
+```
+
+### 练习题 3.43
+
+```c
+1   /* This is very low-quality code.
+2      It is intended to illustrate bad programming practices.
+3      See Problem 3.43. */
+4   char *getline()
+5   {
+6       char buf[8];
+7       char *result;
+8       gets(buf);
+9       result = malloc(strlen(buf));
+10      strcpy(result, buf);
+11      return result;
+12  }
+```
+
+**a) C语言代码**
+
+```asm
+1   080485c0 <getline>:
+2    80485c0: 55                    push %ebp
+3    80485c1: 89 e5                 mov %esp,%ebp
+4    80485c3: 83 ec 28              sub $0x28,%esp
+5    80485c6: 89 5d f4              mov %ebx,-0xc(%ebp)
+6    80485c9: 89 75 f8              mov %esi,-0x8(%ebp)
+7    80485cc: 89 7d fc              mov %edi,-0x4(%ebp)
+    Diagram stack at this point
+8    80485cf: 8d 75 ec              lea -0x14(%ebp),%esi
+9    80485d2: 89 34 24              mov %esi,(%esp)
+10   80485d5: e8 a3 ff ff ff        call 804857d <gets>
+    Modify diagram to show stack contents at this point
+```
+
+**b) 对 gets 调用的反汇编**
+
+以上代码是一个函数（不太好的）实现，这个函数从标准输入读入一行，
+将字符串复制到新分配的存储中，并返回一个执行结果的指针。
+
+考虑下面这样的场景。调用过程 getline，返回地址等于 0x8048643，寄存器 %ebp 等于 0xbffffc94，
+寄存器 %ebx 等于 0x1，寄存器 %edi 等于 0x2，而寄存器 %esi 等于 0x3。
+输入字符串为“012345678901234567890123”，程序会因为段错误（segmentation fault）而中止。
+运行 GDB，确定错误是在执行 getline 的 ret 指令时发生的。
+
+* A. 填写下图，尽可能多地说明在执行完反汇编代码中第 7 行指令后栈的相关信息。
+在右边标准出存储在栈中数字的含义（例如“返回地址”）。在方框中写出它们的十六进制值（如果知道的话）。
+每个方框都代表 4 个字节。指出 %ebp 的位置。
+
+|十六进制值|含义|
+|-|-|
+|08 04 86 43|返回地址|
+|||
+|||
+|||
+|||
+|||
+|||
+|||
+
+* B. 修改你的图，展现调用 gets 的影响（第 10 行）。
+* C. 程序应该试图返回到什么地址？
+* D. 当 getline 返回时，哪个（些）寄存器的值被破坏了？
+* E. 除了可能会缓冲区溢出以外，getline 的代码还有哪两个错误？
