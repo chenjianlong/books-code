@@ -2198,4 +2198,642 @@ E. 对 malloc 的调用应该以 strlen(buf)+1 作为它的参数，而且代码
 答案：
 
 * A. 8192 字节，即 2^13 字节。
-* B. 
+* B. 64次
+
+### 练习题 3.45
+
+函数 intlen，和函数 len 和 iptoa 一起，提供了一种很纠结的方式，来计算表示一个整数所需要的十进制数字的个数。
+我们利用它来研究 GCC 栈保护者措施的一些情况。
+
+```c
+int len(char *s) {
+    return strlen(s);
+}
+
+void iptoa(char *s, int *p) {
+    int val = *p;
+    sprintf(s, "%d", val);
+}
+
+int intlen(int x) {
+    int v;
+    char buf[12];
+    v = x;
+    iptoa(buf, &v);
+    return len(buf);
+}
+```
+
+下面是 intlen 的部分代码，分别由带和不带栈保护者编译：
+
+不带保护者
+
+```asm
+1       subl        $36, %esp
+2       movl        8(%ebp), %eax
+3       movl        %eax, -8(%ebp)
+4       leal        -8(%ebp), %eax
+5       movl        %eax, 4(%esp)
+6       leal        -20(%ebp), %ebx
+7       movl        %ebx, (%esp)
+8       call        iptoa
+```
+
+带保护者
+
+```asm
+1       subl        $52, %esp
+2       movl        %gs:20, %eax
+3       movl        %eax, -8(%ebp)
+4       xorl        %eax, %eax
+5       movl        8(%ebp), %eax
+6       movl        %eax, -24(%ebp)
+7       leal        -24(%ebp), %eax
+8       movl        %eax, 4(%esp)
+9       leal        -20(%ebp), %ebx
+10      movl        %ebx, (%esp)
+11      call        iptoa
+```
+
+* A. 对于两个版本：buf、v和金丝雀值（如果有的话）分别在栈帧中的什么位置？
+* B. 在有保护的代码中，对局部变量重新排列如何提供更好的安全性，以对抗缓冲区越界攻击。
+
+答案：
+
+A. 
+
+* 对于不带保护者版本：buf、v分别位于 %ebp-20 和 %ebp-8 的位置
+* 对于带保护者版本：buf、v分别位于 %ebp-20和%ebp-24 的位置，金丝雀值位于 %ebp-8 的位置
+
+B. 在有保护的代码中，局部变量 v 比 buf 更靠近栈顶，因此 buf 溢出就不会破坏 v 的值。
+实际上，这样放置 buf 目的是一旦有缓冲区溢出，就会破坏金丝雀的值。
+
+### 练习题 3.46
+
+DRAM 是实现微处理器的主存储器的存储器技术，如图 6-17b 所示，DRAM 的开销从 1980 年的每 MB 8000 美元
+下降到了 2010 年的大约 0.06 美元，每年大约下降 1.48倍，或者每 10 年大约下降 51 倍。
+假设这种趋势无限地持续下去（这可能不太现实），而我们对机器存储器的预算大约是 1000 美元，
+这样在 1980 年我们能为机器配置 128KB 的内存，而在 2010 年，可以配置 16.3GB。
+
+* A. 估计到什么时候用 1000 美元的预算我们能买到 256TB 的内存。
+* B. 估计到什么时候用 1000 美元的预算我们能买到 16EB 的内存。
+* C. 如果我们把 DRAM 的预算提高到 10 000 美元，上述这两个时间点能提前多久到来？
+
+答案：
+
+* A. 假设  2010 年的 16.3GB 是基准线，256TB 表示增加了 1.608×10<sup>4</sup> 倍，需要大约 25 年，也就是到 2035 年。
+* B. 16EB 比起 16.3GB 是增加了 1.054×10<sup>9</sup> 倍。这需要大约 53 年，也就是到 2063 年。
+* C. 将预算增加 10 倍，会比预期缩短 6 年，使得分别可以在 2029 年和 2057 年达到两个存储器大小的目标。
+
+### 练习题 3.47
+
+下面的 C 函数将类型为 src\_t 的参数转换成类型 dst\_t 并返回，这里两种类型用 typedef 定义：
+
+```c
+dest_t cvt(src_t x)
+{
+    dest_t y = (dest_t) x;
+    return y;
+}
+```
+
+假设参数 x 存放在寄存器 %rdi 的某个适当命令的部分（即 %rdi、%edi、%di或者 %dil），
+假设使用某种形式的数据传送指令来执行这个类型转换，并将这个值复制到寄存器 %rax 的某个释放命名部分。
+填写下表，指明为下面的源类型和目的类型组合，使用的指令、源寄存器和目的寄存器。
+
+|src\_t|dest\_t|指令|S|D|
+|-|-|-|-|-|
+|long|long|movq|%rdi|%rax|
+|int|long||||
+|char|long||||
+|unsigned int|unsigned long||||
+|unsigned char|unsigned long||||
+|long|int||||
+|unsigned long|unsigned||||
+
+答案：
+
+|src\_t|dest\_t|指令|S|D|
+|-|-|-|-|-|
+|long|long|movq|%rdi|%rax|
+|int|long|mvoslq|%edi|%rax|
+|char|long|movsbq|%dil|%rax|
+|unsigned int|unsigned long|movl|%edi|%eax|
+|unsigned char|unsigned long|movzbq|%eil|%rax|
+|long|int|movl|%edi|%eax|
+|unsigned long|unsigned|movl|%edi|%eax|
+
+### 练习题 3.48
+
+C 函数 arithprob 有参数 a、b、c 和 d，主体如下：
+
+```c
+return a*b + c*d;
+```
+
+编译得到如下 x86-64 代码：
+
+```asm
+1   arithprob:
+2       movslq      %ecx,%rcx
+3       imulq       %rdx,%rcx
+4       movsbl      %sil,%esi
+5       imull       %edi,%esi
+6       movslq      %esi,%rsi
+7       leaq        (%rcx,%rsi), %rax
+8       ret
+```
+
+参数和返回值都是长度不同的有符号整数。
+参数 a、b、c 和 d 分别在寄存器 %rdi、%rsi、%rdx 和 %rcx 中的适当的区域内传递。
+根据这个汇编代码，写出一个函数原型，描述 arithprob 的返回值类型和参数类型。
+
+答案：
+
+```c
+long arithprob(int a, char b, long c, int d) {
+	return a*b + c*d;
+}
+```
+
+### 练习题 3.49
+
+C 函数 fun\_c 有如下总体结构：
+
+```c
+long fun_c(unsigned long x) {
+    long val = 0;
+    int i;
+    for (________; ________; ________) {
+        ________;
+    }
+    ________;
+    return ________;
+}
+```
+
+GCC编译器产生如下汇编代码：
+
+```asm
+1   fun_c:
+  x in %rdi
+2       movl        $0, %ecx
+3       movl        $0, %edx
+4       movabsq     $72340172838076673, %rsi
+5   .L2:
+6       movq        %rdi, %rax
+7       andq        %rsi, %rax
+8       addq        %rax, %rcx
+9       shrq        %rdi            Shift right by 1
+10      addl        $1, %edx
+11      cmpl        $8, %edx
+12      jne         .L2
+13      movq        %rcx, %rax
+14      sarq        $32, %rax
+15      addq        %rcx, %rax
+16      movq        %rax, %rdx
+17      sarq        $16, %rdx
+18      addq        %rax, %rdx
+19      movq        %rdx, %rax
+20      sarq        $8, %rax
+21      addq        %rdx, %rax
+22      andl        $255, %eax
+23      ret
+```
+
+对这段代码做逆向工程，你会发现这对第4行的十进制常数转换为十六进制会有所帮助。
+
+* A. 根据汇编代码版本填写 C 代码中缺失的部分。
+* B. 用自然语言描述这段代码计算的是什么。
+
+答案：
+
+A.
+
+```asm
+1   fun_c:
+  x in %rdi
+2       movl        $0, %ecx        val = 0
+3       movl        $0, %edx        i = 0
+4       movabsq     $72340172838076673, %rsi
+5   .L2:                            loop:
+6       movq        %rdi, %rax      tmp = x
+7       andq        %rsi, %rax      tmp &= 0x0101 0101 0101 0101
+8       addq        %rax, %rcx      val &= tmp
+9       shrq        %rdi            x >>= 1
+10      addl        $1, %edx        ++i
+11      cmpl        $8, %edx        Compare i:8
+12      jne         .L2             if != goto loop
+13      movq        %rcx, %rax      tmp = val
+14      sarq        $32, %rax       tmp >>= 32
+15      addq        %rcx, %rax      tmp += val
+16      movq        %rax, %rdx      tmp2 = tmp
+17      sarq        $16, %rdx       tmp2 >>= 16
+18      addq        %rax, %rdx      tmp2 += tmp
+19      movq        %rdx, %rax      tmp = tmp2
+20      sarq        $8, %rax        tmp >>= 8
+21      addq        %rdx, %rax      tmp += tmp2
+22      andl        $255, %eax      tmp &= 0xFF
+23      ret
+```
+
+```c
+long fun_c(unsigned long x) {
+    long val = 0;
+    int i;
+    for (i = 0; i != 8; x >>= 1, ++i) {
+        val += (x & 0x0101010101010101);
+    }
+    val = (val >> 32) + val;
+    val = (val >> 16) + val;
+    val = (val >> 8) + val;
+    return val & 0xFF;
+}
+```
+
+B. 计算参数 x 二进制表示格式位为 1 的个数
+
+### 练习题 3.50
+
+C 函数 incrprob 有不同大小的参数 q、t 和 x，每个都可能是有符号的，也可能是无符号的。
+该函数有如下主体：
+
+```c
+*t += x;
+*q += *t;
+```
+
+编译得到下面的 x86-64 代码：
+
+```asm
+1   incrprob:
+2       addl        (%rdx), %edi
+3       movl        %edi, (%rdx)
+4       movslq      %edi, %rdi
+5       addq        %rdi, (%rsi)
+6       ret
+```
+
+通过确定 3 个参数的顺序和可能的类型，确定 incrprob 的全部 4 种合理的函数原型。
+
+答案：
+
+根据使用的参数寄存器，易知参数顺序为：
+
+```c
+void incrprob(x,*q,*t);
+```
+
+四种合法的原型分别为：
+
+```c
+void incrprob(int x, long *q, int *t);
+void incrprob_u(unsigned x, long *q, int *t);
+void incrprob_sl(long x, long *q, int *t);
+void incrprob_ul(unsigned long x, long *q, int *t);
+```
+
+### 练习题 3.51
+
+对于 C 程序
+
+```c
+long int local_array(int i)
+{
+    long int a[4] = {2L, 3L, 5L, 7L};
+    int idx = i & 3;
+    return a[idx];
+}
+```
+
+GCC 产生如下代码：
+
+```asm
+  x86-64 implementation of local_array
+  Argument: i in %edi
+1   local_array:
+2       movq        $2, -40(%rsp)
+3       movq        $3, -32(%rsp)
+4       movq        $5, -24(%rsp)
+5       movq        $7, -16(%rsp)
+6       andl        $3, %edi
+7       movq        -40(%rsp,%rdi,8), %rax
+8       ret
+```
+
+* A. 画图说明这个函数使用的栈位置，以及它们相对于栈指针的偏移量。
+* B. 为汇编代码添加注释，描述每条指令的效果。
+* C. 这个示例说明关于 x86-64 栈规则的什么有趣特性？
+
+答案：
+
+A.
+
+![](images/05_20_ex3.51.svg)
+
+B.
+
+```asm
+  x86-64 implementation of local_array
+  Argument: i in %edi
+1   local_array:
+2       movq        $2, -40(%rsp)               a[0] = 2
+3       movq        $3, -32(%rsp)               a[1] = 3
+4       movq        $5, -24(%rsp)               a[2] = 5
+5       movq        $7, -16(%rsp)               a[3] = 7
+6       andl        $3, %edi                    idx = i & 3
+7       movq        -40(%rsp,%rdi,8), %rax      set %rax=a[idx]
+8       ret                                     Return
+```
+
+C. 这个函数从来不改变栈指针。它将它的所有局部变量都存放在栈指针外的区域中。
+
+### 练习题 3.52
+
+对于递归阶乘函数
+
+```c
+long int rfact(long int x)
+{
+    if (x <= 0)
+        return 1;
+    else {
+        long int xm1 = x-1;
+        return x * rfact(xm1);
+    }
+}
+```
+
+GCC 产生下面的代码：
+
+```asm
+  x86-64 implementation of recursive factorial function rfact
+  Argument x in %rdi
+1   rfact:
+2       pushq   %rbx
+3       movq    %rdi, %rbx
+4       movl    $1, %eax
+5       testq   %rdi, %rdi
+6       jle     .L11
+7       leaq    -1(%rdi), %rdi
+8       call    rfact
+9       imulq   %rbx, %rax
+10  .L11:
+11      popq    %rbx
+12      ret
+```
+
+* A. 函数存储在 %rbx 中的是什么值？
+* B. pushq（第2行）和 popq（第11行）指令是干什么用的？
+* C. 为汇编代码添加注释，描述每条指令的效果。
+* D. 这个函数管理栈帧的方式与我们见过的其他方式有什么不同？
+
+答案：
+
+* A. 入参 x
+* B. 保存 %rbx 的原始值到栈中以及返回前恢复 %rbx 的原始值
+* C 如下：
+
+```asm
+  x86-64 implementation of recursive factorial function rfact
+  Argument x in %rdi
+1   rfact:
+2       pushq   %rbx                Save %rbx to stack
+3       movq    %rdi, %rbx          %rbx = x
+4       movl    $1, %eax            Set return value to 1
+5       testq   %rdi, %rdi          test x
+6       jle     .L11                If x <= 0 goto end
+7       leaq    -1(%rdi), %rdi      xm = x -1
+8       call    rfact               call rfact(xm)
+9       imulq   %rbx, %rax          return value = x * rfact(x - 1)
+10  .L11:                       end:
+11      popq    %rbx                Restore %rbx
+12      ret                         Ret
+```
+
+* D. 不显式地减少或者增加栈指针，相反，代码可以用 pushq 和 popq 来修改栈指针以及保存和恢复寄存器状态。
+
+### 练习题 3.53
+
+对于下列结构声明，确定每个字段的偏移量，结构的整个大小，以及在 x86-64 下它的对齐要求。
+
+* A. struct P1 { int i; char c; long j; char d; };
+* B. struct P2 { long i; char c; char d; int j; };
+* C. struct P3 { short w[3]; char c[3] };
+* D. struct P4 { short w[3]; char *c[3] };
+* E. struct P5 { struct P1 a[2]; struct P2 *p };
+
+答案：
+
+![](images/05_20_ex3.53.svg)
+
+## 家庭作业
+
+### 3.54 \*
+
+一个函数的原型为：
+
+```c
+int decode2(int x, int y, int z)l
+```
+
+将这个函数编译成 IA32 汇编代码。代码体如下：
+
+```asm
+  x at %ebp+8, y at %ebp+12, z at %ebp+16
+1   movl    12(%ebp), %edx
+2   subl    16(%ebp), %edx
+3   movl    %edx, %eax
+4   sall    $15, %eax
+5   sarl    $15, %eax
+6   imull   8(%ebp), %edx
+7   xorl    %edx, %eax
+```
+
+参数 x、y 和  z 存放在存储器中相对于寄存器 %ebp 中地址偏移量为 8、12 和 16 的地方。
+代码将返回值存放在寄存器 %eax 中。
+
+写出等价于我们汇编代码的 decode2 的 C 代码。
+
+TODO
+
+### 3.55 \*
+
+下面的代码计算 x 和 y 的乘积，并将结果存放在存储器中。
+数据类型 ll\_t 被定义为等价于 long long。
+
+```c
+typedef long long ll_t;
+
+void store_prod(ll_t *dest, ll_t x, int y) {
+    *dest = x*y;
+}
+```
+
+GCC 生成下面的汇编代码实现计算：
+
+```asm
+  dest at %ebp+8, x at %ebp+12, y at %ebp+20
+1   movl    12(%ebp), %esi
+2   movl    20(%ebp), %eax
+3   movl    %eax, %edx
+4   sarl    $31, %edx
+5   movl    %edx, %ecx
+6   imull   %esi, %ecx
+7   movl    16(%ebp), %ebx
+8   imull   %eax, %ebx
+9   addl    %ebx, %ecx
+10  mull    %esi
+11  leal    (%ecx, %edx), %edx
+12  movl    8(%ebp), %ecx
+13  movl    %eax, (%ecx)
+14  movl    %edx, 4(%ecx)
+```
+
+这段代码用了三个乘法实现多精度运算，这个多精度运算是在 32 位机器上实现 64 位运算所需要的。
+描述用来计算这个乘积的算法，并对汇编代码添加注释，说明它是如何实现你的算法的。
+
+**提示：** 参考练习题 3.12 及其答案。
+
+TODO
+
+### 3.56 \*\*
+
+考虑下面的汇编代码：
+
+```asm
+  x at %ebp+8, n at %ebp+12
+1       movl    8(%ebp), %esi
+2       movl    12(%ebp), %ebx
+3       movl    $1431655765, %edi
+4       movl    $-2147483648, %edx
+5   .L2:
+6       movl    %edx, %eax
+7       andl    %esi, %eax
+8       xorl    %eax, %edi
+9       movl    %ebx, %ecx
+10      sall    %cl, %edx
+11      testl   %edx, %edx
+12      jne     .L2
+13      movl    %edi, %eax
+```
+
+以上代码是以下整体形式的 C 代码编译产生的：
+
+```c
+1   int loop(int x, int n)
+2   {
+3       int result = ________;
+4       int mask;
+5       for (mask = ________; mask ________; mask = ________) {
+6           result ^= ________;
+7       }
+8       return result;
+9   }
+```
+
+你的任务是填写这个 C 代码中缺失的部分，得到一个程序等价于产生的汇编代码。
+回想一下，这个函数的结果是在寄存器 %eax 中返回的。
+你会发现以下工作很有帮助：检查循环之前、之中和之后的汇编代码，形成一个寄存器和程序变量之间一致的映射。
+
+* A. 哪个寄存器保存着程序值 x、n、result 和 mask？
+* B. result 和 mask 的初始值是什么？
+* C. mask 的测试条件是什么？
+* D. mask 是如何被修改的？
+* E. result 是如何被修改的？
+* F. 填写这段 C 代码中所有缺失的部分。
+
+TODO
+
+### 3.57 \*\*
+
+在 3.6.6 节，我们查看了下面的代码，作为使用条件数据传输的一种选择：
+
+```c
+int cread(int *xp) {
+    return (xp ? *xp : 0);
+}
+```
+
+我们给出了使用条件传送指令的一个尝试实现，但是任务它是不合法的，因为它试图从一个空地址读数据。
+
+写一个 C 函数 cread\_alt，它与 cread 有一样的行为，除了它可以被编译成使用条件数据传送。
+当用命令行选项 '-march=i686' 来编译时，产生的代码应该使用条件传送指令而不是某种跳转指令。
+
+TODO
+
+### 3.58 \*\*
+
+下面的代码是在一个开关语句中根据枚举类型值进行分支选择的例子。
+回忆一下，C 语言中枚举类型只是一种引入一组与整数值相对应的名字的方法。
+默认情况下，值是从 0 向上依次赋给名字的。
+在我们的代码中，省略了与各种情况标号相对应的动作。
+
+```c
+/* Enumerated type creates set of constants numbered 0 and upward */
+
+int switch3(int *p1, int *p2, mode_t action)
+{
+    int result = 0;
+    switch (action) {
+    case MODE_A:
+
+    case MODE_B:
+
+    case MODE_C:
+
+    case MODE_D:
+
+    case MODE_E:
+
+    default:
+
+    }
+    return result;
+}
+```
+
+产生的实现各个动作的汇编代码部分如下所示。
+注释指明了参数位置，寄存器值，以及各个跳转目的的情况标号。
+寄存器 %edx 对应于程序变量 result，并被初始化为 -1。
+填写 C 代码中缺失的部分。注意那些会落入其他情况中的情况。
+
+```asm
+  Arguments: p1 at %ebp+8, p2 at %ebp+12, action at %ebp+16
+  Registers: result in %edx (initialized to -1)
+  The jump targets:
+1   .L17:                           MODE_E
+2       movl        $17, %edx
+3       jmp         .L19
+4 .L13: MODE_A
+5 movl 8(%ebp), %eax
+6 movl (%eax), %edx
+7 movl 12(%ebp), %ecx
+8 movl (%ecx), %eax
+9 movl 8(%ebp), %ecx
+10 movl %eax, (%ecx)
+11 jmp .L19
+12 .L14: MODE_B
+13 movl 12(%ebp), %edx
+14 movl (%edx), %eax
+15 movl %eax, %edx
+16 movl 8(%ebp), %ecx
+17 addl (%ecx), %edx
+18 movl 12(%ebp), %eax
+19 movl %edx, (%eax)
+20 jmp .L19
+21 .L15: MODE_C
+22 movl 12(%ebp), %edx
+23 movl $15, (%edx)
+24 movl 8(%ebp), %ecx
+25 movl (%ecx), %edx
+26 jmp .L19
+27 .L16: MODE_D
+28 movl 8(%ebp), %edx
+29 movl (%edx), %eax
+30 movl 12(%ebp), %ecx
+31 movl %eax, (%ecx)
+32 movl $17, %edx
+33 .L19: default
+34 movl %edx, %eax Set return value
+```
