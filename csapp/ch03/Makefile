@@ -3,10 +3,13 @@
 # Jianlong Chen, 2025-04-27 17:56
 #
 
-all:
-	@echo "Makefile needs your attention"
+ASSEMBLES = ex3.19.s ex3.22.s ex3.33.s
 
-*.s: *.c:
-	gcc -m32 -mtune=i386 -O1 -S ex3.22.c
+all: $(ASSEMBLES)
+	@echo "All completed!"
+
+$(ASSEMBLES): %.s: %.c
+	$(CC) -m32 -mtune=i386 -O1 -S $<
+
 # vim:ft=make
 #
