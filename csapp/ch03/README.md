@@ -2634,7 +2634,7 @@ GCC 产生下面的代码：
 一个函数的原型为：
 
 ```c
-int decode2(int x, int y, int z)l
+int decode2(int x, int y, int z);
 ```
 
 将这个函数编译成 IA32 汇编代码。代码体如下：
@@ -2655,7 +2655,25 @@ int decode2(int x, int y, int z)l
 
 写出等价于我们汇编代码的 decode2 的 C 代码。
 
-TODO
+答案：
+
+```asm
+  x at %ebp+8, y at %ebp+12, z at %ebp+16
+1   movl    12(%ebp), %edx          Get y
+2   subl    16(%ebp), %edx          y -= z
+3   movl    %edx, %eax              ret = y
+4   sall    $15, %eax               ret <<= 15
+5   sarl    $15, %eax               ret >>= 15
+6   imull   8(%ebp), %edx           y *= x
+7   xorl    %edx, %eax              ret ^= y
+```
+
+```c
+int decode2(int x, int y, int z) {
+    int tmp = y - z;
+    return (tmp * x) ^ (tmp << 15 >> 15);
+}
+```
 
 ### 3.55 \*
 
@@ -2903,6 +2921,472 @@ GDB 打印出下面的内容：
 
 用 C 代码填写开关语句的主体，使它的行为与机器代码一致。
 
+TODO
+
 ### 3.60 \*\*\*
 
-考虑
+考虑下面的源代码，这里 R、S 和 T 都是用 #define 声明的常数：
+
+```c
+int A[R][S][T];
+
+int store_ele(int i, int j, int k, int *dest)
+{
+    *dest = A[i][j][k];
+    return sizeof(A);
+}
+```
+
+编译这个程序，GCC 产生下面的汇编代码：
+
+```
+  i at %ebp+8, j at %ebp+12, k at %ebp+16, dest at %ebp+20
+1   movl    8(%ebp), %ecx
+2   movl    12(%ebp), %eax
+3   leal    (%eax, %eax, 8), %eax
+4   movl    %ecx, %edx
+5   sall    $6, %edx
+6   subl    %ecx, %edx
+7   addl    %edx, %eax
+8   addl    16(%ebp), %eax
+9   movl    A(,%eax,4), %edx
+10  movl    20(%ebp), %eax
+11  movl    %edx, (%eax)
+12  movl    $2772, %eax
+```
+
+* A. 将等式（3-1）从二维扩展到三维，提供数组元素 A[i][j][k] 的位置公式。
+* B. 运用你的逆向工程技术，根据汇编代码，确定 R、S 和 T 的值。
+
+TODO
+
+### 3.61 \*\*
+
+C 编译器为 var\_prod\_ele 产生的代码（图3-29，我在下面重复了一份）不能将它在循环中使用的所有值都放进寄存器中，
+因此它必须在每次循环时都从存储器中读出 n 的值。
+写出这个函数的 C 代码，使用类似于 GCC 执行的那些优化，但是它的编译代码不会让循环值溢出到存储器中。
+
+```c
+。
+/* Compute i,k of variable matrix.product */
+int var_prod_ele(int n, int A[n][n], int B[n][n], int i, int k) {
+i   nt j;
+    int result = 0;
+
+    for(j=0;j<n;j++)
+        result += A[i][j] * B[j][k];
+
+    return result:
+}
+```
+
+回忆一下，处理器只有 6 个寄存器可以用来保存临时数据，因为寄存器 %ebp 和 %esp 不能用于此目的。
+其中一个寄存器还必须用来保存乘法指令的结果。
+因此，你必须把循环中的值的数量从 6 个（result、Arow、Bcol、j、n 和 4\*n）减少到 5 个。
+
+需要找到一个对你那种编译器行之有效的策略。不断尝试各种不同的策略，直到有一种能工作。
+
+TODO
+
+### 3.62 \*\*
+
+下面的代码转置一个 M×N 矩阵的元素，这里 M 是一个用 #define 定义的常数：
+
+```c
+void transpose(Marray_t A) {
+    int i, j;
+    for (i = 0; i < M; i++)
+        for (j = 0; j < i; j++) {
+            int t = A[i][j];
+            A[i][j] = A[j][i];
+            A[j][i] = t;
+        }
+}
+```
+
+当用优化等级 -O2 编译时，GCC 为这个函数的内循环产生下面的代码：
+
+```asm
+1   .L3:
+2       movl    (%ebx), %eax
+3       movl    (%esi,%ecx,4), %edx
+4       movl    %eax, (%esi,%ecx,4)
+5       addl    $1, %ecx
+6       movl    %edx, (%ebx)
+7       addl    $76, %ebx
+8       cmpl    %edi, %ecx
+9       jl      .L3
+```
+
+* A. M 的值是多少？
+* B. 哪个寄存器保存着程序值 i 和 j?
+* C. 写 transpose 的一个 C 代码版本，使用在这个循环中出现的优化。在你的代码中，使用参数 M，而不要用常数值。
+
+TODO
+
+### 3.63 \*\*
+
+考虑下面的源代码，这里 E1 和 E2 是用 #define 声明的宏表达式，计算用参数 n 表示的矩阵 A 的维度。
+这段代码计算矩阵的第 j 列的元素之和。
+
+```c
+1   int sum_col(int n, int A[E1(n)][E2(n)], int j) {
+2       int i;
+3       int result = 0;
+4       for (i = 0; i < E1(n); i++)
+5           result += A[i][j];
+6       return result;
+7   }
+```
+
+编译这个程序，GCC 产生下面的汇编代码：
+
+```asm
+  n at %ebp+8, A at %ebp+12, j at %ebp+16
+1       movl    8(%ebp), %edx
+2       leal    (%edx, %edx), %eax
+3       leal    -1(%eax), %ecx
+4       leal    (%eax,%edx), %esi
+5       movl    $0, %eax
+6       testl   %esi, %esi
+7       jle     .L3
+8       leal    0(,%ecx,4), %ebx
+9       movl    16(%ebp), %eax
+10      movl    12(%ebp), %edx
+11      leal    (%edx,%eax,4), %ecx
+12      movl    $0, %edx
+13      movl    $0, %eax
+14  .L4:
+15      addl    (%ecx), %eax
+16      addl    $1, %edx
+17      addl    %ebx, %ecx
+18      cmpl    %esi, %edx
+19      jl      .L4
+20  .L3:
+```
+
+运用你的逆向工程技术，确定 E1 和 E2 的定义。
+
+TODO
+
+### 3.64 \*\*
+
+这个作业要查看 GCC 为参数和返回值中有结构的函数产生的代码，由此可以看到通常这些语言特性是如何实现的。
+
+下面的 C 代码是函数 word\_sum，它用结构作为参数和返回值，还有一个函数 diff 调用 word\_sum：
+
+```c
+typedef struct {
+    int *p;
+    int v;
+} str1;
+
+typedef struct {
+    int prod;
+    int sum;
+} str2;
+
+str2 word_sum(str1 s1) {
+    str2 result;
+    result.prod = *s1.p * s1.v;
+    result.sum = *s1.p + s1.v;
+    return result;
+}
+
+int diff(int x, int y)
+{
+    str1 s1;
+    str2 s2;
+    s1.p = &x;
+    s1.v = y;
+    s2 = word_sum(s1);
+    return s2.prod - s2.sum;
+}
+```
+
+GCC 为这两个函数产生下面的代码：
+
+```asm
+1   word_sum:
+2       pushl   %ebp
+3       movl    %esp, %ebp
+4       pushl   %ebx
+5       movl    8(%ebp), %eax
+6       movl    16(%ebp), %ebx
+7       movl    12(%ebp), %edx
+8       movl    (%edx), %edx
+9       leal    (%edx,%ebx), %ecx
+10      movl    %ecx, 4(%eax)
+11      imull   %ebx, %edx
+12      movl    %edx, (%eax)
+13      popl    %ebx
+14      popl    %ebp
+15      ret     $4
+
+
+1   diff:
+2       pushl   %ebp
+3       movl    %esp, %ebp
+4       subl    $20, %esp
+5       leal    -8(%ebp), %edx
+6       leal    8(%ebp), %eax
+7       movl    %eax, 4(%esp)
+8       movl    12(%ebp), %eax
+9       movl    %eax, 8(%esp)
+10      movl    %edx, (%esp)
+11      call    word_sum
+12      subl    $4, %esp
+13      movl    -8(%ebp), %eax
+14      subl    -4(%ebp), %eax
+15      leave
+16      ret
+```
+
+指令 ret $4 很像普通的返回指令，但是它将栈指针增加了 8（4个是为了返回地址，加上4的加法），而不是 4。
+
+* A. 从 word\_sum 代码的第 5~7 行我们可以看到，虽然函数只有一个参数，但是看上去好像从栈中取出了 3 个值。描述这三个值分别是什么。
+* B. 从 diff 代码的第 4 行我们可以看到，栈帧中分配了 20 个字节。把它们当做 5 个字段来使用，每个字段 4 个字节。描述每个字段都是怎么用的。
+* C. 你要如何描述向函数传递结构参数的通用策略？
+* D. 你要如何描述处理从函数返回结构值的通用策略？
+
+TODO
+
+### 3.65 \*\*\*
+
+在下面的代码中，A 和 B 是用 #define 定义的常数：
+
+```c
+typedef struct {
+    short x[A][B]; /* Unknown constants A and B */
+    int y;
+} str1;
+
+typedef struct {
+    char array[B];
+    int t;
+    short s[B];
+    int u;
+} str2;
+
+void setVal(str1 *p, str2 *q) {
+    int v1 = q->t;
+    int v2 = q->u;
+    p->y = v1+v2;
+}
+```
+
+GCC 为 setVal 的主体产生下面的代码：
+
+```asm
+1   movl    12(%ebp), %eax
+2   movl    28(%eax), %edx
+3   addl    8(%eax), %edx
+4   movl    8(%ebp), %eax
+5   movl    %edx, 44(%eax)
+```
+
+A 和 B 的值是多少？（答案是唯一的。）
+
+TODO
+
+### 3.66 \*\*\*
+
+你负责维护一个大型 C 程序时，遇到下面这样的代码：
+
+```c
+1   typedef struct {
+2       int left;
+3       a_struct a[CNT];
+4       int right;
+5   } b_struct;
+6
+7   void test(int i, b_struct *bp)
+8   {
+9       int n = bp->left + bp->right;
+10      a_struct *ap = &bp->a[i];
+11      ap->x[ap->idx] = n;
+12  }
+```
+
+编译时常数 CNT 和结构 a\_struct 的声明在一个你没有访问权限的文件中。
+幸好，你有代码的 '.o' 版本，可以用 OBJDUMP 程序来反汇编这些文件，得到下面的汇编代码：
+
+```
+1   00000000 <test>:
+2       0:  55                      push    %ebp
+3       1:  89 e5                   mov     %esp,%ebp
+4       3:  53                      push    %ebx
+5       4:  8b 45 08                mov     0x8(%ebp),%eax
+6       7:  8b 4d 0c                mov     0xc(%ebp),%ecx
+7       a:  6b d8 1c                imul    $0x1c,%eax,%ebx
+8       d:  8d 14 c5 00 00 00 00    lea     0x0(,%eax,8),%edx
+9      14:  29 c2                   sub     %eax,%edx
+10     16:  03 54 19 04             add     0x4(%ecx,%ebx,1), %edx
+11     1a:  8b 81 c8 00 00 00       mov     0xc8(%ecx), %eax
+12     20:  03 01                   add     (%ecx), %eax
+13     22:  89 44 91 08             mov     %eax,0x8(%ecx,%edx,4)
+14     26:  5b                      pop     %ebx
+15     27:  5d                      pop     %ebp
+16     28:  c3                      ret
+```
+
+运用你的逆向工程技术，推断出下列内容：
+
+* A. CNT 的值。
+* B. 结构 a\_struct 的完整声明。假设这个结构只有字段 idx 和 x。
+
+TODO
+
+### 3.67 \*\*\*
+
+考虑下面的联合声明：
+
+```c
+union ele {
+    struct {
+        int *p;
+        int y;
+    } e1;
+    struct {
+        int x;
+        union ele *next;
+    } e2;
+};
+```
+
+这个声明说明联合中可以嵌套结构。
+
+下面的过程（省略了一些表达式）对一个链表进行操作，链表是以上联合作为元素的：
+
+```c
+void proc(union ele *up)
+{
+    up->________ = *(up->________) - up->________;
+}
+```
+
+* A. 下列字段的偏移量是多少（以字节为单位）：
+
+```
+e1.p: ________
+e1.x: ________
+e2.y: ________
+e2.next: ________
+```
+
+* B. 这个结构总共需要多少个字节？
+* C. 编译器为 proc 的主体产生下面的汇编代码：
+
+```asm
+  up at %ebp+8
+1   movl    8(%ebp), %edx
+2   movl    4(%edx), %ecx
+3   movl    (%ecx), %eax
+4   movl    (%eax), %eax
+5   subl    (%edx), %eax
+6   movl    %eax, 4(%ecx)
+```
+
+在这些信息的基础上，填写 proc 代码中缺失的表达式。**提示：** 有些联合引用的解释可以有歧义。
+
+当你清楚引用指引到哪里的时候，就能够澄清这些歧义。
+只有一个答案，不需要进行强制类型转换，且不违反任何类型限制。
+
+TODO
+
+### 3.68 \*
+
+下一个函数 good\_echo，它从标准输入读取一行，再把它写到标准输出。
+你的实现应该对任意长度的输入行都能工作。
+可以使用库函数 fgets，但是你必须确保即使当输入行要求比你已经为缓冲区分配的更多的空间时，你的函数也能正确工作。
+你的代码还应该检查错误条件，要在遇到 1 时返回。
+参考标准 I/O 函数的定义文档。
+
+TODO
+
+### 3.69 \*
+
+下面的声明定义了一类结构，用来构建二叉树：
+
+```c
+1   typedef struct ELE *tree_ptr;
+2
+3   struct ELE {
+4       long val;
+5       tree_ptr left;
+6       tree_ptr right;
+7   };
+```
+
+对于具有如下原型的函数：
+
+```c
+long trace(tree_ptr tp);
+```
+
+GCC 产生下面的 x86-64 代码：
+
+```asm
+1   trace:
+  tp in %rdi
+2       movl    $0, %eax
+3       testq   %rdi, %rdi
+4       je      .L3
+5   .L5:
+6       movq    (%rdi), %rax
+7       movq    16(%rdi), %rdi
+8       testq   %rdi, %rdi
+9       jne     .L5
+10  .L3:
+11      rep
+12      re5
+```
+
+* A. 给出一个该函数的 C 版本，使用 while 循环。
+* B. 用自然语言解释这个函数计算的是什么。
+
+TODO
+
+### 3.70 \*\*
+
+用家庭作业 3.69 中的树结构，以及一个具有以下原型的函数
+
+```c
+long traverse(tree_ptr tp);
+```
+
+GCC 产生下面的 x86-64 代码：
+
+```asm
+1   traverse:
+  tp in %rdi
+2       movq    %rbx, -24(%rsp)
+3       movq    %rbp, -16(%rsp)
+4       movq    %r12, -8(%rsp)
+5       subq    $24, %rsp
+6       movq    %rdi, %rbp
+7       movabsq $9223372036854775807, %rax
+8       testq   %rdi, %rdi
+9       je      .L9
+10      movq    16(%rdi), %rbx
+11      movq    (%rdi), %rdi
+12      call    traverse
+13      movq    %rax, %r12
+14      movq    8(%rbp), %rdi
+15      call    traverse
+16      cmpq    %rax, %r12
+17      cmovle  %r12, %rax
+18      cmpq    %rbx, %rax
+19      cmovg   %rbx, %rax
+20  .L9:
+21      movq    (%rsp), %rbx
+22      movq    8(%rsp), %rbp
+23      movq    16(%rsp), %r12
+24      addq    $24, %rsp
+25      ret
+```
+
+* A. 生成这个函数的 C 版本。
+* B. 用自然语言解释这个函数计算的是什么。
+
+TODO
