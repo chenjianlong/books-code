@@ -2802,38 +2802,107 @@ int switch3(int *p1, int *p2, mode_t action)
   Arguments: p1 at %ebp+8, p2 at %ebp+12, action at %ebp+16
   Registers: result in %edx (initialized to -1)
   The jump targets:
-1   .L17:                           MODE_E
+1   .L17:                               MODE_E
 2       movl        $17, %edx
 3       jmp         .L19
-4 .L13: MODE_A
-5 movl 8(%ebp), %eax
-6 movl (%eax), %edx
-7 movl 12(%ebp), %ecx
-8 movl (%ecx), %eax
-9 movl 8(%ebp), %ecx
-10 movl %eax, (%ecx)
-11 jmp .L19
-12 .L14: MODE_B
-13 movl 12(%ebp), %edx
-14 movl (%edx), %eax
-15 movl %eax, %edx
-16 movl 8(%ebp), %ecx
-17 addl (%ecx), %edx
-18 movl 12(%ebp), %eax
-19 movl %edx, (%eax)
-20 jmp .L19
-21 .L15: MODE_C
-22 movl 12(%ebp), %edx
-23 movl $15, (%edx)
-24 movl 8(%ebp), %ecx
-25 movl (%ecx), %edx
-26 jmp .L19
-27 .L16: MODE_D
-28 movl 8(%ebp), %edx
-29 movl (%edx), %eax
-30 movl 12(%ebp), %ecx
-31 movl %eax, (%ecx)
-32 movl $17, %edx
-33 .L19: default
-34 movl %edx, %eax Set return value
+4   .L13:                               MODE_A
+5       movl        8(%ebp), %eax
+6       movl        (%eax), %edx
+7       movl        12(%ebp), %ecx
+8       movl        (%ecx), %eax
+9       movl        8(%ebp), %ecx
+10      movl        %eax, (%ecx)
+11      jmp         .L19
+12  .L14:                               MODE_B
+13      movl        12(%ebp), %edx
+14      movl        (%edx), %eax
+15      movl        %eax, %edx
+16      movl        8(%ebp), %ecx
+17      addl        (%ecx), %edx
+18      movl        12(%ebp), %eax
+19      movl        %edx, (%eax)
+20      jmp         .L19
+21  .L15:                               MODE_C
+22      movl        12(%ebp), %edx
+23      movl        $15, (%edx)
+24      movl        8(%ebp), %ecx
+25      movl        (%ecx), %edx
+26      jmp         .L19
+27  .L16:                               MODE_D
+28      movl        8(%ebp), %edx
+29      movl        (%edx), %eax
+30      movl        12(%ebp), %ecx
+31      movl        %eax, (%ecx)
+32      movl        $17, %edx
+33  .L19:                               default
+34      movl        %edx, %eax          Set return value
 ```
+
+TODO
+
+### 3.59 \*\*
+
+这个程序给你一个机会，逆向工程一个 switch 语句。
+在下面这个过程中，去掉了 switch 语句的主题：
+
+```c
+1   int switch_prob(int x, int n)
+2   {
+3       int result = x;
+4
+5       switch(n) {
+6
+7           /* Fill in code here */
+8       }
+9
+10      return result;
+11  }
+```
+
+下图给出了这个过程的反汇编机器代码。我们可以可看到，在第 4 行，参数 n 被加载到寄存器 %eax 中.
+
+```asm
+1  08048420 <switch_prob>:
+2   8048420: 55                     push    %ebp
+3   8048421: 89 e5                  mov     %esp,%ebp
+4   8048423: 8b 45 0c               mov     0xc(%ebp),%eax
+5   8048426: 83 e8 28               sub     $0x28,%eax
+6   8048429: 83 f8 05               cmp     $0x5,%eax
+7   804842c: 77 07                  ja      8048435 <switch_prob+0x15>
+8   804842e: ff 24 85 f0 85 04 08   jmp     *0x80485f0(,%eax,4)
+9   8048435: 8b 45 08               mov     0x8(%ebp),%eax
+10  8048438: eb 24                  jmp     804845e <switch_prob+0x3e>
+11  804843b: 8b 45 08               mov     0x8(%ebp),%eax
+12  804843d: 8d 76 00               lea     0x0(%esi),%esi
+13  8048440: eb 19                  jmp     804845b <switch_prob+0x3b>
+14  8048442: 8b 45 08               mov     0x8(%ebp),%eax
+15  8048445: c1 e0 03               shl     $0x3,%eax
+16  8048448: eb 17                  jmp     8048461 <switch_prob+0x41>
+17  804844a: 8b 45 08               mov     0x8(%ebp),%eax
+18  804844d: c1 f8 03               sar     $0x3,%eax
+19  8048450: eb 0f                  jmp     8048461 <switch_prob+0x41>
+20  8048452: 8b 45 08               mov     0x8(%ebp),%eax
+21  8048455: c1 e0 03               shl     $0x3,%eax
+22  8048458: 2b 45 08               sub     0x8(%ebp),%eax
+23  804845b: 0f af c0               imul    %eax,%eax
+24  804845e: 83 c0 11               add     $0x11,%eax
+25  8048461: 5d                     pop     %ebp
+26  8048462: c3                     ret
+```
+
+跳转表驻留在另一个存储器区域中。
+可以从第 8 行的间接跳转看出来，跳转表的起始地址为 0x80485f0。
+用调试器 GDB，我们可以用命令 x/6w 0x80485f0 来检查存储器中的6个4字节的字。
+GDB 打印出下面的内容：
+
+```
+(gdb) x/6w 0x80485f0
+0x80485f0: 0x8048442 0x8048435 0x8048442 0x804844a
+0x8048600: 0x8048452 0x804843a
+```
+
+用 C 代码填写开关语句的主体，使它的行为与机器代码一致。
+
+### 3.60 \*\*\*
+
+考虑
