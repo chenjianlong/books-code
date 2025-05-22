@@ -317,7 +317,9 @@ int shift_left2_rightn(int x, int n)
 4   sarl %ecx, %eax         x >>= n
 ```
 
-### 练习题 3.9 图 3-8a 中函数有以下变种，有些表达式用空格替代：
+### 练习题 3.9
+
+图 3-8a 中函数有以下变种，有些表达式用空格替代：
 
 ```c
 1   int arith(int x,
@@ -360,7 +362,9 @@ int shift_left2_rightn(int x, int n)
 10  }
 ```
 
-### 练习题 3.10 常常可以看见以下形式的汇编代码行：
+### 练习题 3.10
+
+常常可以看见以下形式的汇编代码行：
 
 ```asm
 xorl %edx,%edx
@@ -446,9 +450,9 @@ dest at %ebp+8, x at %ebp+12, y at %ebp+16
 
 答案：
 
-* A. 我们可以看到，这个程序是在 64 位数据上进行多精度操作。还可以看到，64位乘法操作（第4行）使用的是无符号运算，因此我们可以确定 num_t 是 unsigned long long。（PS：不要被第 3 行的 imull 指令迷惑了，两个 32 位无符号乘法和补码乘法结果的低 32 位级表示是一样的,可以复习了第2章的整数乘法部分，或者查看：[整数运算](https://cs-cjl.com/2025/02_01_integer_operations#sideNavTitle4)）
+* A. 我们可以看到，这个程序是在 64 位数据上进行多精度操作。还可以看到，64位乘法操作（第4行）使用的是无符号运算，因此我们可以确定 num_t 是 unsigned long long。（PS：不要被第 3 行的 imull 指令迷惑了，两个 32 位无符号乘法和补码乘法结果的低 32 位级表示是一样的,可以复习下第2章的整数乘法部分，或者查看：[整数运算](https://cs-cjl.com/2025/02_01_integer_operations#sideNavTitle4)）
 * B. y = y<sub>h</sub> ∙ 2<sup>32</sup>+y<sub>l</sub>，这里 y<sub>h</sub> 和 y<sub>l</sub> 分别是高 32 位和低 32 位表示的值。因此我们可以计算 x ∙ y = x ∙ y<sub>h</sub> ∙ 2<sup>32</sup>+x ∙ y<sub>l</sub>。
-乘积的完整表示是 96 位长，但是我们值需要低 64 位。
+乘积的完整表示是 96 位长，但是我们只需要低 64 位。
 因此可以设 s 为 x ∙ y<sub>h</sub> 的低 32 位，而 t 为 x ∙ y<sub>l</sub> 的完整的 64 位乘积，可以将之划分为高位部分 t<sub>h</sub> 和低位部分 t<sub>l</sub>。
 最终的结果是 t<sub>l</sub> 是低位部分，而 s + t<sub>h</sub> 是高位部分。
 
@@ -2713,7 +2717,25 @@ GCC 生成下面的汇编代码实现计算：
 
 **提示：** 参考练习题 3.12 及其答案。
 
-TODO
+答案：
+
+```asm
+  dest at %ebp+8, x at %ebp+12, y at %ebp+20
+1   movl    12(%ebp), %esi              Load x_l
+2   movl    20(%ebp), %eax              Load y
+3   movl    %eax, %edx                  tmp = y
+4   sarl    $31, %edx                   tmp >>= 31
+5   movl    %edx, %ecx
+6   imull   %esi, %ecx                  ecx = x_l * (y >> 31)
+7   movl    16(%ebp), %ebx              Load x_h
+8   imull   %eax, %ebx                  ebx = x_h * y
+9   addl    %ebx, %ecx                  ecx += ebx
+10  mull    %esi                        t = x_l * y
+11  leal    (%ecx, %edx), %edx          
+12  movl    8(%ebp), %ecx
+13  movl    %eax, (%ecx)
+14  movl    %edx, 4(%ecx)
+```
 
 ### 3.56 \*\*
 
