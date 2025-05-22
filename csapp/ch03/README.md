@@ -3495,10 +3495,10 @@ GCC 为这两个函数产生下面的代码：
 6       movl    16(%ebp), %ebx          Get s1.v
 7       movl    12(%ebp), %edx          Get s1.p
 8       movl    (%edx), %edx            Get *(s1.p)
-9       leal    (%edx,%ebx), %ecx       s1.p+sp.v
-10      movl    %ecx, 4(%eax)           result.sum = *(s1.p+s1.v)
-11      imull   %ebx, %edx              result.prod = *(s1.p) * s1.v
-12      movl    %edx, (%eax)            resul
+9       leal    (%edx,%ebx), %ecx       sum = s1.p+sp.v
+10      movl    %ecx, 4(%eax)           result.sum = sum
+11      imull   %ebx, %edx              prod = *(s1.p) * s1.v
+12      movl    %edx, (%eax)            result.prod = prod
 13      popl    %ebx                    Restore %ebx
 14      popl    %ebp                    Restore %ebp
 15      ret     $4
@@ -3524,11 +3524,25 @@ GCC 为这两个函数产生下面的代码：
 
 * A. 从 word\_sum 代码的第 5~7 行我们可以看到，虽然函数只有一个参数，但是看上去好像从栈中取出了 3 个值。描述这三个值分别是什么。
 
+执行完第12行汇编代码的栈为：
+
+![](images/05_22_ex3.64A.svg)
+
 分别是 result 的地址，s1.v 和 s1.p
 
 * B. 从 diff 代码的第 4 行我们可以看到，栈帧中分配了 20 个字节。把它们当做 5 个字段来使用，每个字段 4 个字节。描述每个字段都是怎么用的。
+
+如下图所示，展示了执行完第 10 行代码的栈示意图：
+
+![](images/05_22_ex3.64B.svg)
+
 * C. 你要如何描述向函数传递结构参数的通用策略？
+
+向函数传递结构的时候会将结构的每个字段都放在栈中传递，结构中前面的变量放在栈的低地址，靠后的放高地址。
+
 * D. 你要如何描述处理从函数返回结构值的通用策略？
+
+如果函数返回的是结构体，调用函数会先在栈中为返回结构分配好地址，然后将返回结构体的地址放在最靠近栈顶的地方（比第一个参数更靠近栈顶）
 
 ### 3.65 \*\*\*
 
@@ -3566,7 +3580,31 @@ GCC 为 setVal 的主体产生下面的代码：
 
 A 和 B 的值是多少？（答案是唯一的。）
 
-TODO
+答案：
+
+首先给汇编代码添加注解：
+
+```asm
+1   movl    12(%ebp), %eax      Get q
+2   movl    28(%eax), %edx      v2 = q->u
+3   addl    8(%eax), %edx      t = q->t+v2
+4   movl    8(%ebp), %eax       Get p
+5   movl    %edx, 44(%eax)      p->y = t;
+```
+
+可知：char array[B] + padding 为 8 字节大小，short s[B]+padding2 为 28-8-4=16字节，padding和padding2的范围是0~3，B的合法值为8或者7
+
+str1 中的 short x[A][B]+padding 占用了44字节大小，也就是 A\*B\*2+padding=44，padding3 为 0~3
+
+padding3 等于 0 时，A\*B=22，显然无法得到解为正整数的 A
+
+padding3 为 1或者3时，显然也无法得到解为正整数的 A
+
+当 padding3 为 2 时，A\*B=21，当B等于7时，得到A为3,当 B 为 8时，A无正整数解
+
+综上，唯一解是：
+
+* A 等于 3，B 等于 7
 
 ### 3.66 \*\*\*
 
