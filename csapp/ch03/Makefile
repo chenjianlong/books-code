@@ -5,8 +5,9 @@
 
 ASSEMBLES = ex3.19.s ex3.22.s ex3.33.s ex3.61.s
 ASSEMBLES64 = ex3.57.s
+BIN = ex3.68
 
-all: $(ASSEMBLES) $(ASSEMBLES64)
+all: $(ASSEMBLES) $(ASSEMBLES64) $(BIN)
 	@echo "All completed!"
 
 $(ASSEMBLES): %.s: %.c

@@ -3652,7 +3652,39 @@ padding3 为 1或者3时，显然也无法得到解为正整数的 A
 * A. CNT 的值。
 * B. 结构 a\_struct 的完整声明。假设这个结构只有字段 idx 和 x。
 
-TODO
+答案：
+
+```
+1   00000000 <test>:
+2       0:  55                      push    %ebp                        Save %ebp
+3       1:  89 e5                   mov     %esp,%ebp                   Set stack frame
+4       3:  53                      push    %ebx                        Save %ebx
+5       4:  8b 45 08                mov     0x8(%ebp),%eax              Get i
+6       7:  8b 4d 0c                mov     0xc(%ebp),%ecx              Get bp
+7       a:  6b d8 1c                imul    $0x1c,%eax,%ebx             i*28
+8       d:  8d 14 c5 00 00 00 00    lea     0x0(,%eax,8),%edx           8*i
+9      14:  29 c2                   sub     %eax,%edx                   7*i
+10     16:  03 54 19 04             add     0x4(%ecx,%ebx,1), %edx      Get xx 7i+*(28*i+bp+4) // bp->a[i].idx+7i
+11     1a:  8b 81 c8 00 00 00       mov     0xc8(%ecx), %eax            Get bp->right(offset 200)
+12     20:  03 01                   add     (%ecx), %eax                n = bp->left+bp->right
+13     22:  89 44 91 08             mov     %eax,0x8(%ecx,%edx,4)       ap->x[ap->idx] = n //*(bp+4xx+8)=n // *(bp+28i+4idx+8) = n
+14     26:  5b                      pop     %ebx
+15     27:  5d                      pop     %ebp
+16     28:  c3                      ret
+```
+
+* A. CNT 的值。
+
+6
+
+* B. 结构 a\_struct 的完整声明。假设这个结构只有字段 idx 和 x。
+
+```c
+struct a_struct {
+    int idx;
+    int x[6];
+};
+```
 
 ### 3.67 \*\*\*
 
@@ -3711,15 +3743,49 @@ e2.next: ________
 
 TODO
 
+* A. 下列字段的偏移量是多少（以字节为单位）：
+
+```
+e1.p: 0
+e1.x: 4
+e2.y: 0
+e2.next: 4
+```
+
+* B. 这个结构总共需要多少个字节？
+
+8 个字节
+
+* C. 给汇编代码添加注解
+
+```asm
+  up at %ebp+8
+1   movl    8(%ebp), %edx       Get up
+2   movl    4(%edx), %ecx       Get up->e2.next
+3   movl    (%ecx), %eax        Get up->e2.next->e1.p
+4   movl    (%eax), %eax        Get *(up->e2.next->e1.p)
+5   subl    (%edx), %eax        *(up->e2.next->e1.p) - up->e2.y
+6   movl    %eax, 4(%ecx)       up->e2.next->e1.x = *(up->e2.next->e1.p) - up->e2.y
+```
+
+因此：
+
+```c
+void proc(union ele *up)
+{
+    up->e2.next->e1.x = *(up->e2.next->e1.p) - up->e2.y;
+}
+```
+
 ### 3.68 \*
 
-下一个函数 good\_echo，它从标准输入读取一行，再把它写到标准输出。
+写一个函数 good\_echo，它从标准输入读取一行，再把它写到标准输出。
 你的实现应该对任意长度的输入行都能工作。
 可以使用库函数 fgets，但是你必须确保即使当输入行要求比你已经为缓冲区分配的更多的空间时，你的函数也能正确工作。
 你的代码还应该检查错误条件，要在遇到 1 时返回。
 参考标准 I/O 函数的定义文档。
 
-TODO
+答案： [ex3.68.c](ex3.68.c)
 
 ### 3.69 \*
 
@@ -3756,13 +3822,47 @@ GCC 产生下面的 x86-64 代码：
 9       jne     .L5
 10  .L3:
 11      rep
-12      re5
+12      ret
 ```
 
 * A. 给出一个该函数的 C 版本，使用 while 循环。
 * B. 用自然语言解释这个函数计算的是什么。
 
-TODO
+给汇编代码添加注释：
+
+```asm
+1   trace:
+  tp in %rdi
+2       movl    $0, %eax            Set 0
+3       testq   %rdi, %rdi          Check tp
+4       je      .L3                 If tp == NULL goto end
+5   .L5:                          loop:
+6       movq    (%rdi), %rax        ret = tp->val
+7       movq    16(%rdi), %rdi      tp = t->right
+8       testq   %rdi, %rdi          Check tp
+9       jne     .L5                 If tp != NULL goto loop
+10  .L3:                          end:
+11      rep
+12      ret
+```
+
+* A. 给出一个该函数的 C 版本，使用 while 循环。
+
+```c
+long trace(tree_ptr tp)
+{
+    long result = 0
+    while (tp) {
+        result = tp->val;
+        tp = tp->right
+    }
+    return result;
+}
+```
+
+* B. 用自然语言解释这个函数计算的是什么。
+
+返回二叉树最右侧叶子节点的值
 
 ### 3.70 \*\*
 
@@ -3782,19 +3882,19 @@ GCC 产生下面的 x86-64 代码：
 4       movq    %r12, -8(%rsp)
 5       subq    $24, %rsp
 6       movq    %rdi, %rbp
-7       movabsq $9223372036854775807, %rax
+7       movabsq $-9223372036854775808, %rax
 8       testq   %rdi, %rdi
 9       je      .L9
-10      movq    16(%rdi), %rbx
-11      movq    (%rdi), %rdi
+10      movq    (%rdi), %rbx
+11      movq    8(%rdi), %rdi
 12      call    traverse
 13      movq    %rax, %r12
-14      movq    8(%rbp), %rdi
+14      movq    16(%rbp), %rdi
 15      call    traverse
 16      cmpq    %rax, %r12
-17      cmovle  %r12, %rax
+17      cmovge  %r12, %rax
 18      cmpq    %rbx, %rax
-19      cmovg   %rbx, %rax
+19      cmovl   %rbx, %rax
 20  .L9:
 21      movq    (%rsp), %rbx
 22      movq    8(%rsp), %rbp
@@ -3806,4 +3906,61 @@ GCC 产生下面的 x86-64 代码：
 * A. 生成这个函数的 C 版本。
 * B. 用自然语言解释这个函数计算的是什么。
 
-TODO
+
+答案：
+
+给汇编代码添加注释：
+
+```asm
+1   traverse:
+  tp in %rdi
+2       movq    %rbx, -24(%rsp)                 Save %rbx
+3       movq    %rbp, -16(%rsp)                 Save %rbp
+4       movq    %r12, -8(%rsp)                  Save %412
+5       subq    $24, %rsp                       Allocate 24byte on stack
+6       movq    %rdi, %rbp                      Get tp
+7       movabsq $-9223372036854775808, %rax     0x8000,0000,0000,0000
+8       testq   %rdi, %rdi                      Check tp
+9       je      .L9                             If tp == NULL goto end
+10      movq    (%rdi), %rbx                    Get tp->val
+11      movq    8(%rdi), %rdi                   Get tp->left
+12      call    traverse                        Call traverse
+13      movq    %rax, %r12                      Save result to %r12
+14      movq    16(%rbp), %rdi                  tp->right
+15      call    traverse                        Call traverse
+16      cmpq    %rax, %r12                      Compare traverse(tp->left):%rax
+17      cmovge  %r12, %rax                      If >= %rax=traverse(tp->left)
+18      cmpq    %rbx, %rax                      Compare %rax:tp->right
+19      cmovl   %rbx, %rax                      If < %rax=tp->val
+20  .L9:
+21      movq    (%rsp), %rbx                    Restore reg
+22      movq    8(%rsp), %rbp
+23      movq    16(%rsp), %r12
+24      addq    $24, %rsp                       Restore stack
+25      ret
+```
+
+* A. 生成这个函数的 C 版本。
+
+```c
+long traverse(tree_ptr tp)
+{
+    if (!tp) return 0x8000000000000000;
+
+    long r1 = traverse(tp->left);
+    long result = traverse(tp->right);
+    if (r1 >= result) {
+        result = r1;
+    }
+
+    if (result < tp->val) {
+        result = tp->val;
+    }
+
+    return result;
+}
+```
+
+* B. 用自然语言解释这个函数计算的是什么。
+
+计算二叉树所有节点的最大值
