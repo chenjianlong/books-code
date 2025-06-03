@@ -1,0 +1,77 @@
+# Bubble sort
+# This version uses a jump
+# Execution begins at address 0
+	.pos 0
+init:	irmovl Stack, %esp  	# Set up Stack pointer
+	irmovl Stack, %ebp  	# Set up base pointer
+	jmp Main		# Execute main program
+
+# Array of 5 elements
+	.align 4
+array:	.long 0x3
+	.long 0x1
+	.long 0x5
+	.long 0x2
+    .long 0x4
+
+Main:	irmovl $5,%eax
+	pushl %eax	# Push 5
+	irmovl array,%edx
+	pushl %edx      # Push array
+	call Bubble	# Bubble(array, 4)
+	halt
+
+	# void Bubble(int *data, int count)
+Bubble:
+	pushl %ebp
+	rrmovl %esp,%ebp
+	mrmovl 8(%ebp),%ecx 	# ecx = data
+	mrmovl 12(%ebp),%edx	# edx = count
+	rrmovl %edx, %eax
+	irmovl $1, %edi
+	subl   %edi, %eax
+	addl   %eax, %eax
+	addl   %eax, %eax
+	addl   %ecx, %eax		# eax = last
+
+	rrmovl %eax, %edi
+	subl   %ecx, %edi		# Compare last:data
+	je     End
+
+Loop:
+	# outer body
+	rrmovl %ecx, %esi		# esi = data(i=data)
+	rrmovl %esi, %edi
+	subl   %eax, %edi		# Compare  i:last
+	je     LoopInnerEnd
+
+LoopInner:
+	# inner body
+	mrmovl (%esi), %ebx		# *i
+	mrmovl 4(%esi), %edi	# *(i+1)
+	subl   %ebx, %edi
+	jge    LoopInnerEndIf
+	mrmovl 4(%esi), %edi	# t=*(i+1)
+	rmmovl %ebx, 4(%esi)	# *(i+1)=*i
+	rmmovl %edi, (%esi)		# *i = t
+
+LoopInnerEndIf:
+	iaddl   $4, %esi
+	rrmovl %esi, %edi
+	subl   %eax, %edi
+	jl     LoopInner
+
+LoopInnerEnd:
+	irmovl $4, %edi
+	subl   %edi, %eax		# last--
+	rrmovl %eax, %edi
+	subl   %ecx, %edi		# Compare last:data
+	jg	   Loop
+	
+End:	
+	popl %ebp
+	ret
+	.pos 0x100
+Stack:	# The stack goes here
+/* $end code-ysa */
+/* $end code-yso */
