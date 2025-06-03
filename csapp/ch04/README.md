@@ -395,6 +395,8 @@ int mem_data = [
 我们希望只为向存储器写数据的指令设置控制信号 mem\_write。
 写出 SEQ 中信号 mem\_write 的 HCL 代码。
 
+答案：
+
 ```c
 bool mem_write = icode in { IRMMOVL, IPUSHL, ICALL };
 ```
@@ -402,3 +404,15 @@ bool mem_write = icode in { IRMMOVL, IPUSHL, ICALL };
 ### 练习题 4.25
 
 写出 Stat 的 HCL 代码，产生四个状态码 SAOK、SADR、SINS 和 SHLT（参见图 4-26）。
+
+答案：
+
+```c
+## Determine instruction status
+int Stat = [
+      imem_error || dmem_error : SADR;
+      !instr_valid: SINS;
+      icode == IHALT : SHLT;
+      1 : SAOK;
+];
+```
