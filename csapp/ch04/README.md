@@ -430,3 +430,94 @@ TODO
 
 TODO
 
+### 练习题 4.28
+
+写出信号 f\_stat 的 HCL 代码，提供取出的指令的临时状态。
+
+
+答案：
+
+```c
+## Determine status code for fetched instruction
+int f_stat = [
+      imem_error : SADR;
+      !instr_valid: SINS;
+      icode == IHALT : SHLT;
+      1 : SAOK;
+];
+```
+
+### 练习题 4.29
+
+译码阶段中标号为 “dstE” 的块根据来自流水线寄存器 D 中取出的指令的各个阶段，产生寄存器文件 E 端口的寄存器 ID。
+在 PIPE 的 HCL 描述中，得到的信号命名为 d\_dstE。
+根据 SEQ 信号 dstE 的 HCL 描述，写出这个信号的 HCL 代码。（参考 4.3.4 节中的译码阶段。）
+目前不用关心实现条件传送的逻辑。
+
+答案：
+
+```c
+# WARNING: Conditional move not implemented correctly here
+int d_dstE = [
+    D_icode in { IRRMOVL, IIRMOVL, IOPL } : D_rB;
+    D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
+    1 : RNONE; # Don’t write any register
+];
+```
+
+### 练习题 4.30
+
+假设 d\_valA 的 HCL 代码中第三和第四种情况（来自访存阶段的两个转发源）的顺序是反过来的。
+请描述下列程序中 `rrmovl` 指令（第 5 行）导致的行为：
+
+```x86asm
+1   irmovl $5, %edx
+2   irmovl $0x100,%esp
+3   rmmovl %edx,0(%esp)
+4   popl %esp
+5   rrmovl %esp,%eax
+```
+
+答案：
+
+由于 `popl` 指令（第 4 行）造成的加载/使用冒险，`rrmovl` 指令（第 5 行）会暂停一个周期。
+当它进入译码阶段，`popl` 指令处于访存阶段，使 M\_dstE 和 M\_dstM 都等于 %esp。
+如果两种情况反过来，那么来自 M\_valE 的写回优先级较高，导致增加了的栈指针被传送到 `rrmovl` 指令作为参数。
+这与练习题 4.7 中确定的处理 `popl %esp` 的惯例不一样。
+
+### 练习题 4.31
+
+假设 d\_valA 的 HCL 代码中第五和第六种情况（来自写回阶段的两个转发源）的顺序是反过来的。
+写一个会运行错误的 Y86 程序。
+请描述错误是如何发生的，以及它对程序行为的影响。
+
+答案：
+
+```x86asm
+```c
+1   irmovl $5, %edx
+2   irmovl $0x100,%esp
+3   rmmovl %edx,0(%esp)
+4   popl %esp
+5   rrmovl %esp,%eax
+```
+
+两个 `nop` 指令会导致当 `rrmovl` 指令在译码阶段中时，`popl` 指令处于写回阶段。
+如果给予处于写回阶段中的两个转发源错误的优先级，那么寄存器 %eax 会设置成增加了的栈指针（书中答案不一样，应该是书本有误：增加了的程序计数器），而不是从存储器中读出的值。
+
+### 练习题 4.32
+
+根据提供到流水线寄存器 E 的源操作数 valB 的值，写出信号 d\_valB 的 HCL 代码。
+
+答案：
+
+```c
+int d_valB = [
+    d_srcB == e_dstE : e_valE;           # Forward valE from execute
+    d_srcB == M_dstM : m_valM;           # Forward valM from memory
+    d_srcB == M_dstE : M_valE;           # Forward valE from memory
+    d_srcB == W_dstM : W_valM;           # Forward valM from write back
+    d_srcB == W_dstE : W_valE;           # Forward valE from write back
+    1 : d_rvalB;                         # Use value read from register file
+];
+```
