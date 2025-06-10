@@ -499,7 +499,9 @@ int d_dstE = [
 2   irmovl $0x100,%esp
 3   rmmovl %edx,0(%esp)
 4   popl %esp
-5   rrmovl %esp,%eax
+5   nop
+6   nop
+7   rrmovl %esp,%eax
 ```
 
 两个 `nop` 指令会导致当 `rrmovl` 指令在译码阶段中时，`popl` 指令处于写回阶段。
@@ -519,5 +521,36 @@ int d_valB = [
     d_srcB == W_dstM : W_valM;           # Forward valM from write back
     d_srcB == W_dstE : W_valE;           # Forward valE from write back
     1 : d_rvalB;                         # Use value read from register file
+];
+```
+
+### 练习题 4.33
+
+d\_valA 的 HCL 代码中的第二种情况使用了信号 e_dstE，判断是否要选择 ALU 的输出 e_valE 作为转发源。
+假设我们用 E\_dstE，也就是流水线寄存器 E 中的目的寄存器 ID，作为这个选择。
+写出一个采用这个修改过的转发逻辑就会产生错误结果的 Y86 程序。
+
+答案：
+
+```x86asm
+1   irmovl $3, %eax
+2   irmovl $1, %edx
+3   irmovl $2, %ebx
+4   subl %edx, %ebx         # CC = 000
+5   cmove %ebx, %eax        # Not transfer Should be $3
+6   halt
+```
+
+在未修改的代码中，由于 CC = 000，条件数据传送没有发生，%eax 的值为 3（第 5 行执行后）,在修改后的版本，条件传送发生了，%eax 的值为 1（第 5 行执行后）。
+
+### 练习题 4.34
+
+在这个阶段，通过检查数据存储器的非法地址情况，我们能够完成状态码 Stat 的计算。
+写出信号 m\_stat 的 HCL 代码。
+
+```c
+int m_stat = [
+        dmem_erorr : SADR;
+        1 : M_stat;
 ];
 ```
