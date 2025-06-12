@@ -613,3 +613,19 @@ bool set_cc =
 
 写出 PIPE 实现中信号 M\_bubble 和 W\_stall 的 HCL 代码。
 后者需要修改图 4-64 中列出的异常事件。
+
+答案：
+
+在下一个周期向访存阶段插入气泡需要检查当前周期中访存或者写回阶段中是否有异常。
+
+```c
+# Start injecting bubbles as soon as exception passes through memory stage
+bool M_bubble = m_stat in { SADR, SINS, SHLT } || W_stat in { SADR, SINS, SHLT };
+```
+
+对于暂停写回阶段，只用检查这个阶段中的指令的状态。
+如果当访存阶段中有异常指令时我们也暂停了，那么这条指令就不能进入写会阶段：
+
+```c
+bool W_stall = W_stat in { SADR, SINS, SHLT };
+```
