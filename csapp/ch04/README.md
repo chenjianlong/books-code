@@ -554,3 +554,62 @@ int m_stat = [
         1 : M_stat;
 ];
 ```
+
+### 练习题 4.35
+
+写一个 Y86 汇编语言程序，它能导致出现组合 A 的情况，并判读控制逻辑是否处理正确。
+
+TODO
+
+### 练习题 4.36
+
+写一个 Y86 汇编语言程序，它能导致出现组合 B 的情况，如果流水线运行正确，以 halt 指令结束。
+
+TODO
+
+### 练习题 4.37
+
+写出 PIPE 实现中信号  D\_stall 的 HCL 代码。
+
+答案：
+
+```c
+bool D_stall =
+        # Conditions for a load/use hazard
+        E_icode in { IMRMOVL, IPOPL } &&
+        E_dstM in { d_srcA, d_srcB };
+```
+
+### 练习题 4.38
+
+写出 PIPE 实现中信号 E\_bubble 的 HCL 代码。
+
+答案：
+
+```c
+bool E_bubble =
+        # Mispredicted branch
+        (E_icode == IJXX && !e_Cnd) ||
+        # Stalling at fetch while ret passes through pipeline
+        # but not condition for a load/use hazard
+        !(E_icode in { IMRMOVL, IPOPL }
+          && E_dstM in { d_srcA, d_srcB });
+```
+
+### 练习题 4.39
+
+写出 PIPE 实现中信号 set\_cc 的 HCL 代码。
+该信号只对 OPl 指令出现，应该考虑程序异常的影响。
+
+答案：
+
+```c
+bool set_cc =
+        E_icode == IOPL &&
+        !m_stat in { SADR, SINS, SHLT } && !W_stat in { SADR, SINS, SHLT };
+```
+
+### 练习题 4.40
+
+写出 PIPE 实现中信号 M\_bubble 和 W\_stall 的 HCL 代码。
+后者需要修改图 4-64 中列出的异常事件。
