@@ -424,7 +424,7 @@ int Med3 = [
   <tr>
     <th>取指</th>
     <td>icode:ifun←M<sub>1</sub>[PC]</br>rA:rB←M<sub>1</sub>[PC+1]</br>valC←M<sub>4</sub>[PC+2]</br>valP←PC+6</td>
-    <td>icode:ifun←M<sub>1</sub>[PC]=3:0</br>rA:rB←M<sub>1</sub>[PC+1]=0xF:4</br>valC←M<sub>4</sub>[PC+2]=128</br>valP←PC+6=0x00e+6=0x14</td>
+    <td>icode:ifun←M<sub>1</sub>[0x00e]=3:0</br>rA:rB←M<sub>1</sub>[0x00f]=0xF:4</br>valC←M<sub>4</sub>[0x010]=128</br>valP←PC+6=0x00e+6=0x14</td>
   </tr>
   <tr><th>译码</th><td></td><td></td></tr>
   <tr><th>执行</th><td>valE←0+valC</td><td>valE←0+valC=128</td></tr>
@@ -454,14 +454,50 @@ int Med3 = [
 
 这条指令的执行会怎样改变寄存器和PC呢？
 
-TODO
+答案：
+
+<table>
+  <tr><th rowspan=2>阶段</th><th>通用</th><th>具体</th></tr>
+  <tr><td>popl rA</td><td>popl %eax</td></tr>
+  <tr>
+    <th>取指</th>
+    <td>icode:ifun←M<sub>1</sub>[PC]</br>rA:rB←M<sub>1</sub>[PC+1]</br>valP←PC+2</td>
+    <td>icode:ifun←M<sub>1</sub>[0x01c]=0xB:0</br>rA:rB←M<sub>1</sub>[0x01d]=0:0xf</br>valP=0x01c+2=0x01e</td>
+  </tr><tr>
+    <th>译码</th>
+    <td>valA←R[%esp]</br>valB←R[%esp]</td>
+    <td>valA←R[%esp]=124</br>valB←R[%esp]=124</td>
+  </tr><tr>
+    <th>执行</th>
+    <td>valE←valB+4</td>
+    <td>valE←124+4=128</td>
+  </tr><tr>
+    <th>访存</th>
+    <td>valM←M<sub>4</sub>[valA]</td>
+    <td>valM←M<sub>4</sub>[124]=9</td>
+  </tr><tr>
+    <th>写回</th>
+    <td>R[%esp]←valE</br>R[rA]←valM</td>
+    <td>R[%esp]←valE=128</br>R[rA]=R[%eax]←valM=9</td>
+  </tr><tr>
+    <th>更新PC</th>
+    <td>PC←valP</td>
+    <td>PC←valP=0x01e</td>
+  </tr>
+</table>
+
+这条指令会将 %eax 设置为 9，%esp 设置为 128，PC 增加2。
 
 ### 练习题 4.13
 
 根据图 4-20 中列出的步骤，指令 `pushl %esp` 会有什么样的效果？
 这与练习题 4.6 中确定的 Y86 期望的行为一致吗？
 
-TODO
+答案：
+
+将 %esp 的旧值放到 %esp-4 指向的内存空间中，然后将 %esp 设置为 %esp-4。
+
+一致。
 
 ### 练习题 4.14
 
@@ -469,7 +505,11 @@ TODO
 `popl %esp` 执行的效果会是怎样的？
 这与练习题 4.7 中确定的 Y86 期望的行为一致吗？
 
-TODO
+答案：
+
+将 %esp 设置为这条指令执行前 %esp 所指向的内存的值。
+
+一致。
 
 ### 练习题 4.15
 
