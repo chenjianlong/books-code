@@ -1,5 +1,185 @@
 # 第4章 处理器体系结构
 
+## Y86 模拟器
+
+### 编译
+
+[sim](sim) 为官方提供了 Y86 模拟器源码，支持终端模式和 GUI 模式，默认只编译终端模式。
+由于代码里面使用了 `matherr` 这个函数，这个函数在 Glibc 2.27 被删除了，因此只能使用 Glib 2.27 之前的版本进行编译。
+这里用了 Ubuntu16.04 成功编译，编译后可以运行在 Ubuntu22.04 下。
+
+我编译了 GUI 模式，除了 GCC 和 make 以外，还需要安装以下依赖库：
+
+```sh
+sudo apt install tk-dev
+sudo apt install tcl-dev
+sudo apt install bison
+sudo apt install flex
+```
+
+然后修改 Makefile：
+
+```diff
+index 414b774..4a44fc4 100644
+--- a/csapp/ch04/sim/Makefile
++++ b/csapp/ch04/sim/Makefile
+@@ -1,6 +1,6 @@
+ # Comment this out if you don't have Tcl/Tk on your system
+
+-#GUIMODE=-DHAS_GUI
++GUIMODE=-DHAS_GUI
+
+ # Modify the following line so that gcc can find the libtcl.so and
+ # libtk.so libraries on your system. You may need to use the -L option
+@@ -13,12 +13,15 @@ TKLIBS=-L/usr/lib -ltk -ltcl
+ # header files on your system. Comment this out if you don't have
+ # Tcl/Tk.
+
+-TKINC=-isystem /usr/include
++TKINC=-isystem /usr/include/tcl8.6
+
+ ##################################################
+ # You shouldn't need to modify anything below here
+ ##################################################
+
++CFLAGS +=-DUSE_INTERP_RESULT
++CPPFLAGS +=-DUSE_INTERP_RESULT
++
+ # Use this rule (make all) to build the Y86 tools. The variables you've
+ # assigned to GUIMODE, TKLIBS, and TKINC will override the values that
+ # are currently assigned in seq/Makefile and pipe/Makefile.
+```
+
+pipe 和 seq 子目录的 Makefile 也需要做如上修改，然后编译即可。
+
+### 工具介绍
+
+编译后，有如下工具
+
+#### misc/yas
+
+Y86 汇编器，用于将 Y86 汇编代码编译成 Y86 对象代码，对象代码可以随后使用 Y86 模拟器（SEQ 或者 PIPE 实现）来运行。
+
+```sh
+$ ./misc/yas -h
+Usage: ./misc/yas [-V[n]] file.ys
+   -V[n]  Generate memory initialization in Verilog format (n-way blocking)
+```
+
+这里举个例子：
+
+假设有 Y86 汇编代码 prog1.ys：
+
+```x86asm
+# prog1: Pad with 3 nop's
+  irmovl $10,%edx
+  irmovl  $3,%eax
+  nop
+  nop
+  nop
+  addl %edx,%eax
+  halt
+```
+
+可以使用命令：
+
+```sh
+$ ./misc/yas ./prog1.ys
+```
+
+会在源码同一目录下生成 prog1.yo 内容如下：
+
+```verilog
+                      | # prog1: Pad with 3 nop's
+  0x000: 30f20a000000 |   irmovl $10,%edx
+  0x006: 30f003000000 |   irmovl  $3,%eax
+  0x00c: 10           |   nop
+  0x00d: 10           |   nop
+  0x00e: 10           |   nop
+  0x00f: 6020         |   addl %edx,%eax
+  0x011: 00           |   halt
+```
+
+#### misc/yis
+
+Y86 指令集模拟器，输入为 Y86 对象代码（object code）,然后输出运行结果，这里使用上面的 prog1.yo 举个例子：
+
+```sh
+$ ./misc/yis  ./prog1.yo
+Stopped in 7 steps at PC = 0x11.  Status 'HLT', CC Z=0 S=0 O=0
+Changes to registers:
+%eax:	0x00000000	0x0000000d
+%edx:	0x00000000	0x0000000a
+
+Changes to memory:
+```
+
+#### misc/hcl2c
+
+这个工具用于将 HCL 转成 C 代码，使用方法为：
+
+```sh
+$ ./misc/hcl2c  -h
+Usage: ./misc/hcl2c [-h] < HCL_file  >C file
+Output C file on stdout.
+   -a     Add define/use annotations
+   -h     Print this message
+```
+
+可以使用 misc/mux4.hcl 或者书中 4.2 节的 HCL 例子自行测试，这里不演示。
+
+#### misc/hcl2v
+
+这个工具用于将 HCL 转成 verilog，默认不会编译出来，如果需要这个工具，需要进 misc 目录然后：
+
+```sh
+$ make hcl2v
+```
+
+使用方法为：
+
+```sh
+$ ./hcl2v -h
+Usage: ./hcl2v [-h] < HCL_file  >verilog file
+Output verilog code on stdout.
+   -h     Print this message
+```
+
+例如：
+
+```sh
+$ ./hcl2v < mux4.hcl > mux4.verilog
+```
+
+mux4.hcl 内容可以查看：[mux4.hcl](misc/mux4.hcl)
+
+mux4.verilog 为：
+
+```verilog
+assign s1 =
+    (code == 2 | code == 3);
+
+assign s0 =
+    (code == 1 | code == 3);
+
+assign Out4 =
+    ((~s1 & ~s0) ? A : ~s1 ? B : ~s0 ? C : D);
+```
+
+#### seq ssim/ssim+
+
+这两个模拟器使用方法是一样的，通过 seq/Makefile 可知 ssim 使用 seq\-std.hcl 而 ssim\+ 使用 seq\+\-std.hcl
+
+默认只编译 ssim，如果需要 ssim\+ 需要进 seq 目录然后：
+
+```sh
+$ make sseq+
+```
+
+#### pipe psim
+
+这个是流水线化的  Y86 模拟器，默认使用 pipe-std.hcl，如果需要测试其他版本需要修改 pipe/Makefile 的 VERSION 变量。
+
 ## 练习题
 
 ### 练习题 4.1
@@ -100,21 +280,27 @@ int rSum(int *Start, int Count)
 
 在一台 IA32 机器上编译这段 C 代码，然后再把那些指令翻译成 Y86 的指令，这样做可能会有帮助。
 
-TODO
+答案：
+
+[ex4.3.ys](ex4.3.ys)
 
 ### 练习题 4.4
 
 修改 Sum 函数的 Y86 代码（图 4-6），实现 AbsSum，计算一个数组的绝对值的和。
 在内循环中使用条件跳转指令。
 
-TODO
+答案：
+
+[ex4.4.ys](ex4.4.ys)
 
 ### 练习题 4.5
 
 修改 Sum 函数的 Y86 代码（图 4-6），实现 AbsSum，计算一个数组的绝对值的和。
 在内循环中使用条件传送指令。
 
-TODO
+答案：
+
+[ex4.5.ys](ex4.5.ys)
 
 ### 练习题 4.6
 
@@ -139,7 +325,9 @@ C 编译器正常情况下是不会产生这条指令的，所以我们必须用
 
 在实验中，我们发现函数 pushtest 总是返回 0，这表示在 IA32 中 `pushl %esp` 指令的行为是怎样的呢？
 
-TODO
+答：
+
+`pushl %esp` 将 %esp 的值压入栈中，然后再修改 %esp 栈指针本身。
 
 ### 练习题 4.7
 
@@ -173,21 +361,39 @@ TODO
 写出信号 xor 的 HCL 表达式，xor 就是异或，输入为 a 和 b。
 信号 xor 和上面定义的 eq 有什么关系？
 
-TODO
+答案：
+
+```c
+bool xor = (!a && b) || (a && !b);
+```
+
+eq 的输出取反等于 xor 的输出,也就是说 eq 和 xor 的输出互补。
 
 ### 练习题 4.9
 
 假设你用练习题 4.8 中的异或电路而不是位级的相等电路来实现一个字级的相等电路。
 设计一个 32 位字的相等电路需要 32 个字级的异或电路，另外还要两个逻辑门。
 
-TODO
+答案：
+
+![](images/06_16_ex4.9.svg)
 
 ### 练习题 4.10
 
 写一个电路的 HCL 代码，对于输入字 A、B 和 C，选择中间值。
 也就是，输出等于三个输入中居于最小值和最大值中间的那个字。
 
-TODO
+答案：
+
+```c
+int Med3 = [
+  A <= B && B <= C : B;
+  C <= B && B <= A : B;
+  B <= A && A <= C : A;
+  C <= A && A <= B : A;
+  1                : C;
+];
+```
 
 ### 练习题 4.11
 
@@ -208,9 +414,24 @@ TODO
   <tr><th>更新PC</th><td>PC←valP</td><td></td></tr>
 </table>
 
-这条指令的执行会怎样改变寄存器和PC呢？
+这条指令的执行会怎样改变寄存器和 PC 呢？
 
-TODO
+答案：
+
+<table>
+  <tr><th rowspan=2>阶段</th><th>通用</th><th>具体</th></tr>
+  <tr><td>irmovl V, rB</td><td>irmovl $128, %esp</td></tr>
+  <tr>
+    <th>取指</th>
+    <td>icode:ifun←M<sub>1</sub>[PC]</br>rA:rB←M<sub>1</sub>[PC+1]</br>valC←M<sub>4</sub>[PC+2]</br>valP←PC+6</td>
+    <td>icode:ifun←M<sub>1</sub>[PC]=3:0</br>rA:rB←M<sub>1</sub>[PC+1]=0xF:4</br>valC←M<sub>4</sub>[PC+2]=128</br>valP←PC+6=0x00e+6=0x14</td>
+  </tr>
+  <tr><th>译码</th><td></td><td></td></tr>
+  <tr><th>执行</th><td>valE←0+valC</td><td>valE←0+valC=128</td></tr>
+  <tr><th>访存</th><td></td><td></td></tr>
+  <tr><th>写回</th><td>R[rB]←valE</td><td>R[%esp]←valE=128</td></tr>
+  <tr><th>更新PC</th><td>PC←valP</td><td>PC←valP=0x014</td></tr>
+</table>
 
 ### 练习题 4.12
 
@@ -629,3 +850,41 @@ bool M_bubble = m_stat in { SADR, SINS, SHLT } || W_stat in { SADR, SINS, SHLT }
 ```c
 bool W_stall = W_stat in { SADR, SINS, SHLT };
 ```
+
+### 练习题 4.41
+
+假设我们使用了一种成功率可以达到 65% 的分支预测策略，例如后向分支选择、前向分支就不选择，见 4.5.4 节。
+那么对 CPI 有什么样的影响，假设其他所有频率都不变。
+
+答案：
+
+|原因|名称|指令频率|条件频率|气泡|乘积|
+|-|-|-|-|-|-|
+|加载/使用|_lp_|0.25|0.20|1|0.05|
+|预测错误|_mp_|0.20|0.35|2|0.14|
+|返回|_rp_|0.02|1.00|3|0.06|
+|总处罚|||||0.25|
+
+三种处罚的总和是 0.25，得到 CPI 为 1.25,比原来的 1.27 少了 0.02。
+
+### 练习题 4.42
+
+让我们来分析你为练习题 4.4 和 4.5 写的程序中使用条件传送和条件控制转移的相对性能。
+假设用这些程序计算一个非常长的数据的绝对值的和，所以整体性能主要由内循环所需要的周期数决定。
+假设跳转指令预测为选择分支，而大约 50% 的数组值为正。
+
+* A. 平均来说，这两个程序的内循环中执行了多少条指令？
+* B. 平均来说，这两个程序的内循环中插入了多少个气泡？
+* C. 对着两个程序来说，每个数组元素平均需要多少个时钟周期？
+
+答案：
+
+* A
+  * 平均来说，4.4 内循环中执行了 10.5 条指令。
+  * 平均来说，4.5 内循环中执行了 10 条指令。
+* B
+  * 平均来说，4.4 内循环中插入了 1 个气泡。
+  * 平均来说，4.5 内循环中插入了 0 个气泡。
+* C
+  * 4.4 每个数组元素平均需要 11.5 个时钟周期。
+  * 4.5 每个数组元素平均需要 10 个时钟周期。
