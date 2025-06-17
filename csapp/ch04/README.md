@@ -327,7 +327,7 @@ C 编译器正常情况下是不会产生这条指令的，所以我们必须用
 
 答：
 
-`pushl %esp` 将 %esp 的值压入栈中，然后再修改 %esp 栈指针本身。
+`pushl %esp` 将 %esp 的当前值压入栈中，然后再修改 %esp 栈指针本身。
 
 ### 练习题 4.7
 
@@ -352,7 +352,7 @@ C 编译器正常情况下是不会产生这条指令的，所以我们必须用
 
 答案：
 
-这表明 `popl %esp` 会弹出这条指令执行前 %esp 指定的内存的值到 %esp 寄存器中。
+这表明 `popl %esp` 将 %esp 当前值指定的内存的值放到 %esp 寄存器中。
 
 这条命令等价于 `mrmovl (%esp), %esp`。
 
@@ -526,7 +526,16 @@ int Med3 = [
 |写回|R[rB]←valE|
 |更新PC|PC←valP|
 
-TODO
+答案：
+
+|阶段|cmovXX rA, rB|
+|-|-|
+|取指|icode:ifun←M<sub>1</sub>[PC]</br>rA:rB←M<sub>1</sub>[PC+1]</br>valP←PC+2|
+|译码|valA←R[rA]|
+|执行|valE←0+valA</br>Cnd ← Cond(CC, ifun)|
+|访存||
+|写回|if (Cnd)</br>R[rB]←valE|
+|更新PC|PC←valP|
 
 ### 练习题 4.16
 
@@ -541,19 +550,48 @@ TODO
     <td>icode:ifun←M<sub>1</sub>[PC]</br>valC←M<sub>4</sub>[PC+1]</br>valP←PC+5</td>
     <td></td>
   </tr>
-  <tr><th>译码</th><td></td><td></td></tr>
+  <tr><th>译码</th><td>valB←R[%esp]</td><td></td></tr>
   <tr><th>执行</th><td>valE←valB+(-4)</td><td></td></tr>
   <tr><th>访存</th><td>M<sub>4</sub>[valE]←valP</td><td></td></tr>
   <tr><th>写回</th><td>R[%esp]←valE</td><td></td></tr>
   <tr><th>更新PC</th><td>PC←valC</td><td></td></tr>
 </table>
 
-TODO
+答案：
+
+<table>
+  <tr><th rowspan=2>阶段</th><th>通用</th><th>具体</th></tr>
+  <tr><td>call Dest</td><td>call 0x209</td></tr>
+  <tr>
+    <th>取指</th>
+    <td>icode:ifun←M<sub>1</sub>[PC]</br>valC←M<sub>4</sub>[PC+1]</br>valP←PC+5</td>
+    <td>icode:ifun←M<sub>1</sub>[0x023]=8:0</br>valC←M<sub>4</sub>[0x024]=0x029</br>valP←PC+5=0x028</td>
+  </tr><tr>
+    <th>译码</th>
+    <td>valB←R[%esp]</td>
+    <td>valB←R[%esp]=128</td>
+  </tr><tr>
+    <th>执行</th>
+    <td>valE←valB+(-4)</td>
+    <td>valE←valB+(-4)=128-4=124</td>
+  </tr><tr>
+    <th>访存</th>
+    <td>M<sub>4</sub>[valE]←valP</td>
+    <td>M<sub>4</sub>[124]←valP=0x028</td>
+  </tr><tr>
+    <th>写回</th>
+    <td>R[%esp]←valE</td>
+    <td>R[%esp]←valE=124</td>
+  </tr><tr>
+    <th>更新PC</th>
+    <td>PC←valC</td>
+    <td>PC←valC=0x029</td>
+  </tr>
+</table>
 
 ### 练习题 4.17
 
 写出 SEQ 实现中信号 need\_valC 的 HCL 代码。
-
 
 答案：
 
@@ -680,7 +718,23 @@ int Stat = [
 
 ### 练习题 4.26
 
-TODO
+假设我们分析图 4-32 中的组合逻辑，认为它可以分成 6 个块，依次命名为 A\~F，延迟分别为 80、30、60、50、70 和 10ps，如下图所示：
+
+![](images/06_17_ex4.26.svg)
+
+在这些块之间插入流水线寄存器，就得到这一设计的流水线化的版本。
+根据在哪里插入流水线寄存器，会出现不同的流水线深度（有多少个阶段）和最大吞吐量的组合。
+假设每个流水线寄存器的延迟为 20ps。
+
+* A. 只插入一个寄存器，得到一个二阶段的流水线。要使吞吐量最大化，应该在哪里插入寄存器呢？吞吐量和延迟是多少？
+* B. 要使一个三阶段的流水线的吞吐量最大化，应该将两个寄存器插在哪里呢？吞吐量和延迟是多少？
+* C. 要使一个四阶段的流水线的吞吐量最大化，应该将三个寄存器插在哪里呢？吞吐量和延迟是多少？
+* D. 要得到一个吞吐量最大的设计，至少要有几个阶段？描述这个设计及其吞吐量和延迟。
+
+* A. 在逻辑 C 和 D 之间插入寄存器，吞吐量是 5.26 GIPS，延迟是：380ps。
+* B. 分别在逻辑 B 和 C 以及 D 和 E 之间插入寄存器，吞吐量是 7.69 GIPS，延迟是：390ps。
+* C. 分别在逻辑 A 和 B，C 和 D 以及 D 和 E 之间插入寄存器，吞吐量是 9.09 GIPS，延迟是：440ps。
+* B. 要使得吞吐量最大，至少需要 5 个阶段，在 (A,B)、(B,C)、(C,D)、(D,E) 之间插入寄存器，吞吐量是 10GIPS,延迟是 500ps。
 
 ### 练习题 4.27
 
@@ -689,12 +743,14 @@ TODO
 * A. 系统的延迟和吞吐量写成 k 的函数是什么？
 * B. 吞吐量的上限等于多少？
 
-TODO
+答案：
+
+* A 吞吐量为：1000/(300/k+20)=100/(30/k+2)=1000k/(300+20k) GIPS，延迟为：300+20k ps
+* B 当 k 为无穷大时，吞吐量达到上限为：100/2=50 GIPS，此时延迟为无穷大
 
 ### 练习题 4.28
 
 写出信号 f\_stat 的 HCL 代码，提供取出的指令的临时状态。
-
 
 答案：
 
@@ -809,6 +865,8 @@ d\_valA 的 HCL 代码中的第二种情况使用了信号 e_dstE，判断是否
 在这个阶段，通过检查数据存储器的非法地址情况，我们能够完成状态码 Stat 的计算。
 写出信号 m\_stat 的 HCL 代码。
 
+答案：
+
 ```c
 int m_stat = [
         dmem_erorr : SADR;
@@ -818,15 +876,19 @@ int m_stat = [
 
 ### 练习题 4.35
 
-写一个 Y86 汇编语言程序，它能导致出现组合 A 的情况，并判读控制逻辑是否处理正确。
+写一个 Y86 汇编语言程序，它能导致出现组合 A 的情况，并判断控制逻辑是否处理正确。
 
-TODO
+答案：
+
+[cjr.ys](y86-code/cjr.ys)
 
 ### 练习题 4.36
 
 写一个 Y86 汇编语言程序，它能导致出现组合 B 的情况，如果流水线运行正确，以 halt 指令结束。
 
-TODO
+答案：
+
+[ret-hazard.ys](y86-code/ret-hazard.ys)
 
 ### 练习题 4.37
 
@@ -928,3 +990,126 @@ bool W_stall = W_stat in { SADR, SINS, SHLT };
 * C
   * 4.4 每个数组元素平均需要 11.5 个时钟周期。
   * 4.5 每个数组元素平均需要 10 个时钟周期。
+
+  ## 家庭作业
+
+  ### 4.43 \*
+
+  在 3.4.2 节中，IA32 `pushl` 指令被描述成要减少栈指针，然后将寄存器存储在栈指针的位置。
+  因此，如果我们有一条指令形如对于某个寄存器 REG，pushl REG，它等价于下面的代码序列：
+
+  ```x86asm
+  subl $4, %esp       Decrement stack pointer
+  movl REG,(%esp)     Store REG on stack
+  ```
+
+  * A. 借助于练习题 4.6 中所做的分析，这段代码序列正确描述了指令 `pushl %esp` 的行为吗？请解释。
+  * B. 你该如何改写这段代码序列，使得它能够像对 REG 是其他寄存器时一样，正确地描述 REG 是 %esp 的情况。
+
+答案：
+
+* A 没正确描述 `pushl %esp`，这段代码将 %esp 修改后的值保存到栈中了
+* B. 如下：
+
+ ```x86asm
+ movl REG,-4(%esp)     Store REG on stack
+ subl $4, %esp       Decrement stack pointer
+ ```
+
+ ### 4.44 \*
+
+ 3.4.2 节中，IA32 `popl` 指令被描述为将来自栈顶的结果复制到目的寄存器，然后将栈指针减少。
+ 因此，如果我们有一条指令形如 `popl REG`，它等价于下面的代码序列：
+
+ ```x86asm
+movl (%esp),REG     Read REG from stack
+addl $4,%esp        Increment stack pointer
+```
+
+* A.借助于练习题 4.7 中所做的分析，这段代码序列正确地描述了指令 `popl %esp` 的行为吗? 请解释。
+* B.你该如何改写这段代码序列，使得它能够像对 REG 是其他寄存器时一样，正确地描述 REG 是 %esp 的情况?
+
+答案：
+
+* A. 没有，指令序列会将栈中的值赋值给 %esp 然后将 %esp 的值加 4
+* B.
+
+```x86asm
+addl $4,%esp        Increment stack pointer
+movl -4(%esp),REG     Read REG from stack
+```
+
+### 4.45 \*\*\*
+
+你的作业是写一个执行冒泡排序的Y86程序。
+下面这个 C 函数用数组引用实现冒泡排序，供你参考:
+
+```c
+/* Bubble sort: Array version */
+void bubble_a(int *data, int count) {
+  int i, last;
+  for (last = count-1; last > 0; last--) {
+    for (i = 0; i < last; i++)
+      if (data[i+1] < data[i]) {
+        /* Swap adjacent elements */
+        int t = data[i+1];
+        data[i+1] = data[i];
+        data[i] = t;
+      }
+  }
+}
+```
+
+* A. 书写并测试一个 C 版本，它用指针引用数组元素，而不是用数组索引。
+* B. 书写并测试一个由这个函数和测试代码组成的 Y86 程序。
+你会发现模仿编译你的 C 代码产生的 IA32 代码来做实现会很有帮助。
+虽然指针比较通常是用无符号算术运算来实现的，但是在这个练习中，你可以使用有符号算术运算。
+
+答案：
+
+* A. [ex4.45a.c](ex4.45a.c)
+* B. [ex4.45b.ys](ex4.45b.ys)
+
+### 4.46 \*\*
+
+修改对家庭作业 4.45 所写的代码，用条件传送来实现冒泡排序函数的内循环中的测试和交换。
+
+答案： [ex4.46.ys](ex4.46.ys)
+
+### 4.47 \*
+
+如 3.7.2小节中讲述的那样，IA32的指令 leave 可以用来使栈为返回做准备。
+它等价于下面这个 Y86 代码序列:
+
+```x86asm
+1 rrmovl %ebp, %esp     Set stack pointer to beginning of frame
+2 popl %ebp             Restore saved %ebp and set stack ptr to end of caller’s frame
+```
+
+假设我们要往 Y86 指令集中加入一条指令，编码如下：
+
+![](images/06_17_ex4.47.svg)
+
+请描述实现这一指令所执行的计算。可以参考 `popl` 的计算(图4-20)。
+
+答案：
+
+|阶段|leave|
+|-|-|
+|取指|icode:ifun ← M<sub>1</sub>[PC]</br>valP ← PC+1|
+|译码|valA ← R[%ebp]</br>valB ← R[%ebp]|
+|执行|valE ← valB + 4|
+|访存|valM ← M<sub>4</sub>[valA]|
+|写回|R[%esp] ← valE</br>R[%ebp] ← valM|
+|更新PC|PC ← valP|PC ← valP|PC ← valP|
+
+### 4.48 \*
+
+在 Y86 示例程序中，例如图 4-6 中的 Sum 函数，我们多次遇到想将一个常数加到寄存器的情况(例如第 12 和 13 行，以及第 14 和 15 行)。
+这要求首先用 `irmovl` 指令将一个寄存器设置为这个常数然后用 `addl` 指令把这个值加到目的寄存器。
+假设想添加一条新指令 `iaddl`，其格式如下：
+
+![](images/06_17_ex4.48.svg)
+
+这条指令将常数值 V 加到寄存器 rB。
+请描述实现这一指令所执行的计算。可以参考 `irmovl` 和 `OPl` 的计算(图 4-18)。
