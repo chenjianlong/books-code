@@ -1113,3 +1113,100 @@ void bubble_a(int *data, int count) {
 
 这条指令将常数值 V 加到寄存器 rB。
 请描述实现这一指令所执行的计算。可以参考 `irmovl` 和 `OPl` 的计算(图 4-18)。
+
+答案：
+
+|阶段|iaddl V, rB|
+|-|-|
+|取指|icode:ifun ← M<sub>1</sub>[PC]</br>rA:rB ← M<sub>1</sub>[PC+1]</br>valC ← M<sub>4</sub>[PC+2]</br>valP ← PC+6|
+|译码|valB ← R[rB]|
+|执行|valE ← valB + valC|
+|访存||
+|写回|R[rB] ← valE|
+|更新PC|PC ← valP|
+
+### 4.49 \*\*
+
+文件 seq-full.hcl 还将常数 ILEAVE 声明为十六进制值 D，也就是 `leave` 的指令代码，同时将常数 REBP 声明为 7，即 %ebp 的寄存器。
+修改实现 `leave` 指令的控制逻辑块的 HCL 描述，就像家庭作业 4.47 中描述的那样。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+答案：
+
+* HCL 文件：[ex4.49.hcl](ex4.49.hcl)，具体修改点可以和 sim/y86-code/seq-full.hcl 对比
+* 测试代码：[ex4.49.ys](ex4.49.ys)
+
+### 4.50 \*\*
+
+文件 seq-full.hcl 包括 SEQ 的 HCL 描述，并将常数 IIADDL 声明为十六进制值 C，也就是 `iaddl` 的指令代码。
+修改实现 `iaddl` 指令的控制逻辑块的 HCL 描述，就像家庭作业 4.48 中描述的那样。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+答案：
+
+* HCL 文件：[ex4.50.hcl](ex4.50.hcl)，具体修改点可以和 sim/y86-code/seq-full.hcl 对比
+* 测试代码：[ex4.50.ys](ex4.50.ys)
+
+### 4.51 \*\*\*
+
+假设要创建一个较低成本的、基于我们为PIPE-设计的结构(图4-41)的流水线化的处理器，不使用旁路技术。
+这个设计用暂停来处理所有的数据相关，直到产生所需值的指令已经通过了写回阶段。
+文件 pipe-stall.hcl 包含一个对 PIPE 的HCL 代码的修改版，其中禁止了旁路逻辑。
+也就是信号 d\_valA 和 d\_valB 只是简单地声明如下：
+
+```x86asm
+## DO NOT MODIFY THE FOLLOWING CODE.
+## No forwarding. valA is either valP or value from register file
+int d_valA = [
+    D_icode in { ICALL, IJXX } : D_valP; # Use incremented PC
+    1 : d_rvalA; # Use value read from register file
+];
+
+## No forwarding. valB is value from register file
+int d_valB = d_rvalB;
+```
+
+修改文件结尾处的流水线控制逻辑，使之能正确处理所有可能的控制和数据冒险。
+作为设计工作的一部分，你应该分析各种控制情况的组合，就像我们在 PIPE 的流水线控制逻辑设计中做的那样。
+你会发现有许多不同的组合，因为有更多的情况需要流水线暂停。
+要确保你的控制逻辑能正确处理每种组合情况。
+可以参考实验资料指导你如何为解答生成模拟器以及如何测试。
+
+TODO
+
+### 4.52 \*\*\*
+
+文件 pipe-full.hcl 还包含常数 ILEAVE 和 REBP 的声明。
+修改该文件以实现指令 `leave`，就像家庭作业 4.47 中描述的那样。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+TODO
+
+### 4.53 \*\*\*
+
+文件 pipe-full.hcl 包含一份 PIPE 的 HCL 描述，以及常数值 `IIADDL` 的声明。
+修改该文件以实现指令 `iaddl`，就像家庭作业 4.48 中描述的那样。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+TODO
+
+### 4.54 \*\*\*
+
+文件 pipe-nt.hcl 包含一份 PIPE 的 HCL 描述，并将常数 J\_YES 声明为值 0，即无条件转移指令的功能码。
+修改分支预测逻辑，使之对条件转移预测为不选择分支，而对无条件转移和 `call` 预测为选择分支。
+你需要设计一种方法来得到跳转目标地址 valC，并送到流水线寄存器 M，以便从错误的分支预测中恢复。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+TODO
+
+### 4.55 \*\*
+
+文件 pipe-btfnt.hcl 包含一份PIPE的 HCL 描述，并将常数 J\_YES 声明为值 0，即无条件转移指令的功能码。
+修改分支预测逻辑，使得当 valC &lt; valP 时(后向分支)，就预测条件转移为选择分支，当 valC &gt; valP 时(前向分支)，就预测为不择分支。
+(由于 Y86 不支持无符号运算，你应该使用有符号比较来实现这个测试。)
+并且将无条件转移和 `call` 预测为选择分支。
+你需要设计一种方法来得到 valC 和 valP，并送到流水线寄存器 M，以便从错误的分支预测中恢复。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+TODO
+
+### 4.56 \*\*\*
