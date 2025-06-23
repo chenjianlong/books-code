@@ -1144,7 +1144,7 @@ void bubble_a(int *data, int count) {
 
 答案：
 
-* HCL 文件：[ex4.50.hcl](ex4.50.hcl)，具体修改点可以和 sim/y86-code/seq-full.hcl 对比
+* HCL 文件：[ex4.50.hcl](ex4.50.hcl)，具体修改点可以和 sim/seq/seq-full.hcl 对比
 * 测试代码：[ex4.50.ys](ex4.50.ys)
 
 ### 4.51 \*\*\*
@@ -1172,7 +1172,10 @@ int d_valB = d_rvalB;
 要确保你的控制逻辑能正确处理每种组合情况。
 可以参考实验资料指导你如何为解答生成模拟器以及如何测试。
 
-TODO
+答案：
+
+* HCL 文件：[ex4.51.hcl](ex4.51.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-nobypass.hcl 对比
+* 测试代码：使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
 
 ### 4.52 \*\*\*
 
@@ -1180,14 +1183,25 @@ TODO
 修改该文件以实现指令 `leave`，就像家庭作业 4.47 中描述的那样。
 可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
 
-TODO
+答案：
 
-### 4.53 \*\*\*
+* HCL 文件：[ex4.52.hcl](ex4.52.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-full.hcl 对比
+* 测试代码：
+  * 使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
+  * [ex4.49.ys](ex4.49.ys)
+
+### 4.53 \*\*
 
 文件 pipe-full.hcl 包含一份 PIPE 的 HCL 描述，以及常数值 `IIADDL` 的声明。
 修改该文件以实现指令 `iaddl`，就像家庭作业 4.48 中描述的那样。
 可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
-TODO
+
+答案：
+
+* HCL 文件：[ex4.53.hcl](ex4.53.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-full.hcl 对比
+* 测试代码：
+  * 使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
+  * [ex4.50.ys](ex4.50.ys)
 
 ### 4.54 \*\*\*
 
@@ -1196,7 +1210,10 @@ TODO
 你需要设计一种方法来得到跳转目标地址 valC，并送到流水线寄存器 M，以便从错误的分支预测中恢复。
 可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
 
-TODO
+答案：
+
+* HCL 文件：[ex4.54.hcl](ex4.54.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-full.hcl 对比
+* 测试代码：使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
 
 ### 4.55 \*\*
 
