@@ -1212,7 +1212,7 @@ int d_valB = d_rvalB;
 
 答案：
 
-* HCL 文件：[ex4.54.hcl](ex4.54.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-full.hcl 对比
+* HCL 文件：[ex4.54.hcl](ex4.54.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-nt.hcl 对比
 * 测试代码：使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
 
 ### 4.55 \*\*
