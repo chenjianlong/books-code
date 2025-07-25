@@ -1224,6 +1224,77 @@ int d_valB = d_rvalB;
 你需要设计一种方法来得到 valC 和 valP，并送到流水线寄存器 M，以便从错误的分支预测中恢复。
 可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
 
-TODO
+答案：
+
+* HCL 文件：[ex4.55.hcl](ex4.55.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-btfnt.hcl 对比
+* 测试代码：使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
 
 ### 4.56 \*\*\*
+
+我们的流水线化的设计有点不太现实，因为寄存器文件有两个写端口，
+然而只有 `popl` 指令需要对寄存器文件同时进行两个写操作。
+因为，其他指令只使用一个写端口，共享这个端口来写 valE 和 valM。
+下面这个图是一个对写回逻辑的修改版，其中，将写回寄存器 ID（W\_dstE 和 W\_dstM）合并成一个信号 w\_dstE，
+同时也将写回值（W\_valE 和 W\_valM）合并成一个信号 w\_valE：
+
+![](images/07_17_ex4.56.svg)
+
+用 HCL 写的执行这些合并的逻辑，如下所示：
+
+```c
+## Set E port register ID
+int w_dstE = [
+    ## writing from valM
+    W_dstM != RNONE : W_dstM;
+    1: W_dstE;
+];
+
+## Set E port value
+int w_valE = [
+    W_dstM != RNONE : W_valM;
+    1: W_valE;
+];
+```
+
+对这些多路复用器的控制由 dstE 确定——当它表明有某个寄存器时，就选择端口 E 的值，否则就选择端口 M 的值。
+
+在模拟模型中，我们可以禁止寄存器端口 M，如下面这段 HCL 代码所示：
+
+```c
+## Disable register port M
+## Set M port register ID
+int w_dstM = RNONE;
+
+## Set M port value
+int w_valM = 0;
+```
+
+接下来的问题就是要设计处理 `popl` 的方法。
+一种方法是用控制逻辑动态地处理指令 `popl rA`，使之与下面两条指令序列有一样的效果：
+
+```x86asm
+iaddl $4, %esp
+mrmovl -4(%esp), rA
+```
+
+（关于指令 `iaddl` 的描述，请参考家庭作业 4.48）要注意两条指令的顺序，以保证 `popl %esp` 能正常工作。
+要达到这个目的，可以让译码阶段的逻辑对上面列出的 `popl` 指令和 `addl` 指令一视同仁，除了它会预测下一个 PC 与当前 PC 相等以外。
+在下一个周期，再次取出 `popl` 指令，但是指令代码变成了特殊的值 IPOP2。
+它会被当做一条特殊的指令来处理，行为与上面列出的 `mrmovl` 指令一样。
+
+文件 pipe-1w.hcl 包含上面将的修改过的写端口逻辑。
+它将常数 IPOP2 声明为十六进制值 E。
+还包括信号 f\_icode 的定义，它产生流水线寄存器 D 的 icode 字段。
+可以修改这个定义，使得当第二次取出 `popl` 指令时，插入指令代码 IPOP2。
+这个 HCL 文件还包含信号 f\_pc 的声明，也就是标号为 “Select PC” 的块（见图 4-55）在取值阶段产生的程序计数器的值。
+
+修改该文件中的控制逻辑，使之按照我们描述的方式来处理 `popl` 指令。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+答案：
+
+* HCL 文件：[ex4.56.hcl](ex4.56.hcl)，具体修改点可以和 sim/pipe/sim/pipe/pipe-1w.hcl 对比
+* 测试代码：使用上述 HCL 文件编译 psim 后，进 sim/y86-code 运行 `make testpsim`
+
+### 4.57 \*\*\*
+
