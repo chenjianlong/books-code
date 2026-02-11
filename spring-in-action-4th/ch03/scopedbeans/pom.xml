@@ -11,7 +11,7 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <springVersion>6.1.14</springVersion>
+        <springVersion>6.1.20</springVersion>
     </properties>
 
     <dependencies>
