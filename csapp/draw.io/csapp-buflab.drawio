@@ -1,0 +1,73 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.9 Chrome/134.0.6998.205 Electron/35.4.0 Safari/537.36" version="27.0.9">
+  <diagram name="Level 0" id="Zz_8oTHP7Ahc3OGd3fee">
+    <mxGraphModel dx="378" dy="289" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-1" value="保存的%ebp" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="359" y="319" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-2" value="传给 Gets 的 buf" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="359" y="359" width="120" height="121" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-4" value="未使用的" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="359" y="479" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-6" value="&amp;amp;buf" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="359" y="559" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-7" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="488" y="319" width="20" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-8" value="在调用Gets之前" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="364" y="239" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-9" value="getbuf&lt;div&gt;的栈帧&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="508" y="439" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-10" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="259" y="338.5" as="sourcePoint" />
+            <mxPoint x="329" y="338.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-11" value="0" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="329" y="324" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-16" value="帧指针&lt;div&gt;%ebp&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="209" y="319" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-18" value="-0x38" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="316" y="564" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-19" value="" style="endArrow=classic;html=1;rounded=0;entryX=-0.067;entryY=0.467;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="gCuxXrj9rxzlKLzlmJFE-18">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="259" y="578" as="sourcePoint" />
+            <mxPoint x="299" y="549" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-21" value="栈指针&lt;div&gt;%esp&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="209" y="559" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-22" value="getbuf 返回值" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="359" y="279" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-23" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;direction=west;" vertex="1" parent="1">
+          <mxGeometry x="334" y="359" width="20" height="121" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-24" value="0x28字节" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="275" y="404.5" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-25" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="264" y="479.5" as="sourcePoint" />
+            <mxPoint x="334" y="479.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gCuxXrj9rxzlKLzlmJFE-26" value="buf" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="224" y="465" width="40" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
