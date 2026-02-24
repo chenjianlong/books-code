@@ -149,3 +149,5 @@ Type string:Fizz!: You called fizz(0x1005b2b7)
 VALID
 NICE JOB!
 ```
+
+https://jtchen.io/blog/csapp-bufferlab
