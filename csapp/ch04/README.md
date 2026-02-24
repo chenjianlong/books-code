@@ -913,8 +913,7 @@ bool D_stall =
 bool E_bubble =
         # Mispredicted branch
         (E_icode == IJXX && !e_Cnd) ||
-        # Stalling at fetch while ret passes through pipeline
-        # but not condition for a load/use hazard
+        # load/use hazard
         !(E_icode in { IMRMOVL, IPOPL }
           && E_dstM in { d_srcA, d_srcB });
 ```
@@ -1035,7 +1034,7 @@ addl $4,%esp        Increment stack pointer
 * B.
 
 ```x86asm
-addl $4,%esp        Increment stack pointer
+addl $4,%esp          Increment stack pointer
 movl -4(%esp),REG     Read REG from stack
 ```
 
@@ -1298,11 +1297,11 @@ mrmovl -4(%esp), rA
 
 ### 4.57 \*\*\*
 
- 在我们的 PIPE 的设计中，只要一条指令执行了 load 操作，从存储器中读一个值到寄存器，并且下一条指令要用这个寄存器作为源操作数，就会产生一个暂停。
- 如果要在执行阶段中使用这个源操作数，暂停是避免冒险的唯一方法。
+在我们的 PIPE 的设计中，只要一条指令执行了 `load` 操作，从存储器中读一个值到寄存器，并且下一条指令要用这个寄存器作为源操作数，就会产生一个暂停。
+如果要在执行阶段中使用这个源操作数，暂停是避免冒险的唯一方法。
 
- 对于第二条指令将源操作数存储到存储器的情况，例如 `rmmovl` 或 `pushl` 指令，是不需要这样的暂停的。
- 考虑下面这段代码示例：
+对于第二条指令将源操作数存储到存储器的情况，例如 `rmmovl` 或 `pushl` 指令，是不需要这样的暂停的。
+考虑下面这段代码示例：
 
  ```x86asm
  1    mrmovl 0(%ecx), %edx      # Load 1
@@ -1312,36 +1311,113 @@ mrmovl -4(%esp), rA
  5    rmmovl %eax, 0(%edx)      # Store 2
  ```
 
- 在第 1 行和第 2 行，`mrmovl` 指令从存储器读一个值到 %edx，然后 `pushl` 指令将这个值压入栈中。
- 我们的 PIPE 设计会让 `pushl` 指令暂停，以避免状态/使用冒险。
- 不过，可以看到，`pushl` 指令要到访存阶段才会需要 %edx 的值。
- 我们可以再添加一条旁路通路，如下图 4-69 所示，将存储器输出（信号 m\_valM）转发到流水线寄存器 M 中的 valA 字段。
- 在下一个时钟周期，被传送的值就能吸入存储器了。
- 这种技术被称为加载转发（load forwarding）。
+在第 1 行和第 2 行，`mrmovl` 指令从存储器读一个值到 %edx，然后 `pushl` 指令将这个值压入栈中。
+我们的 PIPE 设计会让 `pushl` 指令暂停，以避免状态/使用冒险。
+不过，可以看到，`pushl` 指令要到访存阶段才会需要 %edx 的值。
+我们可以再添加一条旁路通路，如下图 4-69 所示，将存储器输出（信号 m\_valM）转发到流水线寄存器 M 中的 valA 字段。
+在下一个时钟周期，被传送的值就能写入存储器了。
+这种技术被称为加载转发（load forwarding）。
 
- TODO
+![](images/07_31_ex4.57.svg)
 
- 注意，上述代码序列中的第二个例子（第 4 行和第 5 行）不能利用加载转发。
- `popl` 指令加载的值是作为下一条指令地址计算的一部分的，而在执行阶段而非访存阶段就需要这个值了。
+图 4-69 能够进行加载转发的执行和访存阶段
 
- * A 写出描述发现加载/使用冒险条件的逻辑公式，类似于图 4-64 所示，除了能用加载转发时不会导致暂停以外。
- * B 文件 pipe-lf.hcl 包含一个 PIPE 控制逻辑的修改版。
- 它含有信号 e\_valA 的定义，用来实现图 4-69 中标号为 “Fwd A” 的块。
- 它还将流水线控制逻辑中的加载/使用冒险的条件设置为 0，因此流水线控制逻辑将不会发现任何形式的加载/使用冒险。
- 修改这个 HCL 描述以实现加载转发。
- 可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+注意，上述代码序列中的第二个例子（第 4 行和第 5 行）不能利用加载转发。
+`popl` 指令加载的值是作为下一条指令地址计算的一部分的，而在执行阶段而非访存阶段就需要这个值了。
+
+* A 写出描述发现加载/使用冒险条件的逻辑公式，类似于图 4-64 所示，除了能用加载转发时不会导致暂停以外。
+* B 文件 pipe-lf.hcl 包含一个 PIPE 控制逻辑的修改版。
+它含有信号 e\_valA 的定义，用来实现图 4-69 中标号为 “Fwd A” 的块。
+它还将流水线控制逻辑中的加载/使用冒险的条件设置为 0，因此流水线控制逻辑将不会发现任何形式的加载/使用冒险。
+修改这个 HCL 描述以实现加载转发。
+可以参考实验资料获得如何为你的解答生成模拟器以及如何测试模拟器的指导。
+
+
+答案：
 
 A:
 
-|条件|触发条件|
-|-|-|
-|加载转发|E_icode ∈ {IRMMOVL, IPUSHL}|
+考虑加载/使用冒险：
 
- TODO
+```
+E_icode ∈ {IMRMOVL, IPOPL} && E_dstM ∈ {d_srcA, d_srcB}
+```
+
+有如下情况：
+
+|情况|1|2|3|4|
+|-|-|-|-|-|
+|E\_dstM == d\_srcA|1|1|0|0|
+|E\_dstM == d\_srcB|1|0|1|0|
+
+情况 4 不会引发加载/使用冒险，情况 1，2，3 会引发加载/使用冒险
+
+如果 `E_icode ∈ {IMRMOVL, IPOPL}`，E\_dstM 必然不为 RNONE。
+
+考虑情况 1 和 3，E\_dstM == d\_srcB，在 `E_icode ∈ {IMRMOVL, IPOPL}` 的前提下，d\_srcB 肯定不为 `RNONE` ，因此需要在 E 阶段(执行阶段)使用 d\_srcB，此时不能使用 加载/转发。
+
+加载/转发只能在情况 2 使用，现在考虑所有 d\_srcA 不为 `RNONE` 的指令：
+
+|指令|d\_srcA|valA 在阶段 E 是否需要使用|是否可以使用 加载/转发|
+|-|-|-|-|
+|rrmovl|rA|是|否|
+|rmmovl|rA|否|是|
+|opl|rA|是|否|
+|pushl|rA|否|是|
+|ret|esp|否|否|
+|popl|esp|否|否|
+
+`ret` 和 `popl` 不能使用 加载/转发，因为此时 `d_srcA == d_srcB == %esp`，不符合上述情况 2。
+
+综上，引入 加载/转发 后，加载/使用 冒险只能在如下情况使用：
+
+```
+E_icode in { IMRMOVL, IPOPL } &&
+(
+  E_dstM == d_srcB ||
+  (
+    E_dstM == d_srcA && !(D_icode in { IRMMOVL, IPUSHL })
+  )
+);
+```
  
  ### 4.58 \*\*
 
  比较两个版本的冒泡排序的性能（家庭作业 4.45 和 4.46）。
  解释为什么一个版本的性能比另一个的好。
 
- TODO
+ 答案：
+
+ 4.45 的版本更高效，我们看看 4.45 的内循环：
+
+ ```x86asm
+ LoopInner:
+	# inner body
+	mrmovl (%esi), %ebx		# *i
+	mrmovl 4(%esi), %edi	# *(i+1)
+	subl   %ebx, %edi
+	jge    LoopInnerEndIf
+	mrmovl 4(%esi), %edi	# t=*(i+1)
+	rmmovl %ebx, 4(%esi)	# *(i+1)=*i
+	rmmovl %edi, (%esi)		# *i = t
+ ```
+
+ 预测正确的情况需要 4 个流水线周期，错误的情况需要 7 + 2（预测错误需要插入两个气泡），假设正确和错误的概率均为 50%，则平均需要：5.5 个流水线周期。
+
+ 4.46 的版本：
+
+```x86asm
+LoopInner:
+	# inner body
+	mrmovl (%esi), %ebx		# *i
+	mrmovl 4(%esi), %edi	# *(i+1)
+	rrmovl %edi, %edx
+	subl   %ebx, %edx
+	cmovl  %ebx, %edx		# 5 instruction swap(x,y)
+	cmovl  %edi, %ebx		#
+	cmovl  %edx, %edi		#
+	rmmovl %ebx, (%esi)
+	rmmovl %edi, 4(%esi)
+```
+
+内循环需要 9 个流水线周期。
