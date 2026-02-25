@@ -1,4 +1,4 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.9 Chrome/134.0.6998.205 Electron/35.4.0 Safari/537.36" version="27.0.9" pages="2">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.9 Chrome/134.0.6998.205 Electron/35.4.0 Safari/537.36" version="27.0.9" pages="3">
   <diagram name="Level 0" id="Zz_8oTHP7Ahc3OGd3fee">
     <mxGraphModel dx="378" dy="289" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -143,6 +143,80 @@
         </mxCell>
         <mxCell id="lYYYKezz_YIiheSZD4g6-20" value="val 入参，需要等于 cookie" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="250" width="120" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="tCWp7vCSapiXvu86twtK" name="Level 2">
+    <mxGraphModel dx="946" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="d1HUpmF-4X4-nkzimEai-1" value="保存的%ebp，可修改为任意值" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="320" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-2" value="传给 Gets 的 buf，填充为特定指令字节数组" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="360" width="120" height="121" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-3" value="未使用的" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-4" value="&amp;amp;buf" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="560" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-5" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="449" y="320" width="20" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-6" value="在调用Gets之后" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="325" y="210" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-7" value="getbuf&lt;div&gt;的栈帧&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="469" y="440" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-8" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="220" y="339.5" as="sourcePoint" />
+            <mxPoint x="290" y="339.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-9" value="0" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="290" y="325" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-10" value="帧指针&lt;div&gt;%ebp&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="170" y="320" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-11" value="-0x38" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="277" y="565" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-12" value="" style="endArrow=classic;html=1;rounded=0;entryX=-0.067;entryY=0.467;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="d1HUpmF-4X4-nkzimEai-11">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="220" y="579" as="sourcePoint" />
+            <mxPoint x="260" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-13" value="栈指针&lt;div&gt;%esp&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="170" y="560" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-14" value="getbuf 返回值，修改为buf所在地址" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="280" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-15" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;direction=west;" vertex="1" parent="1">
+          <mxGeometry x="295" y="360" width="20" height="121" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-16" value="0x28字节" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="236" y="405.5" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-17" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="225" y="480.5" as="sourcePoint" />
+            <mxPoint x="295" y="480.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-18" value="buf" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="185" y="466" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d1HUpmF-4X4-nkzimEai-19" value="bang函数地址" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="240" width="120" height="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
