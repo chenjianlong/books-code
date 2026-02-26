@@ -4,10 +4,16 @@
 #    Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2010     #
 ####################################################################
 
-## Your task is to implement the iaddl and leave instructions
-## The file contains a declaration of the icodes
-## for iaddl (IIADDL) and leave (ILEAVE).
-## Your job is to add the rest of the logic to make it work
+## Your task is to modify the design so that on any cycle, only
+## one of the two possible (valE and valM) register writes will occur.
+## This requires special handling of the popl instruction.
+## Overall strategy:  IPOPL passes through pipe, 
+## treated as stack pointer increment, but not incrementing the PC
+## On refetch, modify fetched icode to indicate an instruction "IPOP2",
+## which reads from memory.
+## This requires modifying the definition of f_icode
+## and lots of other changes.  Relevant positions to change
+## are indicated by comments starting with keyword "1W".
 
 ####################################################################
 #    C Include's.  Don't alter these                               #
@@ -38,17 +44,14 @@ intsig ICALL	'I_CALL'
 intsig IRET	'I_RET'
 intsig IPUSHL	'I_PUSHL'
 intsig IPOPL	'I_POPL'
-# Instruction code for iaddl instruction
-intsig IIADDL	'I_IADDL'
-# Instruction code for leave instruction
-intsig ILEAVE	'I_LEAVE'
+# 1W: Special instruction code for second try of popl
+intsig IPOP2	'I_POP2'
 
 ##### Symbolic represenations of Y86 function codes            #####
 intsig FNONE    'F_NONE'        # Default function code
 
 ##### Symbolic representation of Y86 Registers referenced      #####
 intsig RESP     'REG_ESP'    	     # Stack Pointer
-intsig REBP     'REG_EBP'    	     # Frame Pointer
 intsig RNONE    'REG_NONE'   	     # Special value indicating "no register"
 
 ##### ALU Functions referenced explicitly ##########################
@@ -75,6 +78,8 @@ intsig f_icode	'if_id_next->icode'  # (Possibly modified) instruction code
 intsig f_ifun	'if_id_next->ifun'   # Fetched instruction function
 intsig f_valC	'if_id_next->valc'   # Constant data of fetched instruction
 intsig f_valP	'if_id_next->valp'   # Address of following instruction
+## 1W: Provide access to the PC value for the current instruction
+intsig f_pc	'f_pc'               # Address of fetched instruction
 boolsig imem_error 'imem_error'	     # Error signal from instruction memory
 boolsig instr_valid 'instr_valid'    # Is fetched instruction valid?
 
@@ -147,6 +152,9 @@ int f_pc = [
 ];
 
 ## Determine icode of fetched instruction
+## 1W: To split ipopl into two cycles, need to be able to 
+## modify value of icode,
+## so that it will be IPOP2 when fetched for second time.
 int f_icode = [
 	imem_error : INOP;
 	1: imem_icode;
@@ -161,7 +169,7 @@ int f_ifun = [
 # Is instruction valid?
 bool instr_valid = f_icode in 
 	{ INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };
+	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL };
 
 # Determine status code for fetched instruction
 int f_stat = [
@@ -174,20 +182,24 @@ int f_stat = [
 # Does fetched instruction require a regid byte?
 bool need_regids =
 	f_icode in { IRRMOVL, IOPL, IPUSHL, IPOPL, 
-		     IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
+		     IIRMOVL, IRMMOVL, IMRMOVL };
 
 # Does fetched instruction require a constant word?
 bool need_valC =
-	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL };
 
 # Predict next value of PC
 int f_predPC = [
 	f_icode in { IJXX, ICALL } : f_valC;
+	## 1W: Want to refetch popl one time
 	1 : f_valP;
 ];
 
 ################ Decode Stage ######################################
 
+## W1: Strategy.  Decoding of popl rA should be treated the same
+## as would iaddl $4, %esp
+## Decoding of pop2 rA treated same as mrmovl -4(%esp), rA
 
 ## What register should be used as the A source?
 int d_srcA = [
@@ -198,14 +210,14 @@ int d_srcA = [
 
 ## What register should be used as the B source?
 int d_srcB = [
-	D_icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL  } : D_rB;
+	D_icode in { IOPL, IRMMOVL, IMRMOVL  } : D_rB;
 	D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
 	1 : RNONE;  # Don't need register
 ];
 
 ## What register should be used as the E destination?
 int d_dstE = [
-	D_icode in { IRRMOVL, IIRMOVL, IOPL, IIADDL} : D_rB;
+	D_icode in { IRRMOVL, IIRMOVL, IOPL} : D_rB;
 	D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
 	1 : RNONE;  # Don't write any register
 ];
@@ -242,7 +254,7 @@ int d_valB = [
 ## Select input A to ALU
 int aluA = [
 	E_icode in { IRRMOVL, IOPL } : E_valA;
-	E_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : E_valC;
+	E_icode in { IIRMOVL, IRMMOVL, IMRMOVL } : E_valC;
 	E_icode in { ICALL, IPUSHL } : -4;
 	E_icode in { IRET, IPOPL } : 4;
 	# Other instructions don't need ALU
@@ -251,7 +263,7 @@ int aluA = [
 ## Select input B to ALU
 int aluB = [
 	E_icode in { IRMMOVL, IMRMOVL, IOPL, ICALL, 
-		     IPUSHL, IRET, IPOPL, IIADDL } : E_valB;
+		     IPUSHL, IRET, IPOPL } : E_valB;
 	E_icode in { IRRMOVL, IIRMOVL } : 0;
 	# Other instructions don't need ALU
 ];
@@ -263,7 +275,7 @@ int alufun = [
 ];
 
 ## Should the condition codes be updated?
-bool set_cc = E_icode in { IOPL, IIADDL } &&
+bool set_cc = E_icode == IOPL &&
 	# State changes only during normal operation
 	!m_stat in { SADR, SINS, SHLT } && !W_stat in { SADR, SINS, SHLT };
 
@@ -299,17 +311,31 @@ int m_stat = [
 ];
 #/* $end pipe-m_stat-hcl */
 
+################ Write back stage ##################################
+
+## 1W: For this problem, we introduce a multiplexor that merges
+## valE and valM into a single value for writing to register port E.
+## DO NOT CHANGE THIS LOGIC
+## Merge both write back sources onto register port E 
 ## Set E port register ID
-int w_dstE = W_dstE;
+int w_dstE = [
+	## writing from valM
+	W_dstM != RNONE : W_dstM;
+	1: W_dstE;
+];
 
 ## Set E port value
-int w_valE = W_valE;
+int w_valE = [
+	W_dstM != RNONE : W_valM;
+	1: W_valE;
+];
 
+## Disable register port M
 ## Set M port register ID
-int w_dstM = W_dstM;
+int w_dstM = RNONE;
 
 ## Set M port value
-int w_valM = W_valM;
+int w_valM = 0;
 
 ## Update processor status
 int Stat = [
@@ -342,6 +368,7 @@ bool D_bubble =
 	# Stalling at fetch while ret passes through pipeline
 	# but not condition for a load/use hazard
 	!(E_icode in { IMRMOVL, IPOPL } && E_dstM in { d_srcA, d_srcB }) &&
+	# 1W: This condition will change
 	  IRET in { D_icode, E_icode, M_icode };
 
 # Should I stall or inject a bubble into Pipeline Register E?

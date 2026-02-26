@@ -1,13 +1,8 @@
 #/* $begin seq-all-hcl */
 ####################################################################
-#  HCL Description of Control for Single Cycle Y86 Processor SEQ   #
+#  HCL Description of Control for Single Cycle Y86 Processor SEQ+  #
 #  Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2010       #
 ####################################################################
-
-## Your task is to implement the iaddl and leave instructions
-## The file contains a declaration of the icodes
-## for iaddl (IIADDL) and leave (ILEAVE).
-## Your job is to add the rest of the logic to make it work
 
 ####################################################################
 #    C Include's.  Don't alter these                               #
@@ -17,9 +12,9 @@ quote '#include <stdio.h>'
 quote '#include "isa.h"'
 quote '#include "sim.h"'
 quote 'int sim_main(int argc, char *argv[]);'
-quote 'int gen_pc(){return 0;}'
+quote 'int gen_new_pc(){return 0;}'
 quote 'int main(int argc, char *argv[])'
-quote '  {plusmode=0;return sim_main(argc,argv);}'
+quote '  {plusmode=1;return sim_main(argc,argv);}'
 
 ####################################################################
 #    Declarations.  Do not change/remove/delete any of these       #
@@ -38,17 +33,12 @@ intsig ICALL	'I_CALL'
 intsig IRET	'I_RET'
 intsig IPUSHL	'I_PUSHL'
 intsig IPOPL	'I_POPL'
-# Instruction code for iaddl instruction
-intsig IIADDL	'I_IADDL'
-# Instruction code for leave instruction
-intsig ILEAVE	'I_LEAVE'
 
 ##### Symbolic represenations of Y86 function codes                  #####
 intsig FNONE    'F_NONE'        # Default function code
 
 ##### Symbolic representation of Y86 Registers referenced explicitly #####
 intsig RESP     'REG_ESP'    	# Stack Pointer
-intsig REBP     'REG_EBP'    	# Frame Pointer
 intsig RNONE    'REG_NONE'   	# Special value indicating "no register"
 
 ##### ALU Functions referenced explicitly                            #####
@@ -62,8 +52,15 @@ intsig SHLT	'STAT_HLT'	# Halt instruction encountered
 
 ##### Signals that can be referenced by control logic ####################
 
-##### Fetch stage inputs		#####
-intsig pc 'pc'				# Program counter
+##### PC stage inputs			#####
+
+## All of these values are based on those from previous instruction
+intsig  pIcode 'prev_icode'		# Instr. control code
+intsig  pValC  'prev_valc'		# Constant from instruction
+intsig  pValM  'prev_valm'		# Value read from memory
+intsig  pValP  'prev_valp'		# Incremented program counter
+boolsig pCnd 'prev_bcond'		# Condition flag
+
 ##### Fetch stage computations		#####
 intsig imem_icode 'imem_icode'		# icode field from instruction memory
 intsig imem_ifun  'imem_ifun' 		# ifun field from instruction memory
@@ -93,6 +90,23 @@ boolsig dmem_error 'dmem_error'		# Error signal from data memory
 #    Control Signal Definitions.                                   #
 ####################################################################
 
+################ Program Counter Computation #######################
+
+# Compute fetch location for this instruction based on results from
+# previous instruction.
+
+int pc = [
+	# Call.  Use instruction constant
+	pIcode == ICALL : pValC;
+	# Taken branch.  Use instruction constant
+	pIcode == IJXX && pCnd : pValC;
+	# Completion of RET instruction.  Use value from stack
+	pIcode == IRET : pValM;
+	# Default: Use incremented PC
+	1 : pValP;
+];
+#/* $end seq-plus-pc-hcl */
+
 ################ Fetch Stage     ###################################
 
 # Determine instruction code
@@ -109,16 +123,16 @@ int ifun = [
 
 bool instr_valid = icode in 
 	{ INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-	       IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };
+	       IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL };
 
 # Does fetched instruction require a regid byte?
 bool need_regids =
 	icode in { IRRMOVL, IOPL, IPUSHL, IPOPL, 
-		     IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
+		     IIRMOVL, IRMMOVL, IMRMOVL };
 
 # Does fetched instruction require a constant word?
 bool need_valC =
-	icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+	icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL };
 
 ################ Decode Stage    ###################################
 
@@ -131,7 +145,7 @@ int srcA = [
 
 ## What register should be used as the B source?
 int srcB = [
-	icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL  } : rB;
+	icode in { IOPL, IRMMOVL, IMRMOVL  } : rB;
 	icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
 	1 : RNONE;  # Don't need register
 ];
@@ -139,7 +153,7 @@ int srcB = [
 ## What register should be used as the E destination?
 int dstE = [
 	icode in { IRRMOVL } && Cnd : rB;
-	icode in { IIRMOVL, IOPL, IIADDL } : rB;
+	icode in { IIRMOVL, IOPL} : rB;
 	icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
 	1 : RNONE;  # Don't write any register
 ];
@@ -155,7 +169,7 @@ int dstM = [
 ## Select input A to ALU
 int aluA = [
 	icode in { IRRMOVL, IOPL } : valA;
-	icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : valC;
+	icode in { IIRMOVL, IRMMOVL, IMRMOVL } : valC;
 	icode in { ICALL, IPUSHL } : -4;
 	icode in { IRET, IPOPL } : 4;
 	# Other instructions don't need ALU
@@ -164,7 +178,7 @@ int aluA = [
 ## Select input B to ALU
 int aluB = [
 	icode in { IRMMOVL, IMRMOVL, IOPL, ICALL, 
-		      IPUSHL, IRET, IPOPL, IIADDL } : valB;
+		      IPUSHL, IRET, IPOPL } : valB;
 	icode in { IRRMOVL, IIRMOVL } : 0;
 	# Other instructions don't need ALU
 ];
@@ -176,7 +190,7 @@ int alufun = [
 ];
 
 ## Should the condition codes be updated?
-bool set_cc = icode in { IOPL, IIADDL };
+bool set_cc = icode in { IOPL };
 
 ################ Memory Stage    ###################################
 
@@ -208,20 +222,5 @@ int Stat = [
 	!instr_valid: SINS;
 	icode == IHALT : SHLT;
 	1 : SAOK;
-];
-
-################ Program Counter Update ############################
-
-## What address should instruction be fetched at
-
-int new_pc = [
-	# Call.  Use instruction constant
-	icode == ICALL : valC;
-	# Taken branch.  Use instruction constant
-	icode == IJXX && Cnd : valC;
-	# Completion of RET instruction.  Use value from stack
-	icode == IRET : valM;
-	# Default: Use incremented PC
-	1 : valP;
 ];
 #/* $end seq-all-hcl */

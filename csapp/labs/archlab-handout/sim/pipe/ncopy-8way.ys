@@ -1,0 +1,112 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len ints to dst.
+# Return the number of positive ints (>0) contained in src.
+#
+# Include your name and ID here.
+#
+# Describe how and why you modified the baseline code.
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+ncopy:	pushl %ebp		# Save old frame pointer
+	rrmovl %esp,%ebp	# Set up new frame pointer
+	pushl %esi		# Save callee-save regs
+	pushl %ebx
+	pushl %edi
+	mrmovl 8(%ebp),%ebx	# src
+	mrmovl 16(%ebp),%edx	# len
+	mrmovl 12(%ebp),%ecx	# dst
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorl %eax,%eax		# count = 0;
+Large:
+	iaddl $-8, %edx
+	jge Loop0
+	iaddl $8, %edx
+	jmp Small0
+
+Loop0:
+	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop1
+	iaddl $1, %eax		# count++
+Loop1:
+	mrmovl 4(%ebx), %esi	# read val from src...
+	rmmovl %esi, 4(%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop2
+	iaddl $1, %eax		# count++
+Loop2:
+	mrmovl 8(%ebx), %esi	# read val from src...
+	rmmovl %esi, 8(%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop3
+	iaddl $1, %eax		# count++
+Loop3:
+	mrmovl 12(%ebx), %esi	# read val from src...
+	rmmovl %esi, 12(%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop4
+	iaddl $1, %eax		# count++
+Loop4:
+	mrmovl 16(%ebx), %esi	# read val from src...
+	rmmovl %esi, 16(%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop5
+	iaddl $1, %eax		# count++
+Loop5:
+	mrmovl 20(%ebx), %esi	# read val from src...
+	rmmovl %esi, 20(%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop6
+	iaddl $1, %eax		# count++
+Loop6:
+	mrmovl 24(%ebx), %esi	# read val from src...
+	rmmovl %esi, 24(%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Loop7
+	iaddl $1, %eax		# count++
+Loop7:
+	mrmovl 28(%ebx), %esi	# read val from src...
+	rmmovl %esi, 28(%ecx)	# ...and store it to dst
+	iaddl $32, %ebx		# src+=8
+	iaddl $32, %ecx		# dst+=8
+	andl %esi, %esi		# val <= 0?
+	jle Large
+	iaddl $1, %eax		# count++
+	jmp Large
+
+Small0:
+	andl %edx,%edx		# len <= 0?
+	jle Done		# if so, goto Done:
+
+Small1:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos:
+	iaddl $1, %eax		# count++
+Npos:
+	iaddl $-1, %edx		# len--
+	iaddl $4, %ebx		# src++
+	iaddl $4, %ecx		# dst++
+	andl %edx,%edx		# len > 0?
+	jg Small1
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	popl %edi               # Restore callee-save registers
+	popl %ebx
+	popl %esi
+	rrmovl %ebp, %esp
+	popl %ebp
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

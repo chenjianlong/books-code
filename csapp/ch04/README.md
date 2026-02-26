@@ -1077,7 +1077,7 @@ void bubble_a(int *data, int count) {
 
 ### 4.47 \*
 
-如 3.7.2小节中讲述的那样，IA32的指令 leave 可以用来使栈为返回做准备。
+如 3.7.2小节中讲述的那样，IA32的指令 `leave` 可以用来使栈为返回做准备。
 它等价于下面这个 Y86 代码序列:
 
 ```x86asm
@@ -1132,7 +1132,7 @@ void bubble_a(int *data, int count) {
 
 答案：
 
-* HCL 文件：[ex4.49.hcl](ex4.49.hcl)，具体修改点可以和 sim/y86-code/seq-full.hcl 对比
+* HCL 文件：[ex4.49.hcl](ex4.49.hcl)，具体修改点可以和 sim/seq/seq-full.hcl 对比
 * 测试代码：[ex4.49.ys](ex4.49.ys)
 
 ### 4.50 \*\*
