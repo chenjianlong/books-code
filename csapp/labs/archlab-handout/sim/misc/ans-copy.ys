@@ -1,0 +1,77 @@
+/* $begin code-yso */
+/* $begin code-ysa */
+# Execution begins at address 0 
+	.pos 0 
+init:	irmovl Stack, %esp  	# Set up stack pointer  
+	irmovl Stack, %ebp  	# Set up base pointer   
+	call Main		# Execute main program
+	halt			# Terminate program 
+
+    .align 4
+# Source block
+src:
+    .long 0x00a
+    .long 0x0b0
+    .long 0xc00
+# Destination block
+dest:
+    .long 0x111
+    .long 0x222
+    .long 0x333
+
+Main:	pushl %ebp 
+	rrmovl %esp,%ebp
+	irmovl $3,%edx
+	pushl %edx      	# Push n
+    irmovl dest,%edx
+    pushl %edx          # Push dest
+    irmovl src,%edx
+    pushl %edx          # Push src
+	call copy_block		# copy_block(src, dest, n)
+	rrmovl %ebp,%esp
+	popl %ebp
+	ret 
+
+/* $begin copy_block-ys 0 */
+	# int copy_block(int *src, int *dest, int len)
+copy_block:
+    pushl %ebp 
+	rrmovl %esp,%ebp
+    pushl %esi
+    pushl %edi
+    pushl %ebx
+    mrmovl 8(%ebp),%ebx 	# ebx = src
+    mrmovl 12(%ebp), %edx   # edx = dest
+    mrmovl 16(%ebp), %ecx   # ecx = n
+	xorl %eax,%eax		# result = 0
+
+Loop:
+    andl %ecx, %ecx
+    je End
+
+    irmovl $1, %edi
+    subl %edi, %ecx
+
+    mrmovl (%ebx), %edi
+    rmmovl %edi, (%edx)
+    xorl %edi, %eax
+
+    irmovl $4, %edi
+    addl %edi, %ebx
+    addl %edi, %edx
+    jmp Loop
+
+End:
+    popl %ebx
+    popl %edi
+    popl %esi
+    rrmovl %ebp,%esp
+	popl %ebp
+    ret
+/* $end copy_block-ys 0 */
+
+# The stack starts here and grows to lower addresses
+	.pos 0x100		
+Stack:	 
+/* $end code-ysa */
+/* $end code-yso */
