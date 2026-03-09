@@ -68,8 +68,8 @@ LoopInnerEnd:
 	rrmovl %eax, %edi
 	subl   %ecx, %edi		# Compare last:data
 	jg	   Loop
-	
-End:	
+
+End:
 	popl %ebp
 	ret
 	.pos 0x100
