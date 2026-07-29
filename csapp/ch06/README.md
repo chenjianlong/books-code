@@ -32,3 +32,98 @@
 答案：
 
 512 \* 400 \* 10000 \* 2 \* 2 = 8192000000 ≈ 8.19G
+
+### 练习题 6.3
+
+估计访问下面这个磁盘上一个扇区的访问时间（以 ms 为单位）：
+
+|参数|值|
+|-|-|
+|旋转速率|15 000RPM|
+|T<sub>avg seek</sub>|8ms|
+|每条磁道的平均扇区数|500|
+
+答案：
+
+最大旋转延迟为：
+
+<math display="block">
+  <mrow>
+    <msub><mtext>T</mtext><mtext>max rotation</mtext></msub>
+    <mo>=</mo>
+    <mfrac>
+      <mn>1</mn>
+      <mtext>RPM</mtext>
+    </mfrac>
+    <mo>×</mo>
+    <mfrac>
+      <mrow>
+        <mn>60</mn><mtext>secs</mtext>
+      </mrow>
+      <mrow>
+        <mn>1</mn><mtext>min</mtext>
+      </mrow>
+    </mfrac>
+  </mrow>
+</math>
+
+平均旋转时间 T<sub>avg rotation</sub> 是 T<sub>max rotation</sub> 的一半。
+
+一个扇区以秒为单位的平均传送时间如下：
+
+
+<math display="block">
+  <mrow>
+    <msub><mtext>T</mtext><mtext>avg transfer</mtext></msub>
+    <mo>=</mo>
+    <mfrac>
+      <mn>1</mn>
+      <mtext>RPM</mtext>
+    </mfrac>
+    <mo>×</mo>
+    <mfrac>
+      <mn>1</mn>
+      <mrow>
+          <mo>(</mo><mtext>平均扇区数</mtext><mo>/</mo><mtext>磁道</mtext><mo>)</mo>
+      </mrow>
+    </mfrac>
+    <mo>×</mo>
+    <mfrac>
+      <mrow>
+        <mn>60</mn><mtext>secs</mtext>
+      </mrow>
+      <mrow>
+        <mn>1</mn><mtext>min</mtext>
+      </mrow>
+    </mfrac>
+  </mrow>
+</math>
+
+平均旋转时间为：
+
+T<sub>avg rotation</sub>=1/2×(60/15000RPM)×1000ms/sec=2ms
+
+平均传送时间为：
+
+T<sub>avg transfer</sub>=60/15000RPM × 1/500扇区/磁道 × 1000ms/sec ≈ 0.008ms
+整个估计的访问时间为：
+
+T<sub>access</sub>=T<sub>avg seek</sub>+T<sub>avg rotation</sub>+T<sub>avg transfer</sub>=8ms+2ms+0.008ms≈10ms
+
+### 练习题 6.4
+
+假设 1MB 的文件由 512 个字节的逻辑块组成，存储在具有如下特性的磁盘驱动器上：
+
+|参数|值|
+|-|-|
+|旋转速率|10 000RPM|
+|T<sub>avg seek</sub>|5 ms|
+|平均扇区数/磁道|1000|
+|表面|4|
+|扇区大小|512 字节|
+
+对于下面的情况，假设程序顺序地读文件的逻辑块，一个接一个，将 读/写 头定位到第一块上的时间是 T<sub>avg seek</sub>+T<sub>avg rotation</sub>。
+
+* A. 最好的情况：给定逻辑块到磁盘扇区的最好的可能的映射（即顺序的），估计读这个文件需要的最优时间（以 ms 为单位）。
+* B. 随机的情况：如果块是随机地映射到磁盘扇区的，估计读这个文件需要的时间（以 ms 为单位）。
+
