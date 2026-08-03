@@ -385,3 +385,70 @@ clear1 &gt; clear2 &gt; clear3
 |1.|32|1024|4|1|256|22|8|2|
 |2.|32|1024|8|4|32|24|5|3|
 |3.|32|1024|32|32|1|27|0|5|
+
+### 练习题 6.11
+
+在前面 `dotprod` 的例子中，在我们对数组 x 做了填充之后，所有对 x 和 y 的引用的命中率是多少?
+
+答案：`3/4`
+
+### 练习题 6.12
+
+一般而言，如果一个地址的高 `s` 位被用做组索引，那么存储器块连续的片(chunk)会被映射到同一个高速缓存组。
+
+* A. 每个这样的连续的数组片中有多少个块?
+* B. 考虑下面的代码，它运行在一个高速缓存形式为 `(S，E，B，m)=(512，1, 32, 32)` 的系统上:
+
+```C
+int array[4096];
+for (i = 0; i < 4096; i++)
+  sum += array[i];
+```
+
+在任意时刻，存储在高速缓存中的数组块的最大数量为多少?
+
+答案：
+
+* A
+
+每个连续的数组片有 2<sup>t</sup> 个块。
+
+* B
+
+|m|C|B|E|S|t|s|b|
+|-|-|-|-|-|-|-|-|
+|32|16,384|32|1|512|18|9|5|
+
+每 2<sup>t</sup>=2<sup>18</sup> 个块会共用一个缓存组，假设 `array[4096]` 放在地址为 0 开始的内存上，
+`(4096 * 4) / 32 = 512` 个块，整个数组都会映射到组号为 0 的缓存组上，在任意时刻，高速缓存中的数组块最大的数量为 1。
+
+### 练习题 6.13
+
+下面的问题能帮助你加强理解高速缓存是如何工作的。
+有如下假设:
+
+* 存储器是字节寻址的。
+* 存储器访问的是1字节的字(不是4字节的字)。
+* 地址的宽度为13位。
+* 高速缓存是2路组相联的(E=2)，块大小为4字节(B-4)，有8个组(S=8)。
+
+高速缓存的内容如下，所有的数字都是以十六进制来表示的。
+
+2 路组相联高速缓存
+
+<table>
+  <thead>
+    <tr><th></th><th colspan=6>行 0</th><th colspan=6>行 1</th></tr>
+    <tr><th>组索引</th><th>标记位</th><th>有效位</th><th>字节 0</th><th>字节 1</th><th>字节 2</th><th>字节 3</th><th>标记位</th><th>有效位</th><th>字节 0</th><th>字节 1</th><th>字节 2</th><th>字节 3</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>09</td><td>1</td><td>86</td><td>30</td><td>3F</td><td>10</td><td>00</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+    <tr><td>1</td><td>45</td><td>1</td><td>60</td><td>4F</td><td>E0</td><td>23</td><td>38</td><td>1</td><td>00</td><td>BC</td><td>0B</td><td>37</td></tr>
+    <tr><td>2</td><td>EB</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td><td>0B</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+    <tr><td>3</td><td>06</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td><td>32</td><td>1</td><td>12</td><td>08</td><td>7B</td><td>AD</td></tr>
+    <tr><td>4</td><td>C7</td><td>1</td><td>06</td><td>78</td><td>07</td><td>C5</td><td>05</td><td>1</td><td>40</td><td>67</td><td>C2</td><td>3B</td></tr>
+    <tr><td>5</td><td>71</td><td>1</td><td>0B</td><td>DE</td><td>18</td><td>4B</td><td>6E</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+    <tr><td>6</td><td>91</td><td>1</td><td>A0</td><td>B7</td><td>26</td><td>2D</td><td>F0</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+    <tr><td>7</td><td>46</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td><td>DE</td><td>1</td><td>12</td><td>C0</td><td>88</td><td>37</td></tr>
+  </tbody>
+</table>
