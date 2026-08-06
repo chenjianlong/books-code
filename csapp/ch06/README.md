@@ -31,7 +31,7 @@
 
 答案：
 
-512 \* 400 \* 10000 \* 2 \* 2 = 8192000000 ≈ 8.19G
+512 \* 400 \* 10000 \* 2 \* 2 = 8192000000 ≈ 8.192G
 
 ### 练习题 6.3
 
@@ -900,3 +900,620 @@ for (i = 0; i < 16; i++) {
 * C 列出所有会在组 4 中命中的十六进制存储器地址。
 * D 列出所有会在组 2 中命中的十六进制存储器地址。
 
+### 6.30 \*\*
+
+假设我们有一个具有如下属性的系统：
+
+* 存储器是字节寻址的。
+* 存储器访问是对 1字节字的（而不是 4 字节字）。
+* 地址宽 12 位。
+* 高速缓存是两路组相联的(E=2)，块大小为 4 字节 (B=4)，有四个组(S=4)。
+
+高速缓存的内容如下，所有的地址、标记和值都以十六进制表示：
+
+
+<table>
+  <thead>
+    <tr>
+      <th>组索引</th><th>标记</th><th>有效位</th><th>字节 0</th><th>字节 1</th><th>字节 2</th><th>字节 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan=2>0</th><td>00</td><td>1</td><td>40</td><td>41</td><td>42</td><td>43</td>
+    </tr>
+    <tr>
+      <td>83</td><td>1</td><td>FE</td><td>97</td><td>CC</td><td>D0</td>
+    </tr>
+    <tr>
+      <th rowspan=2>1</th><td>00</td><td>1</td><td>44</td><td>45</td><td>46</td><td>47</td>
+    </tr>
+    <tr>
+      <td>83</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td>
+    </tr>
+    <tr>
+      <th rowspan=2>2</th><td>00</td><td>1</td><td>48</td><td>49</td><td>4A</td><td>4B</td>
+    </tr>
+    <tr>
+      <td>40</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td>
+    </tr>
+    <tr>
+      <th rowspan=2>3</th><td>FF</td><td>1</td><td>9A</td><td>C0</td><td>03</td><td>FF</td>
+    </tr>
+    <tr>
+      <td>00</td><td>0</td><td>-</td><td>-</td><td>-</td><td>-</td>
+    </tr>
+  </tbody>
+</table>
+
+* A 下面的图给出了一个地址的格式（每个小框表示一位）。指出用来确定下列信息的字段（在图中标号出来）：
+  * CO 高速缓存块偏移
+  * CI 高速缓存组索引
+  * CT 高速缓存标记
+
+![](images/ex6.30.svg)
+
+* B 对于下面每个存储器访问，当它们是按照列出来的顺序执行时，指出是高速缓存命中还是不命中。
+如果可以从高速缓存中的信息推断出来的话，请给出读出的值。
+
+|操作|地址|命中？|读出的值（或者未知）|
+|-|-|-|-|
+|读|0x409|||
+|写|0x40A|||
+|读|0x833|||
+
+### 6.31 \*
+
+假设我们有一个具有如下属性的系统：
+
+* 存储器是字节寻址的。
+* 存储器访问是对 1字节字的（而不是 4 字节字）。
+* 地址宽 13 位。
+* 高速缓存是四路组相联的(E=4)，块大小为 4 字节 (B=4)，有八个组(S=8)。
+
+考虑下面的高速缓存状态。
+所有的地址、标记和值都以十六进制表示。
+每组有四行，索引列包含组索引。
+标记列包含每一行的标记值。
+_V_ 列包含每一行的有效位。
+字节 0~3 列包含每一行的数据，标号从左向右，字节 0 在左边。
+
+4 路组相联高速缓存
+
+<table>
+  <thead>
+    <tr>
+      <th>索引</th>
+      <th>标记</th><th>V</th><th colspan=4>字节 0~3</th>
+      <th>标记</th><th>V</th><th colspan=4>字节 0~3</th>
+      <th>标记</th><th>V</th><th colspan=4>字节 0~3</th>
+      <th>标记</th><th>V</th><th colspan=4>字节 0~3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>F0</td><td>1</td><td>ED</td><td>32</td><td>0A</td><td>A2</td>
+      <td>8A</td><td>1</td><td>BF</td><td>80</td><td>1D</td><td>FC</td>
+      <td>14</td><td>1</td><td>EF</td><td>09</td><td>86</td><td>2A</td>
+      <td>BC</td><td>0</td><td>25</td><td>44</td><td>6F</td><td>1A</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>BC</td><td>0</td><td>03</td><td>3E</td><td>CD</td><td>38</td>
+      <td>A0</td><td>0</td><td>16</td><td>7B</td><td>ED</td><td>5A</td>
+      <td>BC</td><td>1</td><td>8E</td><td>4C</td><td>DF</td><td>18</td>
+      <td>E4</td><td>1</td><td>FB</td><td>B7</td><td>12</td><td>02</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>BC</td><td>1</td><td>54</td><td>9E</td><td>1E</td><td>FA</td>
+      <td>B6</td><td>1</td><td>DC</td><td>81</td><td>B2</td><td>14</td>
+      <td>00</td><td>0</td><td>B6</td><td>1F</td><td>7B</td><td>44</td>
+      <td>74</td><td>0</td><td>10</td><td>F5</td><td>B8</td><td>2E</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BE</td><td>0</td><td>2F</td><td>7E</td><td>3D</td><td>A8</td>
+      <td>C0</td><td>1</td><td>27</td><td>95</td><td>A4</td><td>74</td>
+      <td>C4</td><td>0</td><td>07</td><td>11</td><td>6B</td><td>D8</td>
+      <td>BC</td><td>0</td><td>C7</td><td>B7</td><td>AF</td><td>C2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7E</td><td>1</td><td>32</td><td>21</td><td>1C</td><td>2C</td>
+      <td>8A</td><td>1</td><td>22</td><td>C2</td><td>DC</td><td>34</td>
+      <td>BC</td><td>1</td><td>BA</td><td>DD</td><td>37</td><td>D8</td>
+      <td>DC</td><td>0</td><td>E7</td><td>A2</td><td>39</td><td>BA</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>98</td><td>0</td><td>A9</td><td>76</td><td>2B</td><td>EE</td>
+      <td>54</td><td>0</td><td>BC</td><td>91</td><td>D5</td><td>92</td>
+      <td>98</td><td>1</td><td>80</td><td>BA</td><td>9B</td><td>F6</td>
+      <td>BC</td><td>1</td><td>48</td><td>16</td><td>81</td><td>0A</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>38</td><td>0</td><td>5D</td><td>4D</td><td>F7</td><td>DA</td>
+      <td>BC</td><td>1</td><td>69</td><td>C2</td><td>8C</td><td>74</td>
+      <td>8A</td><td>1</td><td>A8</td><td>CE</td><td>7F</td><td>DA</td>
+      <td>38</td><td>1</td><td>FA</td><td>93</td><td>EB</td><td>48</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>8A</td><td>1</td><td>04</td><td>2A</td><td>32</td><td>6A</td>
+      <td>9E</td><td>0</td><td>B1</td><td>86</td><td>56</td><td>0E</td>
+      <td>CC</td><td>1</td><td>96</td><td>30</td><td>47</td><td>F2</td>
+      <td>BC</td><td>1</td><td>F8</td><td>1D</td><td>42</td><td>30</td>
+    </tr>
+  </tbody>
+</table>
+
+* A 这个高速缓存的大小（C）是多少字节？
+* B 下面的图给出了一个地址的格式（每个小框表示一位）。指出用来确定下列信息的字段（在图中标号出来）：
+  * CO 高速缓存块偏移
+  * CI 高速缓存组索引
+  * CT 高速缓存标记
+
+  ![](images/ex6.31.svg)
+
+  ### 6.32 \*\*
+
+假设程序使用作业6.31中的高速缓存，引用位于地址0x0718处的 1 字节字。
+用十六进制表示出它所访问的高速缓存条目，以及返回的高速缓存字节值。
+指明是否发生了高速缓存不命中。
+如果有高速缓存不命中，对于“返回的高速缓存字节”输入“-”。
+提示:注意那些有效位!
+  
+* A.地址格式(每个小框表示一位):
+
+  ![](images/ex6.31.svg)
+
+* B 存储器引用
+
+|参数|值|
+|-|-|
+|高速缓存块偏移（CO）|0x____|
+|高速缓存组索引（CI）|0x____|
+|高速缓存标记（CT）|0x____|
+|高速缓存命中？（是/否）||
+|返回的高速缓存字节|0x____|
+
+### 6.33 \*\*
+
+对于存储器地址 0x16EC 重复作业 6.32。
+
+* A.地址格式(每个小框表示一位):
+
+  ![](images/ex6.31.svg)
+
+* B 存储器引用
+
+|参数|值|
+|-|-|
+|高速缓存块偏移（CO）|0x____|
+|高速缓存组索引（CI）|0x____|
+|高速缓存标记（CT）|0x____|
+|高速缓存命中？（是/否）||
+|返回的高速缓存字节|0x____|
+
+### 6.34 \*\*
+
+对于作业 6.31 中的高速缓存，列出会在组 5 中命中的八个存储器地址（以十六进制表示）。
+
+### 6.35 \*\*
+
+考虑下面的矩阵转置函数：
+
+```c
+typedef int array[4][4];
+
+void transpose2(array dst, array src)
+{
+  int i,j;
+
+  for (i = 0; i<4; i++) {
+    for (j = 0; j < 4; j++) {
+      dst[i][j] = src[j][i];
+    }
+  }
+}
+```
+
+假设这段代码运行在一台具有如下属性的机器上:
+
+* sizeof(int) == 4。
+* 数组 src 从地址0开始，而数组 dst 从地址 64 开始(十进制)。
+* 只有一个 L1 数据高速缓存，它是直接映射、直写、写分配的，块大小为 16 字节。
+* 这个高速缓存总共有 32 个数据字节，初始为空。
+* 对 src 和 dst 数组的访问分别是读和写不命中的唯一来源。
+
+对于每个 row 和 col，指明对 `src[row][col]` 和 `dst[row][col]` 的访问是命中(h)还是不命中(m)。
+例如，读 `src[0][0]` 会不命中，而写 `dst[0][0]` 也会不命中。
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">dst 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 1</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 2</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 3</th><td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">src 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 1</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 2</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 3</th><td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
+
+### 6.36 \*\*
+
+对于一个总大小为 128 数据字节的高速缓存，重复练习题 6.35。
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">dst 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 1</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 2</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 3</th><td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">src 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 1</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 2</th><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <th>行 3</th><td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
+
+### 6.37 \*\*
+
+这道题测试你预测 C 语言代码的高速缓存行为的能力。
+对下面这段代码进行分析:
+
+```c
+int x[2][256];
+int i;
+int sum0;
+
+for (i = 0; i < 256; i++) {
+  sum += x[0][i] * x[1][i];
+}
+```
+
+假设我们在下列条件下执行这段代码:
+
+* sizeof(int) == 4。
+* 数组 x 从存储器地址 0x0 开始，按照行优先顺序存储。
+* 在下面每种情况中，高速缓存最开始时都是空的。
+* 唯一的存储器访问是对数组x的条目进行访问。其他所有的变量都存储在寄存器中。
+
+给定这些假设，估计下列情况中不命中率。
+
+* A. 情况1: 假设高速缓存是 1024 字节，直接映射，高速缓存块大小为 32 字节。不命中率是多少?
+* B. 情况2: 如果我们把高速缓存的大小翻倍到 2048 字节，不命中率是多少?
+* C. 情况3: 现在假设高速缓存是 1024 字节，两路组相联，使用 LRU 替换策略，高速缓存块大小为 32 字节。不命中率是多少?
+* D. 对于情况3，更大的高速缓存大小会帮助降低不命中率吗?为什么能或者为什么不能?
+* E. 对于情况3，更大的块大小会帮助降低不命中率吗?为什么能或者为什么不能?
+
+### 6.38 \*\*
+
+这道题也是测试你分析 C 语言代码的高速缓存行为的能力。
+假设我们在下列条件下执行下面的三个求和函数：
+
+* sizeof (int) == 4。
+* 机器有 4KB 直接映射的高速缓存，块大小为 16 字节。
+* 在两个循环中，代码只对数组数据进行存储器访问。循环索引和值 sum 都存放在寄存器中。
+* 数组a从存储器地址 0x08000000 处开始存储。
+
+对于 N=64 和 N=60 两种情况，在表中填写它们大概的高速缓存不命中率。
+
+|函数|N=64|N=60|
+|-|-|-|
+|sumA|||
+|sumB|||
+|sumC|||
+
+```c
+typedef int array_t[N][N];
+
+int sumA(array_t a)
+{
+  int i, j;
+  int sum = 0;
+  for (i = 0; i < N; i++)
+    for (j=0; j < N; j++) {
+      sum += a[i][j];
+    }
+  return sum;
+}
+
+int sumB(array_t a)
+{
+  int i, j;
+  int sum = 0;
+  for (j = 0; j < N; j++)
+    for (i = 0; i< N; i++) {
+      sum += a[i][j];
+    }
+  return sum;
+}
+
+int sumC(array_t a)
+{
+  int i, j;
+  int sum = 0;
+  for (j = 0; j < N; j += 2)
+    for (i = 0; i < N; i+=2) {
+      sum += (a[i][j] + a[i+1][j]
+              + a[i][j+1] + a[i+1][j+1]);
+    }
+  return sum;
+}
+```
+
+### 6.39 \*
+
+3M<sup>TM</sup> 决定在白纸上印黄方格，做成Post-It<sup>®</sup> 小贴纸。
+在打印过程中，他们需要设置方格中每个点的 CMYK(蓝色，红色，黄色，黑色)值。
+3M 雇用你判定下面算法在一个具有 1024字节、直接映射、块大小为 64 字节的数据高速缓存上的效率。
+有如下定义:
+
+```c
+struct point_color {
+  int c;
+  int m;
+  int y;
+  int k;
+};
+
+struct point_color square[16][16];
+int i, j;
+```
+
+有如下假设:
+
+* sizeof (int) == 4.
+* square 起始于存储器地址0。
+* 高速缓存初始为空。
+* 唯一的存储器访问是对于 square 数组中的元素。变量i和j被存放在寄存器中。
+
+确定下列代码的高速缓存性能:
+
+```c
+for (i = 0; i < 16; i++) {
+  for (j = 0; j < 16; j++) {
+    square[i][j].c = 0;
+    square[i][j].m = 0;
+    square[i][j].y = 1;
+    square[i][j].k = 0;
+  }
+}
+```
+
+* A. 写总数是多少?
+* B. 在高速缓存中不命中的写总数是多少?
+* C. 不命中率是多少?
+
+### 6.40 \*
+
+给定家庭作业 6.39 中的假设，确定下列代码的高速缓存性能:
+
+```c
+for (i = 0; i < 16; i++) {
+  for (j = 0; j < 16; j++) {
+    square[j][i].c = 0;
+    square[j][i].m = 0;
+    square[j][i].y = 1;
+    square[j][i].k = 0;
+  }
+}
+```
+
+* A. 写总数是多少?
+* B. 在高速缓存中不命中的写总数是多少?
+* C. 不命中率是多少?
+
+### 6.41 \*
+
+给定家庭作业 6.39 中的假设，确定下列代码的高速缓存性能:
+
+```c
+for (i = 0; i < 16; i++) {
+  for (j = 0; j < 16; j++) {
+    square[i][j].y = 1;
+  }
+}
+for (i = 0; i < 16; i++) {
+  for (j = 0; j < 16; j++) {
+    square[i][j].c = 0;
+    square[i][j].m = 0;
+    square[i][j].k = 0;
+  }
+}
+```
+
+* A. 写总数是多少?
+* B. 在高速缓存中不命中的写总数是多少?
+* C. 不命中率是多少?
+
+### 6.42 \*\*
+
+你正在编写一个新的 3D 游戏，希望能名利双收。
+你现在正在写一个函数，使得在画下一帧之前先清空屏幕缓冲区。
+你现在工作的屏幕是 640X480 像素数组。
+你工作的机器有一个 64KB 直接映射高速缓存，每行 4 个字节。
+你使用下面的 C 语言数据结构:
+
+```c
+struct pixel {
+  char r;
+  char g;
+  char b;
+  char a;
+};
+
+struct pixel buffer[480][640];
+int i, j;
+char *cptr;
+int *iptr;
+```
+
+有如下假设:
+
+* sizeof(char)==l 和 sizeof(int)==4。
+* buffer 起始于存储器地址0。
+* 高速缓存初始为空。
+* 唯一的存储器访问是对于 buffer 数组中元素的访问。变量i、j、cptr 和 iptr 被存放在寄存器中。
+
+下面代码中百分之多少的写会在高速缓存中不命中?
+
+```c
+for (j = 0; j < 640; j++) {
+  for (i = 0; i < 480; i++) {
+    buffer[i][j].r = 0;
+    buffer[i][j].g = 0;
+    buffer[i][j].b = 0;
+    buffer[i][j].a = 0;
+  }
+}
+```
+
+### 6.43 \*\*
+
+给定家庭作业6.42中的假设，下面代码中百分之多少的写会在高速缓存中不命中?
+
+```c
+char *cptr = (char *) buffer;
+for (; cptr < (((char *) buffer) + 640 * 480 * 4); cptr++)
+  *cptr = 0;
+```
+
+### 6.44 \*\*
+
+给定家庭作业6.42中的假设，下面代码中百分之多少的写会在高速缓存中不命中?
+
+```c
+int *iptr = (int *)buffer;
+for (; iptr < ((int *)buffer + 640*480); iptr++)
+  *iptr = 0;
+```
+
+### 6.45 \*\*\*
+
+从 CS:APP2的网站上下载mountain程序，在你最喜欢的 PC/Linux系统上运行它。
+根据结果估计你系统上的高速缓存的大小。
+
+### 6.46 \*\*\*\*
+
+在这项任务中，你会把你在第 5 章和第 6 章中学习到的概念应用到一个存储器使用频繁的代码的优化问题上。
+考虑一个拷贝并转置一个类型为 int 的 N×N 矩阵的过程。
+也就是，对于源矩阵 S 和目的矩阵 D，我们要将每个元素s<sub>i,j</sub>拷贝到 d<sub>j,i</sub>。
+只用一个简单的循环就能实现这段代码:
+
+```c
+void transpose(int *dst, int *src, int dim)
+{
+  int i, j;
+  for (i = 0; i < dim; i++)
+    for (j = 0; j < dim; j++)
+      dst[j*dim + i] = src[i*dim + j];
+}
+```
+
+这里，过程的参数是指向目的矩阵(dst)和源矩阵(src)的指针，以及矩阵的大小 N(dim)。
+你的工作是设计一个运行得尽可能快的转置函数。
+
+### 6.47 \*\*\*\*
+
+这是家庭作业6.46的一个有趣的变体。
+考虑将一个有向图 g 转换成它对应的无向图 g\'。
+图 g\' 有一条从顶点 _u_ 到顶点 _v_ 的边，当且仅当原图 g 中有一条 _u_ 到 _v_ 或者 _v_ 到 _u_ 的边。
+图 g 是由如下的它的邻接矩阵(adjacency matrix)G 表示的。
+如果 N 是 g 中顶点的数量，那么 G 是一个 N×N 的矩阵它的元素是全 0 或者全 1。
+假设 g 的顶点是这样命名的: v<sub>0</sub>，v<sub>1</sub>，...，v<sub>N-1</sub>。
+那么如果有一条从 v<sub>i</sub> 到 v<sub>j</sub> 的边，那么 G[i][j]为 1，否则为 0。
+注意，邻接矩阵对角线上的元素总是 1，而无向图的邻接矩阵对称的。
+只用一个简单的循环就能实现这段代码:
+
+```c
+void col_convert(int *G, int dim) {
+  int i, j;
+  for (i = 0; i < dim; i++)
+    for (j = 0; j < dim; j++)
+      G[j*dim + i] = G[j*dim + i] || G[i*dim +j];
+}
+```
+
+你的工作是设计一个运行得尽可能快的函数。
+同前面一样，要提出一个好的解答，需要应用你在第 5 章和第 6 章中所学到的概念。
