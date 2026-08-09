@@ -1880,6 +1880,53 @@ void transpose(int *dst, int *src, int dim)
 这里，过程的参数是指向目的矩阵(dst)和源矩阵(src)的指针，以及矩阵的大小 N(dim)。
 你的工作是设计一个运行得尽可能快的转置函数。
 
+答：
+
+我用来测试的 CPU 情况：
+
+* 48k L1 data cache
+* 12 way
+* 64 set
+* 64 byte block
+
+基本思路是将 src 和 dst 拆分成多个小矩阵，每次处理处理一个小矩阵，这样可以：
+
+将小矩阵都放到 L1 data chache 中，减少缓存不命中的概率
+
+由于 64 set \* 64 byte block 等于 4096B 可以预期，当我们将小矩阵拆分成 1024N 或者其整数倍的时候性能会比较差，因为此时矩阵中的每行都会缓存到 L1 data cache 中的同一个组（set）中。
+
+参考代码：[ex6.46.c](ex6.46.c) 基于以下代码进行了修改：https://github.com/edwinfj/csapp-2e-solution/blob/master/practice/c6/p6.46.c
+
+在我的机器上测试结果为：
+
+```
+1 blocksize     3101546 clock ticks     3101.55 ms
+10 blocksize    1011015 clock ticks     1011.01 ms
+20 blocksize    980420 clock ticks      980.42 ms
+30 blocksize    969179 clock ticks      969.18 ms
+40 blocksize    1074195 clock ticks     1074.19 ms
+50 blocksize    1016173 clock ticks     1016.17 ms
+60 blocksize    980865 clock ticks      980.87 ms
+70 blocksize    959847 clock ticks      959.85 ms
+80 blocksize    955404 clock ticks      955.40 ms
+90 blocksize    957503 clock ticks      957.50 ms
+100 blocksize   1040204 clock ticks     1040.20 ms
+110 blocksize   1017218 clock ticks     1017.22 ms
+120 blocksize   955807 clock ticks      955.81 ms
+130 blocksize   930085 clock ticks      930.09 ms
+140 blocksize   1055012 clock ticks     1055.01 ms
+150 blocksize   1022950 clock ticks     1022.95 ms
+160 blocksize   989540 clock ticks      989.54 ms
+170 blocksize   948435 clock ticks      948.43 ms
+400 blocksize   948298 clock ticks      948.30 ms
+600 blocksize   957347 clock ticks      957.35 ms
+800 blocksize   1362172 clock ticks     1362.17 ms
+1000 blocksize  1612191 clock ticks     1612.19 ms
+1024 blocksize  1655010 clock ticks     1655.01 ms
+1111 blocksize  1688796 clock ticks     1688.80 ms
+2222 blocksize  1766744 clock ticks     1766.74 ms
+```
+
 ### 6.47 \*\*\*\*
 
 这是家庭作业6.46的一个有趣的变体。
@@ -1903,3 +1950,97 @@ void col_convert(int *G, int dim) {
 
 你的工作是设计一个运行得尽可能快的函数。
 同前面一样，要提出一个好的解答，需要应用你在第 5 章和第 6 章中所学到的概念。
+
+答:
+
+参考：[ex6.47.c](ex6.47.c) 基于以下代码进行了修改：https://github.com/edwinfj/csapp-2e-solution/blob/master/practice/c6/p6.47.c
+
+下面是我的运行结果
+
+```
+1 block 2096128 count   7184.10 ms
+2 block 2096128 count   2605.16 ms
+3 block 2096128 count   2066.20 ms
+4 block 2096128 count   1871.12 ms
+5 block 2096128 count   1685.22 ms
+6 block 2096128 count   1404.61 ms
+7 block 2096128 count   1337.97 ms
+8 block 2096128 count   1261.51 ms
+9 block 2096128 count   1225.35 ms
+10 block        2096128 count   1163.44 ms
+11 block        2096128 count   1182.17 ms
+12 block        2096128 count   1141.65 ms
+13 block        2096128 count   1173.89 ms
+14 block        2096128 count   1121.87 ms
+15 block        2096128 count   1124.59 ms
+16 block        2096128 count   1130.00 ms
+17 block        2096128 count   1137.82 ms
+18 block        2096128 count   1100.63 ms
+100 block       2096128 count   1154.95 ms
+200 block       2096128 count   1457.80 ms
+400 block       2096128 count   3070.63 ms
+800 block       2096128 count   3481.43 ms
+1024 block      2096128 count   3405.40 ms
+1111 block      2096128 count   3430.60 ms
+2048 block      2096128 count   3902.97 ms
+```
+
+下面是取消循环展开后的测试结果：
+
+```
+1 block 2096128 count   5779.25 ms
+2 block 2096128 count   2127.83 ms
+3 block 2096128 count   1981.57 ms
+4 block 2096128 count   1756.64 ms
+5 block 2096128 count   1587.11 ms
+6 block 2096128 count   1393.66 ms
+7 block 2096128 count   1281.99 ms
+8 block 2096128 count   1288.00 ms
+9 block 2096128 count   1207.68 ms
+10 block        2096128 count   1245.95 ms
+11 block        2096128 count   1198.31 ms
+12 block        2096128 count   1191.35 ms
+13 block        2096128 count   1175.04 ms
+14 block        2096128 count   1200.36 ms
+15 block        2096128 count   1304.32 ms
+16 block        2096128 count   1298.06 ms
+17 block        2096128 count   1270.21 ms
+18 block        2096128 count   1282.08 ms
+100 block       2096128 count   1184.39 ms
+200 block       2096128 count   1754.32 ms
+400 block       2096128 count   2930.66 ms
+800 block       2096128 count   3028.83 ms
+1024 block      2096128 count   3266.68 ms
+1111 block      2096128 count   3286.38 ms
+2048 block      2096128 count   3385.39 ms
+```
+
+下面是取消循环展开+开启O1优化的测试结果，可以看到我们的手动优化版本还有很大的改进空间：
+
+```
+1 block 2096128 count   3230.90 ms
+2 block 2096128 count   1307.67 ms
+3 block 2096128 count   978.41 ms
+4 block 2096128 count   873.80 ms
+5 block 2096128 count   786.45 ms
+6 block 2096128 count   679.65 ms
+7 block 2096128 count   638.74 ms
+8 block 2096128 count   627.05 ms
+9 block 2096128 count   624.45 ms
+10 block        2096128 count   662.72 ms
+11 block        2096128 count   710.80 ms
+12 block        2096128 count   627.51 ms
+13 block        2096128 count   708.99 ms
+14 block        2096128 count   722.79 ms
+15 block        2096128 count   800.21 ms
+16 block        2096128 count   876.64 ms
+17 block        2096128 count   1032.19 ms
+18 block        2096128 count   1123.84 ms
+100 block       2096128 count   1368.16 ms
+200 block       2096128 count   1370.60 ms
+400 block       2096128 count   1548.41 ms
+800 block       2096128 count   1551.45 ms
+1024 block      2096128 count   1642.53 ms
+1111 block      2096128 count   1560.17 ms
+2048 block      2096128 count   1900.94 ms
+```
