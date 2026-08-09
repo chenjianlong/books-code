@@ -872,6 +872,28 @@ T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>avg
 * A 最好情况：估计在所有可能的逻辑块到磁盘扇区的映射上读该文件所需要的最优时间（以 ms 为单位）。
 * B 随机情况：估计如果块是随机映射到磁盘扇区上时读该文件所需要的时间（以 ms 为单位）。
 
+答：
+
+T<sub>rotation</sub> = 1/12000 \* (60 \* 1000) = 5ms
+
+T<sub>avg rotation</sub> = 1/2 \* 1/12000 \* (60 \* 1000) = 2.5ms
+
+3M / 1024 = 3000块
+
+* A
+
+3000块连续的情况下，传输时间为磁盘转 3000/500 = 6 圈的时间
+
+T<sub>transfer</sub> = 6 * T<sub>rotation</sub> = 30ms
+
+T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>transfer</sub> = 3ms + 2.5ms + 30ms = 35.5ms
+
+* B
+
+每一块都需要定位，此时传输时间基本可以忽略
+
+T<sub>access</sub> = 3000 \* (T<sub>avg seek</sub> + T<sub>avg rotation</sub>) = 16500ms = 16.5s
+
 ### 6.26 \*
 
 下面的表给出了一些不同的高速缓存的参数。
@@ -887,6 +909,17 @@ T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>avg
 |5.|32|2048|32|1|||||
 |6.|32|2048|32|4|||||
 
+答：
+
+|高速缓存|m|C|B|E|S|t|s|b|
+|-|-|-|-|-|-|-|-|-|
+|1.|32|2048|4|4|128|23|7|2|
+|2.|32|2048|4|512|1|30|0|2|
+|3.|32|2048|8|1|256|21|8|3|
+|4.|32|2048|8|128|2|28|1|3|
+|5.|32|2048|32|1|64|21|6|5|
+|6.|32|2048|32|4|16|23|4|5|
+
 ### 6.27 \*
 
 下面的表给出了一些不同高速缓存的参数。
@@ -898,7 +931,16 @@ T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>avg
 |1.|32||16|1||19|9|4|
 |2.|32|4096|||256|22|8|2|
 |3.|32|4096|4|8|128|||2|
-|4.|32|2048||4|16|22|4||
+|4.|32|2048||4|16|23|4||
+
+答：
+
+|高速缓存|m|C|B|E|S|t|s|b|
+|-|-|-|-|-|-|-|-|-|
+|1.|32|8192|16|1|512|19|9|4|
+|2.|32|4096|4|4|256|22|8|2|
+|3.|32|4096|4|8|128|23|7|2|
+|4.|32|2048|32|4|16|23|4|5|
 
 ### 6.28 \*
 
@@ -906,6 +948,38 @@ T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>avg
 
 * A 列出所有会在组 6 中命中的十六进制存储器地址。
 * B 列出所有会在组 1 中命中的十六进制存储器地址。
+
+答：
+
+先回顾 6.13 各个字段的占位：
+
+![](images/ex6.13ans.svg)
+
+* A
+
+组 6 有效的标记位为：0x91(CT), CI 为 0x6
+
+所有的地址有：
+
+0B10001 0001 110 xx
+
+转为十六进制为：0x1238、0x1239、0x123A、0x123B
+
+* B
+
+组 1 有效的标记位有：0x45 和 0x38
+
+所有的地址有：
+
+0B0100 0101 001 xx
+
+0B0011 1000 001 xx
+
+转为十六进制为：
+
+0x08A4、0x08A5、0x08A6、0x08A7
+
+0x0704、0x0705、0x0706、0x0707
 
 ### 6.29 \*\*
 
@@ -915,6 +989,48 @@ T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>avg
 * B 列出所有会在组 5 中命中的十六进制存储器地址。
 * C 列出所有会在组 4 中命中的十六进制存储器地址。
 * D 列出所有会在组 2 中命中的十六进制存储器地址。
+
+答：
+
+先回顾 6.13 各个字段的占位：
+
+![](images/ex6.13ans.svg)
+
+* A
+
+组 7 的有效标记位有：0xDE
+
+所有的地址有：
+
+0B1101 1110 111 xx
+
+0x1BDC、0x1BDD、0x1BDE、0x1BDF
+
+* B
+
+组 5 的有效标记位有：0x71
+
+所有的地址有：
+
+0B0111 0001 101 xx
+
+0x0E34、0x0E35、0x0E36、0x0E37
+
+* C
+
+组 4 的有效标记位有：0xC7、0x05
+
+0B1100 0111 100 xx
+
+0B0000 0101 100 xx
+
+0x18F0、0x18F1、0x18F2、0x18F2
+
+0x00B0、0x00B1、0x00B2、0x00B3
+
+* D
+
+组 2 中没有有效的标记位，因此没有命中的存储器地址
 
 ### 6.30 \*\*
 
@@ -977,6 +1093,20 @@ T<sub>access</sub> = T<sub>avg seek</sub> + T<sub>avg rotation</sub> + T<sub>avg
 |读|0x409|||
 |写|0x40A|||
 |读|0x833|||
+
+答：
+
+* A
+
+![](images/ex6.30ans.svg)
+
+* B
+
+|操作|地址|命中？|读出的值（或者未知）|
+|-|-|-|-|
+|读|0x409|否|未知|
+|写|0x40A|是|-|
+|读|0x833|是|D0|
 
 ### 6.31 \*
 
@@ -1072,7 +1202,17 @@ _V_ 列包含每一行的有效位。
   * CI 高速缓存组索引
   * CT 高速缓存标记
 
-  ![](images/ex6.31.svg)
+![](images/ex6.31.svg)
+
+答：
+
+* A
+
+C = S \* E \* B = 8 * 4 * 4 = 128字节
+
+* B
+
+![](images/ex6.13ans.svg)
 
   ### 6.32 \*\*
 
@@ -1096,6 +1236,22 @@ _V_ 列包含每一行的有效位。
 |高速缓存命中？（是/否）||
 |返回的高速缓存字节|0x____|
 
+答：
+
+* A
+
+![](images/ex6.32.svg)
+
+* B
+
+|参数|值|
+|-|-|
+|高速缓存块偏移（CO）|0x2|
+|高速缓存组索引（CI）|0x3|
+|高速缓存标记（CT）|0x16|
+|高速缓存命中？（是/否）|否|
+|返回的高速缓存字节|-|
+
 ### 6.33 \*\*
 
 对于存储器地址 0x16EC 重复作业 6.32。
@@ -1114,9 +1270,37 @@ _V_ 列包含每一行的有效位。
 |高速缓存命中？（是/否）||
 |返回的高速缓存字节|0x____|
 
+答：
+
+* A
+
+![](images/ex6.33.svg)
+
+* B
+
+|参数|值|
+|-|-|
+|高速缓存块偏移（CO）|0x0|
+|高速缓存组索引（CI）|0x3|
+|高速缓存标记（CT）|0xB7|
+|高速缓存命中？（是/否）|否|
+|返回的高速缓存字节|-|
+
 ### 6.34 \*\*
 
 对于作业 6.31 中的高速缓存，列出会在组 5 中命中的八个存储器地址（以十六进制表示）。
+
+答：
+
+0B1001 1000 101 xx
+
+0B1011 1100 101 xx
+
+十六进制表示：
+
+0x1314，0x1315，0x1316，0x1317
+
+0x1794, 0x1795，0x1796，0x1797
 
 ### 6.35 \*\*
 
@@ -1198,6 +1382,58 @@ void transpose2(array dst, array src)
   </tbody>
 </table>
 
+答：
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">dst 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td>h</td><td>m</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 1</th><td>m</td><td>m</td><td>h</td><td>m</td>
+    </tr>
+    <tr>
+      <th>行 2</th><td>m</td><td>h</td><td>m</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 3</th><td>m</td><td>m</td><td>h</td><td>m</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">src 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td>m</td><td>m</td><td>m</td>
+    </tr>
+    <tr>
+      <th>行 1</th><td>m</td><td>m</td><td>m</td><td>m</td>
+    </tr>
+    <tr>
+      <th>行 2</th><td>m</td><td>m</td><td>m</td><td>m</td>
+    </tr>
+    <tr>
+      <th>行 3</th><td>m</td><td>m</td><td>m</td><td>m</td>
+    </tr>
+  </tbody>
+</table>
+
 ### 6.36 \*\*
 
 对于一个总大小为 128 数据字节的高速缓存，重复练习题 6.35。
@@ -1213,7 +1449,7 @@ void transpose2(array dst, array src)
   </thead>
   <tbody>
     <tr>
-      <th>行 0</th><td>m</td><td></td><td></td><td></td>
+      <th>行 0</th><td></td><td></td><td></td><td></td>
     </tr>
     <tr>
       <th>行 1</th><td></td><td></td><td></td><td></td>
@@ -1238,7 +1474,7 @@ void transpose2(array dst, array src)
   </thead>
   <tbody>
     <tr>
-      <th>行 0</th><td>m</td><td></td><td></td><td></td>
+      <th>行 0</th><td></td><td></td><td></td><td></td>
     </tr>
     <tr>
       <th>行 1</th><td></td><td></td><td></td><td></td>
@@ -1248,6 +1484,58 @@ void transpose2(array dst, array src)
     </tr>
     <tr>
       <th>行 3</th><td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
+
+答：
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">dst 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 1</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 2</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 3</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th colspan=5 style="text-align:center">src 数组</th>
+    </tr>
+    <tr>
+      <th></th><th>列 0</th><th>列 1</th><th>列 2</th><th>列 3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>行 0</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 1</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 2</th><td>m</td><td>h</td><td>h</td><td>h</td>
+    </tr>
+    <tr>
+      <th>行 3</th><td>m</td><td>h</td><td>h</td><td>h</td>
     </tr>
   </tbody>
 </table>
@@ -1282,6 +1570,30 @@ for (i = 0; i < 256; i++) {
 * D. 对于情况3，更大的高速缓存大小会帮助降低不命中率吗?为什么能或者为什么不能?
 * E. 对于情况3，更大的块大小会帮助降低不命中率吗?为什么能或者为什么不能?
 
+答：
+
+* A
+
+100%
+
+* B
+
+2048字节，刚好可以把 x 都缓存进来，块大小为 32 字节，每个块的前 4 字节是不命中的，后续都命中。
+
+4/32 = 12.5%
+
+* C
+
+两路组相连，LRU 替换策略，跟 B 的不命中率一样，每个块 32 字节，前 4 字节不命中，不命中率是 12.5%
+
+* D
+
+不能，缓存块大小不变的情况下，每个块第一次加载进缓存都是前 4 字节（1 个字）不命中。
+
+* E
+
+可以，两路组相连，LRU 替换策略，由于程序的特性 `x[0][i]` 和 `x[1][i]` 总是不同的块，缓存块变大的情况下，不命中率会有 4/32 = 12.5% 变成 4/B, 当 B 大于 32 的情况下，结果会比 12.5% 小。
+
 ### 6.38 \*\*
 
 这道题也是测试你分析 C 语言代码的高速缓存行为的能力。
@@ -1308,7 +1620,7 @@ int sumA(array_t a)
   int i, j;
   int sum = 0;
   for (i = 0; i < N; i++)
-    for (j=0; j < N; j++) {
+    for (j = 0; j < N; j++) {
       sum += a[i][j];
     }
   return sum;
@@ -1319,7 +1631,7 @@ int sumB(array_t a)
   int i, j;
   int sum = 0;
   for (j = 0; j < N; j++)
-    for (i = 0; i< N; i++) {
+    for (i = 0; i < N; i++) {
       sum += a[i][j];
     }
   return sum;
@@ -1338,9 +1650,17 @@ int sumC(array_t a)
 }
 ```
 
+答：
+
+|函数|N=64|N=60|
+|-|-|-|
+|sumA|25%|25%|
+|sumB|100%|25%|
+|sumC|50%|25%|
+
 ### 6.39 \*
 
-3M<sup>TM</sup> 决定在白纸上印黄方格，做成Post-It<sup>®</sup> 小贴纸。
+3M<sup>TM</sup> 决定在白纸上印黄方格，做成 Post-It<sup>®</sup> 小贴纸。
 在打印过程中，他们需要设置方格中每个点的 CMYK(蓝色，红色，黄色，黑色)值。
 3M 雇用你判定下面算法在一个具有 1024字节、直接映射、块大小为 64 字节的数据高速缓存上的效率。
 有如下定义:
@@ -1381,6 +1701,20 @@ for (i = 0; i < 16; i++) {
 * B. 在高速缓存中不命中的写总数是多少?
 * C. 不命中率是多少?
 
+答：
+
+* A
+
+1024次写
+
+* B
+
+64次
+
+* C
+
+6.25%
+
 ### 6.40 \*
 
 给定家庭作业 6.39 中的假设，确定下列代码的高速缓存性能:
@@ -1399,6 +1733,20 @@ for (i = 0; i < 16; i++) {
 * A. 写总数是多少?
 * B. 在高速缓存中不命中的写总数是多少?
 * C. 不命中率是多少?
+
+答：
+
+* A
+
+1024次写
+
+* B
+
+256次
+
+* C
+
+25%
 
 ### 6.41 \*
 
@@ -1422,6 +1770,20 @@ for (i = 0; i < 16; i++) {
 * A. 写总数是多少?
 * B. 在高速缓存中不命中的写总数是多少?
 * C. 不命中率是多少?
+
+答：
+
+* A
+
+1024次写
+
+* B
+
+1/4 \* 16 \* 16 + 1/4 \* 16 \* 16 = 128次
+
+* C
+
+12.5%
 
 ### 6.42 \*\*
 
@@ -1447,10 +1809,10 @@ int *iptr;
 
 有如下假设:
 
-* sizeof(char)==l 和 sizeof(int)==4。
-* buffer 起始于存储器地址0。
+* sizeof(char) == 1 和 sizeof(int) == 4。
+* buffer 起始于存储器地址 0。
 * 高速缓存初始为空。
-* 唯一的存储器访问是对于 buffer 数组中元素的访问。变量i、j、cptr 和 iptr 被存放在寄存器中。
+* 唯一的存储器访问是对于 buffer 数组中元素的访问。变量 i、j、cptr 和 iptr 被存放在寄存器中。
 
 下面代码中百分之多少的写会在高速缓存中不命中?
 
@@ -1465,6 +1827,8 @@ for (j = 0; j < 640; j++) {
 }
 ```
 
+答：25%
+
 ### 6.43 \*\*
 
 给定家庭作业6.42中的假设，下面代码中百分之多少的写会在高速缓存中不命中?
@@ -1474,6 +1838,8 @@ char *cptr = (char *) buffer;
 for (; cptr < (((char *) buffer) + 640 * 480 * 4); cptr++)
   *cptr = 0;
 ```
+
+答：25%
 
 ### 6.44 \*\*
 
@@ -1485,10 +1851,14 @@ for (; iptr < ((int *)buffer + 640*480); iptr++)
   *iptr = 0;
 ```
 
+答：100%
+
 ### 6.45 \*\*\*
 
 从 CS:APP2的网站上下载mountain程序，在你最喜欢的 PC/Linux系统上运行它。
 根据结果估计你系统上的高速缓存的大小。
+
+答：略，代码在 [mountain](mountain)
 
 ### 6.46 \*\*\*\*
 
