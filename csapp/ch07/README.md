@@ -225,3 +225,58 @@ int p2()
 * A. 因为启动代码会调用 `main` 函数，没有 `main` 函数，程序会编译失败
 * B. 这三者都最终会通过 `_exit` 函数将控制权返回给操作系统。
 
+## 家庭作业
+
+### 7.6 \*
+
+考虑下面的 `swap.c` 函数版本，它计算自己被调用的次数:
+
+```c
+extern int buf[];
+
+int *bufp0 = &buf[0];
+static int *bufp1;
+
+static void incr()
+{
+    static int count=0;
+
+    count++;
+}
+
+void swap()
+{
+    int temp;
+
+    incr();
+    bufp1 = &buf[1];
+    temp = *bufp0;
+    *bufp0 = *bufp1;
+    *bufp1 = temp;
+}
+```
+
+对于每个 `swap.o` 中定义和引用的符号，请指出它是否在模块 `swap.o` 的 `.symtab` 节中有符号表条目。
+如果是这样，请指出定义该符号的模块(`swap.o` 或 `main.o`)、符号类型(本地、全局或外部)以及它在模块中所处的节(`.text`、`.data` 或 `.bss`)。
+
+|符号|`swap.o` `.symtab` 条目?|符号类型|定义符号的模块|节|
+|-|-|-|-|-|
+|buf|||||
+|bufp0|||||
+|bufp1|||||
+|swap|||||
+|temp|||||
+|incr|||||
+|count|||||
+
+答：
+
+|符号|`swap.o` `.symtab` 条目?|符号类型|定义符号的模块|节|
+|-|-|-|-|-|
+|buf|是|外部|`main.o`|`.data`|
+|bufp0|是|全局|`swap.o`|`.data`|
+|bufp1|是|本地|`swap.o`|`.bss`|
+|swap|是|全局|`swap.o`|`.text`|
+|temp|否|-|-|-|
+|incr|是|全局|`swap.o`|`.text`|
+|count|是|本地|`swap.o`|`.bss`|
