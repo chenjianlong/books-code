@@ -280,3 +280,242 @@ void swap()
 |temp|否|-|-|-|
 |incr|是|全局|`swap.o`|`.text`|
 |count|是|本地|`swap.o`|`.bss`|
+
+### 7.7 \*
+
+不改变任何变量名字，修改 7.6.1 节中的 `bar5.c`, 使得 `foo5.c` 输出 x 和 y 的正确值（也就是整数 15213 和 15212 的十六进制表示）。
+
+附录：
+
+```c
+/* foo5.c */
+#include <stdio.h>
+void f(void);
+
+int x = 15213;
+int y = 15212;
+
+int main()
+{
+    f();
+    printf("x = 0x%x y = 0x%x \n",
+           x, y);
+    return 0;
+}
+```
+
+```c
+/* bar5.c */
+double x;
+
+void f()
+{
+    x = -0.0;
+}
+```
+
+### 7.8 \*
+
+在此题中，REF(x.i)-->DEF(x.k) 表示链接器将任意对模块 i 中符号 x 的引用与模块 k 中符号 x 的定义相关联。
+在下面每个例子中，用这种符号来说明链接器是如何解析在每个模块中有多重定义的引用的。
+如果出现链接时错误（规则 1），写 "ERROR"。
+如果链接器从定义中任意选择一个（规则 3），那么写 “UNKNOWN”。
+
+* A
+
+```c
+/* Module 1 */
+int main()
+{
+}
+
+/* Module 2 */
+static int main=1;
+int p2()
+{
+}
+```
+
+```
+(a) REF(main.1) --> DEF(____.___)
+(a) REF(main.2) --> DEF(____.___)
+```
+
+* B
+
+```c
+/* Module 1 */
+int x;
+void main()
+{
+}
+
+/* Module 2 */
+double x;
+int p2()
+{
+}
+```
+
+```
+(a) REF(x.1) --> DEF(____.___)
+(a) REF(x.2) --> DEF(____.___)
+```
+
+* C
+
+```c
+C. /* Module 1 */
+int x=1;
+void main()
+{
+}
+
+/* Module 2 */
+double x=1.0;
+int p2()
+{
+}
+```
+
+```
+(a) REF(x.1) --> DEF(____.___)
+(b) REF(x.2) --> DEF(____.___)
+```
+
+### 7.9 \*
+
+考虑下面的程序，它由两个目标模块组成:
+
+```c
+/* foo6.c */
+void p2(void);
+
+int main()
+{
+    p2();
+    return 0;
+}
+```
+
+```c
+/* bar6.c */
+#include <stdio.h>
+
+char main;
+
+void p2()
+{
+    printf("0x%x\n", main);
+}
+```
+
+当在 Linux 系统中编译和执行这个程序时，即使p2不初始化变量 main，它也能打印字符串 “0x55\n” 并正常终止。
+你能解释这一点吗?
+
+### 7.10 \*
+
+a和b表示当前路径中的目标模块或静态库，而 a→b 表示 a 依赖于 b，也就是说 a 引用了一个 b 定义的符号。
+对于下面的每个场景，给出使得静态链接器能够解析所有符号引用的最小的命令行(含有最少数量的目标文件和库参数的命令):
+
+* A. p.o → libx.a → p.o
+* B. p.o → libx.a → liby.a 和 liby.a → libx.a
+* C. p.o → libx.a → liby.a → libz.a 和 liby.a → libx.a → libz.a
+
+### 7.11 \*
+
+图 7-12 中的段头部表明数据段占用了存储器中 0x104 个字节。
+然而，只有开始的 0xe8 字节来自可执行文件的节。
+引起这种差异的原因是什么?
+
+### 7.12 \*\*
+
+图 7-10 中的 swap 程序包含 5 个重定位的引用。
+对于每个重定位的引用，给出它在图 7-10 中的行
+号、运行时存储器地址和值。
+`swap.o` 模块中的原始代码和重定位条目如图 7-19 所示。
+
+```x86asm
+1 00000000 <swap>:
+2 0: 55                     push %ebp
+3 1: 8b 15 00 00 00 00      mov 0x0,%edx Get *bufp0=&buf[0]
+4                           3: R_386_32 bufp0 Relocation entry
+5 7: a1 04 00 00 00         mov 0x4,%eax Get buf[1]
+6                           8: R_386_32 buf Relocation entry
+7 c: 89 e5                  mov %esp,%ebp
+8 e: c7 05 00 00 00 00 04   movl $0x4,0x0 bufp1 = &buf[1];
+9 15: 00 00 00
+10                          10: R_386_32 bufp1 Relocation entry
+11                          14: R_386_32 buf Relocation entry
+12 18: 89 ec                mov %ebp,%esp
+13 1a: 8b 0a                mov (%edx),%ecx temp = buf[0];
+14 1c: 89 02                mov %eax,(%edx) buf[0]=buf[1];
+15 1e: a1 00 00 00 00       mov 0x0,%eax Get *bufp1=&buf[1]
+16                          1f: R_386_32 bufp1 Relocation entry
+17 23: 89 08                mov %ecx,(%eax) buf[1]=temp;
+18 25: 5d                   pop %ebp
+19 26: c3                   ret
+```
+
+**图 7-19 练习题 7.12 的代码和重定位条目**
+
+|图 7-10 中的行号|地址|值|
+|-|-|-|
+||||
+||||
+||||
+
+### 7.13 \*\*\*
+
+考虑图 7-20 中的 C 代码和相应的可重定位目标模块。
+
+* A.确定当模块被重定位时，链接器将修改 `.text` 中的哪些指令。
+对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
+* B.确定当模块被重定位时，链接器将修改 `.data` 中的哪些数据目标。
+对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
+
+可以随意使用诸如OBJDUMP之类的工具来帮助你解答这个题目。
+
+(a) C code
+
+```c
+1 extern int p3(void);
+2 int x = 1;
+3 int *xp = &x;
+4
+5 void p2(int y) {
+6 }
+7
+8 void p1() {
+9 p2(*xp + p3());
+10 }
+```
+```x86asm
+(b) .text section of relocatable object file
+1 00000000 <p2>:
+2 0: 55 push %ebp
+3 1: 89 e5 mov %esp,%ebp
+4 3: 89 ec mov %ebp,%esp
+5 5: 5d pop %ebp
+6 6: c3 ret
+7 00000008 <p1>:
+8 8: 55 push %ebp
+9 9: 89 e5 mov %esp,%ebp
+10 b: 83 ec 08 sub $0x8,%esp
+11 e: 83 c4 f4 add $0xfffffff4,%esp
+12 11: e8 fc ff ff ff call 12 <p1+0xa>
+13 16: 89 c2 mov %eax,%edx
+14 18: a1 00 00 00 00 mov 0x0,%eax
+15 1d: 03 10 add (%eax),%edx
+16 1f: 52 push %edx
+17 20: e8 fc ff ff ff call 21 <p1+0x19>
+18 25: 89 ec mov %ebp,%esp
+19 27: 5d pop %ebp
+20 28: c3 ret
+(c) .data section of relocatable object file
+1 00000000 <x>:
+2 0: 01 00 00 00
+3 00000004 <xp>:
+4 4: 00 00 00 00
+Figure 7.20 Example code for Problem 7.13.
+```
