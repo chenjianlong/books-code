@@ -544,6 +544,8 @@ a 和 b 表示当前路径中的目标模块或静态库，而 a→b 表示 a �
 # code/link/pdata-exe.d
 ```
 
+答:
+
 |图 7-10 中的行号|地址|值|
 |-|-|-|
 |15|0x804945c|0x8049454|
@@ -561,48 +563,129 @@ a 和 b 表示当前路径中的目标模块或静态库，而 a→b 表示 a �
 * B.确定当模块被重定位时，链接器将修改 `.data` 中的哪些数据目标。
 对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
 
-可以随意使用诸如OBJDUMP之类的工具来帮助你解答这个题目。
+可以随意使用诸如 `OBJDUMP` 之类的工具来帮助你解答这个题目。
 
-(a) C code
 
 ```c
-1 extern int p3(void);
-2 int x = 1;
-3 int *xp = &x;
-4
-5 void p2(int y) {
-6 }
-7
-8 void p1() {
-9 p2(*xp + p3());
-10 }
+extern int p3(void);
+int x = 1;
+int *xp = &x;
+
+void p2(int y) {
+}
+
+void p1() {
+    p2(*xp + p3());
+}
 ```
+
+(a) C 代码
+
 ```x86asm
-(b) .text section of relocatable object file
 1 00000000 <p2>:
-2 0: 55 push %ebp
-3 1: 89 e5 mov %esp,%ebp
-4 3: 89 ec mov %ebp,%esp
-5 5: 5d pop %ebp
-6 6: c3 ret
+2   0: 55               push %ebp
+3   1: 89 e5            mov %esp,%ebp
+4   3: 89 ec            mov %ebp,%esp
+5   5: 5d               pop %ebp
+6   6: c3               ret
+
 7 00000008 <p1>:
-8 8: 55 push %ebp
-9 9: 89 e5 mov %esp,%ebp
-10 b: 83 ec 08 sub $0x8,%esp
-11 e: 83 c4 f4 add $0xfffffff4,%esp
-12 11: e8 fc ff ff ff call 12 <p1+0xa>
-13 16: 89 c2 mov %eax,%edx
-14 18: a1 00 00 00 00 mov 0x0,%eax
-15 1d: 03 10 add (%eax),%edx
-16 1f: 52 push %edx
-17 20: e8 fc ff ff ff call 21 <p1+0x19>
-18 25: 89 ec mov %ebp,%esp
-19 27: 5d pop %ebp
-20 28: c3 ret
-(c) .data section of relocatable object file
-1 00000000 <x>:
-2 0: 01 00 00 00
-3 00000004 <xp>:
-4 4: 00 00 00 00
-Figure 7.20 Example code for Problem 7.13.
+8    8: 55              push %ebp
+9    9: 89 e5           mov %esp,%ebp
+10   b: 83 ec 08        sub $0x8,%esp
+11   e: 83 c4 f4        add $0xfffffff4,%esp
+12  11: e8 fc ff ff ff  call 12 <p1+0xa>
+13  16: 89 c2           mov %eax,%edx
+14  18: a1 00 00 00 00  mov 0x0,%eax
+15  1d: 03 10           add (%eax),%edx
+16  1f: 52              push %edx
+17  20: e8 fc ff ff ff  call 21 <p1+0x19>
+18  25: 89 ec           mov %ebp,%esp
+19  27: 5d              pop %ebp
+20  28: c3              ret
 ```
+
+(b) 可重定位目标文件的 `.text` 节
+
+```x86asm
+1   00000000 <x>:
+2       0: 01 00 00 00
+3   00000004 <xp>:
+4       4: 00 00 00 00
+```
+
+(c) 可重定位目标文件的 `.data` 节
+
+**图 7-20 练习题 7.13 的示例代码**
+
+### 7.14 \*\*\*
+
+考虑图 7-21 中的 C 代码和相应的可重定位目标模块。
+
+* A.确定当模块被重定位时，链接器将修改 `.text` 中的哪些指令。
+对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
+* B.确定当模块被重定位时，链接器将修改 `.data` 中的哪些数据目标。
+对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
+
+可以随意使用诸如 `OBJDUMP` 之类的工具来帮助你解答这个题目。
+
+```c
+int relo3(int val) {
+    switch (val) {
+    case 100:
+        return(val);
+    case 101:
+        return(val+1);
+    case 103: case 104:
+        return(val+3);
+    case 105:
+        return(val+5);
+    default:
+        return(val+6);
+    }
+}
+```
+
+(a) C 代码
+
+```x86asm
+1 00000000 <relo3>:
+2    0: 55                      push %ebp
+3    1: 89 e5                   mov %esp,%ebp
+4    3: 8b 45 08                mov 0x8(%ebp),%eax
+5    6: 8d 50 9c                lea 0xffffff9c(%eax),%edx
+6    9: 83 fa 05                cmp $0x5,%edx
+7    c: 77 17                   ja 25 <relo3+0x25>
+8    e: ff 24 95 00 00 00 00    jmp *0x0(,%edx,4)
+9   15: 40                      inc %eax
+10  16: eb 10                   jmp 28 <relo3+0x28>
+11  18: 83 c0 03                add $0x3,%eax
+12  1b: eb 0b                   jmp 28 <relo3+0x28>
+13  1d: 8d 76 00                lea 0x0(%esi),%esi
+14  20: 83 c0 05                add $0x5,%eax
+15  23: eb 03                   jmp 28 <relo3+0x28>
+16  25: 83 c0 06                add $0x6,%eax
+17  28: 89 ec                   mov %ebp,%esp
+18  2a: 5d                      pop %ebp
+19  2b: c3                      ret
+```
+
+(b) 可重定位目标文件的 `.text` 节
+
+```x86asm
+This is the jump table for the switch statement
+1 0000 28000000 15000000 25000000 18000000  4 words at offsets 0x0,0x4,0x8, and 0xc
+2 0010 18000000 20000000                    2 words at offsets 0x10 and 0x14
+```
+
+(c) 可重定位目标文件的 `.rodata` 节
+
+**图 7-21 练习题 7.14 示例代码**
+
+### 7.15 \*\*\*
+
+完成下面的任务将帮助你更熟悉处理目标文件的各种工具。
+
+* A. 在你的系统上，`libc.a` 和 `libm.a` 的版本中包含多少目标文件?
+* B. `gcc -O2` 产生的可执行代码与 `gcc -O2 -g` 产生的不同吗?
+* C. 在你的系统上，GCC 驱动程序使用的是什么共享库?
