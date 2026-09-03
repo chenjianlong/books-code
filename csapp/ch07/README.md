@@ -314,6 +314,18 @@ void f()
 }
 ```
 
+答:
+
+```c
+/* bar5.c */
+static double x;
+
+void f()
+{
+    x = -0.0;
+}
+```
+
 ### 7.8 \*
 
 在此题中，REF(x.i)-->DEF(x.k) 表示链接器将任意对模块 i 中符号 x 的引用与模块 k 中符号 x 的定义相关联。
@@ -365,7 +377,7 @@ int p2()
 * C
 
 ```c
-C. /* Module 1 */
+/* Module 1 */
 int x=1;
 void main()
 {
@@ -382,6 +394,18 @@ int p2()
 (a) REF(x.1) --> DEF(____.___)
 (b) REF(x.2) --> DEF(____.___)
 ```
+
+答：
+
+* A
+
+```
+(a) REF(main.1) --> DEF(main.1)
+(a) REF(main.2) --> DEF(main.2)
+```
+
+* B UNKNOWN
+* C ERROR
 
 ### 7.9 \*
 
@@ -413,14 +437,24 @@ void p2()
 当在 Linux 系统中编译和执行这个程序时，即使p2不初始化变量 main，它也能打印字符串 “0x55\n” 并正常终止。
 你能解释这一点吗?
 
+答：
+
+bar6.main 链接到 foo6.main 了，“0x55\n” 是 foo6.main 的内容。 
+
 ### 7.10 \*
 
-a和b表示当前路径中的目标模块或静态库，而 a→b 表示 a 依赖于 b，也就是说 a 引用了一个 b 定义的符号。
+a 和 b 表示当前路径中的目标模块或静态库，而 a→b 表示 a 依赖于 b，也就是说 a 引用了一个 b 定义的符号。
 对于下面的每个场景，给出使得静态链接器能够解析所有符号引用的最小的命令行(含有最少数量的目标文件和库参数的命令):
 
 * A. p.o → libx.a → p.o
 * B. p.o → libx.a → liby.a 和 liby.a → libx.a
 * C. p.o → libx.a → liby.a → libz.a 和 liby.a → libx.a → libz.a
+
+答：
+
+* A. gcc p.o -lx
+* B. gcc p.o -lx -ly
+* C. gcc p.o -lx -ly -lz
 
 ### 7.11 \*
 
@@ -428,11 +462,14 @@ a和b表示当前路径中的目标模块或静态库，而 a→b 表示 a 依�
 然而，只有开始的 0xe8 字节来自可执行文件的节。
 引起这种差异的原因是什么?
 
+答：
+
+`.bss` 节需要占用内存空间
+
 ### 7.12 \*\*
 
-图 7-10 中的 swap 程序包含 5 个重定位的引用。
-对于每个重定位的引用，给出它在图 7-10 中的行
-号、运行时存储器地址和值。
+图 7-10 中的 `swap` 程序包含 5 个重定位的引用。
+对于每个重定位的引用，给出它在图 7-10 中的行号、运行时存储器地址和值。
 `swap.o` 模块中的原始代码和重定位条目如图 7-19 所示。
 
 ```x86asm
@@ -464,6 +501,56 @@ a和b表示当前路径中的目标模块或静态库，而 a→b 表示 a 依�
 ||||
 ||||
 ||||
+
+附录 图 7-10
+
+```x86asm
+# (a) Relocated .text section
+# code/link/p-exe.d
+1   080483b4 <main>:
+2   80483b4: 55                     push %ebp
+3   80483b5: 89 e5                  mov %esp,%ebp
+4   80483b7: 83 ec 08               sub $0x8,%esp
+5   80483ba: e8 09 00 00 00         call 80483c8 <swap> swap();
+6   80483bf: 31 c0                  xor %eax,%eax
+7   80483c1: 89 ec                  mov %ebp,%esp
+8   80483c3: 5d                     pop %ebp
+9   80483c4: c3                     ret
+10  80483c5: 90                     nop
+11  80483c6: 90                     nop
+12  80483c7: 90                     nop
+13  080483c8 <swap>:
+14  80483c8: 55                     push %ebp
+15  80483c9: 8b 15 5c 94 04 08      mov 0x804945c,%edx Get *bufp0
+16  80483cf: a1 58 94 04 08         mov 0x8049458,%eax Get buf[1]
+17  80483d4: 89 e5                  mov %esp,%ebp
+18  80483d6: c7 05 48 95 04 08 58   movl $0x8049458,0x8049548 bufp1 = &buf[1]
+19  80483dd: 94 04 08
+20  80483e0: 89 ec                  mov %ebp,%esp
+21  80483e2: 8b 0a                  mov (%edx),%ecx
+22  80483e4: 89 02                  mov %eax,(%edx)
+23  80483e6: a1 48 95 04 08         mov 0x8049548,%eax Get *bufp1
+24  80483eb: 89 08                  mov %ecx,(%eax)
+25  80483ed: 5d                     pop %ebp
+26  80483ee: c3                     ret
+# code/link/p-exe.d
+
+# (b) Relocated .data section
+# code/link/pdata-exe.d
+1   08049454 <buf>:
+2   8049454: 01 00 00 00 02 00 00 00
+3   0804945c <bufp0>:
+4   804945c: 54 94 04 08 Relocated!
+# code/link/pdata-exe.d
+```
+
+|图 7-10 中的行号|地址|值|
+|-|-|-|
+|15|0x804945c|0x8049454|
+|16|0x8049458|0x0000002|
+|18|0x8049548|0x8049458|
+|22|0x8049458|0x0000002|
+|23|0x8049548|0x8049458|
 
 ### 7.13 \*\*\*
 
