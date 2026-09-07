@@ -565,7 +565,6 @@ a 和 b 表示当前路径中的目标模块或静态库，而 a→b 表示 a �
 
 可以随意使用诸如 `OBJDUMP` 之类的工具来帮助你解答这个题目。
 
-
 ```c
 extern int p3(void);
 int x = 1;
@@ -618,13 +617,25 @@ void p1() {
 
 **图 7-20 练习题 7.13 的示例代码**
 
+答：
+
+|`.text` 节行号|节偏移(十六进制)|重定位类型|符号名字|
+|-|-|-|-|
+|12|12|R_386_PC_32|p3|
+|14|19|R_386_32|xp|
+|17|21|R_386_PC_32|P2|
+
+|`.data` 节行号|节偏移(十六进制)|重定位类型|符号名字|
+|-|-|-|-|
+|4|4|R_386_32|x|
+
 ### 7.14 \*\*\*
 
 考虑图 7-21 中的 C 代码和相应的可重定位目标模块。
 
 * A.确定当模块被重定位时，链接器将修改 `.text` 中的哪些指令。
 对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
-* B.确定当模块被重定位时，链接器将修改 `.data` 中的哪些数据目标。
+* B.确定当模块被重定位时，链接器将修改 `.rodata` 中的哪些数据目标。
 对于每条这样的指令，列出它的重定位条目中的信息:节偏移、重定位类型和符号名字。
 
 可以随意使用诸如 `OBJDUMP` 之类的工具来帮助你解答这个题目。
@@ -682,6 +693,49 @@ This is the jump table for the switch statement
 
 **图 7-21 练习题 7.14 示例代码**
 
+答：
+
+先给 (b) 加下注释
+
+```x86asm
+1 00000000 <relo3>:
+2    0: 55                      push %ebp
+3    1: 89 e5                   mov %esp,%ebp
+4    3: 8b 45 08                mov 0x8(%ebp),%eax          # %eax=val
+5    6: 8d 50 9c                lea 0xffffff9c(%eax),%edx   # %edx=val-100
+6    9: 83 fa 05                cmp $0x5,%edx
+7    c: 77 17                   ja 25 <relo3+0x25>
+8    e: ff 24 95 00 00 00 00    jmp *0x0(,%edx,4)
+9   15: 40                      inc %eax
+10  16: eb 10                   jmp 28 <relo3+0x28>
+11  18: 83 c0 03                add $0x3,%eax
+12  1b: eb 0b                   jmp 28 <relo3+0x28>
+13  1d: 8d 76 00                lea 0x0(%esi),%esi
+14  20: 83 c0 05                add $0x5,%eax
+15  23: eb 03                   jmp 28 <relo3+0x28>
+16  25: 83 c0 06                add $0x6,%eax
+17  28: 89 ec                   mov %ebp,%esp
+18  2a: 5d                      pop %ebp
+19  2b: c3                      ret
+```
+
+* A
+
+|`.text` 节行号|节偏移(十六进制)|重定位类型|符号名字|
+|-|-|-|-|
+|8|11|R_386_32|.rodata|
+
+* B
+
+|节偏移(十六进制)|重定位类型|符号名字|
+|-|-|-|
+|0|R_386_32|`.text`|
+|4|R_386_32|`.text`|
+|8|R_386_32|`.text`|
+|c|R_386_32|`.text`|
+|10|R_386_32|`.text`|
+|14|R_386_32|`.text`|
+
 ### 7.15 \*\*\*
 
 完成下面的任务将帮助你更熟悉处理目标文件的各种工具。
@@ -689,3 +743,65 @@ This is the jump table for the switch statement
 * A. 在你的系统上，`libc.a` 和 `libm.a` 的版本中包含多少目标文件?
 * B. `gcc -O2` 产生的可执行代码与 `gcc -O2 -g` 产生的不同吗?
 * C. 在你的系统上，GCC 驱动程序使用的是什么共享库?
+
+答：
+
+* A
+
+```sh
+$ ar t `gcc -m32 -print-file-name=libc.a` | wc -l
+1694
+$ ar t `gcc -m32 -print-file-name=libm.a` | wc -l
+721
+$ ar t `gcc -print-file-name=libc.a` | wc -l
+1692
+$ ar t `gcc -print-file-name=libm.a` | wc -l
+ar: /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/libm.a: File format not recognized
+0
+$ file /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/libm.a
+/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/libm.a: ASCII text
+$ cat /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/libm.a
+/* GNU ld script
+*/
+OUTPUT_FORMAT(elf64-x86-64)
+GROUP ( /usr/lib/x86_64-linux-gnu/libm-2.27.a /usr/lib/x86_64-linux-gnu/libmvec.a )
+$ ar t /usr/lib/x86_64-linux-gnu/libm-2.27.a  | wc -l
+794
+$ ar t /usr/lib/x86_64-linux-gnu/libmvec.a | wc -l
+129
+```
+
+* B 是的，不同
+
+* C 
+
+```sh
+$ gcc -Wl,--verbose -o /dev/null -x c /dev/null 2>&1 | grep -E '^(attempt to open|-[a-z])' | head -40
+
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o succeeded
+attempt to open /tmp/ccdKcJ0f.o succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.so failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc_s.so succeeded
+attempt to open libgcc_s.so.1 failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc_s.so.1 succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.so failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libc.so failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libc.a failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/libc.so succeeded
+attempt to open /lib/x86_64-linux-gnu/libc.so.6 succeeded
+attempt to open /usr/lib/x86_64-linux-gnu/libc_nonshared.a succeeded
+attempt to open /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.so failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc_s.so succeeded
+attempt to open libgcc_s.so.1 failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc_s.so.1 succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.so failed
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o succeeded
+attempt to open /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o succeeded
+```
