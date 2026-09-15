@@ -556,7 +556,9 @@ unix> ./myls
 ...output is now 80 columns wide
 ```
 
-TODO
+答：
+
+[ex8.20.c](ex8.20.c)
 
 ### 8.21 \*\*
 
@@ -600,12 +602,12 @@ bac
 int mysystem(char *command);
 ```
 
-`mysystem` 函数通过调用 “/bin/sh-c command” 来执行 command, 然后在 command 完成后返回。
+`mysystem` 函数通过调用 “/bin/sh -c command” 来执行 command, 然后在 command 完成后返回。
 如果 command(通过调用 `exit` 函数或者执行一条 `return` 语句)正常退出，那么 `mysystem` 返回 command 退出状态。
 例如，如果 command 通过调用exit(8)终止，那么 `mysystem` 返回值 8。
 否则，如果 command 是异常终止的，那么 `mysystem` 就返回外壳返回的状态。
 
-TODO
+答：[8.22.c](8.22.c)
 
 ### 8.23 \*\*
 
@@ -668,7 +670,7 @@ child 12255 terminated by signal 11: Segmentation fault
 child 12254 terminated by signal 11: Segmentation fault
 ```
 
-> 提示: 请参考psignal(3)的 man 页。
+> 提示: 请参考 psignal(3)的 man 页。
 
 附录：
 
@@ -706,5 +708,189 @@ int main()
 ```
 
 **图8-17 使用 waitpid 函数不按照特定的顺序回收僵死子进程**
+
+TODO
+
+### 8.25 \*\*\*
+
+编写 `fgets` 函数的一个版本，叫做 `tfgets`,它 5 秒钟后会超时。
+`tfgets` 函数接收和 `fgets` 相同的输入。
+如果用户在 5 秒内不键入一个输入行，`tfgets` 返回 `NULL`。
+否则，它返回一个指向输入行的指针。
+
+TODO
+
+### 8.26 \*\*\*\*
+
+以图 8-22 中的示例作为开始点，编写一个支持作业控制的外壳程序。
+外壳必须具有以下特性:
+
+* 用户输入的命令行由一个 `name`、零个或者多个参数组成，它们都是由一个或者多个空格分隔开的。
+如果 `name` 是一个内置命令，那么外壳就立即处理它，并等待下一个命令行。
+否则，外壳就假设 `name` 是一个可执行的文件，在一个初始的子进程(作业)的上下文中加载并运行它。
+作业的进程组 ID 与子进程的 PID 相同。
+* 每个作业是由一个进程ID(PID)或者一个作业ID(JID)来标识的，它是由一个外壳分配的任意的小正整数。
+JID在命令行上用前缀 “%” 来表示。
+比如，“%5” 表示JID5，而 “5” 表示PID5。
+* 如果命令行以&来结束，那么外壳就在后台运行这个作业。
+否则，外壳就在前台运行这个作业。
+* 输入ctrl-c(ctrl-z)，使得外壳发送一个SIGINT(SIGTSTP)信号给前台进程组中的每个进程。
+* 内置命令 `jobs` 列出所有的后台作业。
+* 内置命令 bg &lt;job&gt; 通过发送一个 SIGCONT 信号重启 &lt;job&gt;，然后在后台运行它。
+&lt;job&gt; 参数可以是一个 PID，也可以是一个 JID。
+* 内置命令 fg &lt;job&gt; 通过发送一个 SIGCONT 信号重启 &lt;job&gt;，然后在前台运行它。
+* 外壳回收它所有的僵死子进程。如果任何作业因为它收到一个未捕获的信号而终止，那么外壳就输出一条信息到终端，包含该作业的 PID 和对违规信号的描述。
+
+图 8-42 展示了一个示例的外壳会话。
+
+```sh
+unix> ./shell                               Run your shell program
+> bogus
+bogus: Command not found.                   Execve can’t find executable
+> foo 10
+Job 5035 terminated by signal: Interrupt    User types ctrl-c
+> foo 100 &
+[1] 5036 foo 100 &
+> foo 200 &
+[2] 5037 foo 200 &
+> jobs
+[1] 5036 Running foo 100 &
+[2] 5037 Running foo 200 &
+> fg %1
+Job [1] 5036 stopped by signal: Stopped     User types ctrl-z
+> jobs
+[1] 5036 Stopped foo 100 &
+[2] 5037 Running foo 200 &
+> bg 5035
+5035: No such process
+> bg 5036
+[1] 5036 foo 100 &
+> /bin/kill 5036
+Job 5036 terminated by signal: Terminated
+> fg %2                                     Wait for fg job to finish.
+> quit
+unix>                                       Back to the Unix shell
+```
+
+**图 8-42 家庭作业 8.26 的外壳会话示例**
+
+附录：
+
+```c
+/* code/ecf/shellex.c */
+#include "csapp.h"
+#define MAXARGS 128
+
+/* Function prototypes */
+void eval(char *cmdline);
+int parseline(char *buf, char **argv);
+int builtin_command(char **argv);
+
+int main()
+{
+    char cmdline[MAXLINE]; /* Command line */
+
+    while (1) {
+        /* Read */
+        printf("> ");
+        Fgets(cmdline, MAXLINE, stdin);
+        if (feof(stdin))
+            exit(0);
+
+        /* Evaluate */
+        eval(cmdline);
+    }
+}
+/* code/ecf/shellex.c */
+```
+
+**图 8-22 一个简单的外壳程序的 `main` 例程**
+
+```c
+/* code/ecf/shellex.c */
+/* eval - Evaluate a command line */
+void eval(char *cmdline)
+{
+    char *argv[MAXARGS]; /* Argument list execve() */
+    char buf[MAXLINE]; /* Holds modified command line */
+    int bg; /* Should the job run in bg or fg? */
+    pid_t pid; /* Process id */
+
+    strcpy(buf, cmdline);
+    bg = parseline(buf, argv);
+    if (argv[0] == NULL)
+        return; /* Ignore empty lines */
+
+    if (!builtin_command(argv)) {
+        if ((pid = Fork()) == 0) { /* Child runs user job */
+            if (execve(argv[0], argv, environ) < 0) {
+                printf("%s: Command not found.\n", argv[0]);
+                exit(0);
+            }
+        }
+
+        /* Parent waits for foreground job to terminate */
+        if (!bg) {
+            int status;
+            if (waitpid(pid, &status, 0) < 0)
+                unix_error("waitfg: waitpid error");
+        }
+        else
+            printf("%d %s", pid, cmdline);
+    }
+    return;
+}
+
+/* If first arg is a builtin command, run it and return true */
+int builtin_command(char **argv)
+{
+    if (!strcmp(argv[0], "quit"))   /* quit command */
+        exit(0);
+    if (!strcmp(argv[0], "&"))      /* Ignore singleton & */
+        return 1;
+    return 0;                       /* Not a builtin command */
+}
+/* code/ecf/shellex.c */
+```
+
+**图 8-23 `eval`:对外壳命令行求值**
+
+```c
+/* code/ecf/shellex.c */
+/* parseline - Parse the command line and build the argv array */
+int parseline(char *buf, char **argv)
+{
+    char *delim;    /* Points to first space delimiter */
+    int argc;       /* Number of args */
+    int bg;         /* Background job? */
+
+    buf[strlen(buf)-1] = ’ ’; /* Replace trailing ’\n’ with space */
+    while (*buf && (*buf == ’ ’)) /* Ignore leading spaces */
+        buf++;
+
+    /* Build the argv list */
+    argc = 0;
+    while ((delim = strchr(buf, ’ ’))) {
+        argv[argc++] = buf;
+        *delim = ’\0’;
+        buf = delim + 1;
+        while (*buf && (*buf == ’ ’)) /* Ignore spaces */
+            buf++;
+    }
+    argv[argc] = NULL;
+
+    if (argc == 0) /* Ignore blank line */
+        return 1;
+
+    /* Should the job run in the background? */
+    if ((bg = (*argv[argc-1] == ’&’)) != 0)
+        argv[--argc] = NULL;
+
+    return bg;
+}
+/* code/ecf/shellex.c */
+```
+
+**图 8-24 `parseline`:解析外壳的一个输人行**
 
 TODO
