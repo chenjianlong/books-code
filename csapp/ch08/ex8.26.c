@@ -140,23 +140,50 @@ void unix_error(char *msg)
     exit(EXIT_FAILURE);
 }
 
+void handle_sigchld()
+{
+    int status = 0;
+    while (1) {
+        pid_t pid = waitpid(-1, &status, WNOHANG);
+        if (pid <= 0) {
+            break;
+        }
+
+        if (WIFEXITED(status)) {
+            printf("child %d terminated normally with exit status=%d\n",
+                    pid, WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            int signo = WTERMSIG(status);
+            printf("child %d terminated by signal %d: %s\n",
+                    pid, signo, strsignal(signo));
+        } else {
+            printf("child %d terminated abnormally\n", pid);
+        }
+    }
+}
+
 void sig_handler(int sig)
 {
     printf("Receive signal: %d, %s\n", sig, strsignal(sig));
-    if (fg_pgid <= 0) {
-        return;
-    }
-
     switch (sig) {
     case SIGINT:
+        if (fg_pgid <= 0) {
+            return;
+        }
         if (kill(-fg_pgid, SIGINT) < 0) {
             perror("kill error");
         }
         break;
     case SIGSTOP:
+        if (fg_pgid <= 0) {
+            return;
+        }
         if (kill(-fg_pgid, SIGSTOP) < 0) {
             perror("kill error");
         }
+        break;
+    case SIGCHLD:
+        handle_sigchld();
         break;
     }
 }
