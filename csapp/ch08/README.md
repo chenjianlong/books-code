@@ -864,17 +864,17 @@ int parseline(char *buf, char **argv)
     int argc;       /* Number of args */
     int bg;         /* Background job? */
 
-    buf[strlen(buf)-1] = ’ ’; /* Replace trailing ’\n’ with space */
-    while (*buf && (*buf == ’ ’)) /* Ignore leading spaces */
+    buf[strlen(buf)-1] = ' '; /* Replace trailing '\n' with space */
+    while (*buf && (*buf == ' ')) /* Ignore leading spaces */
         buf++;
 
     /* Build the argv list */
     argc = 0;
-    while ((delim = strchr(buf, ’ ’))) {
+    while ((delim = strchr(buf, ' '))) {
         argv[argc++] = buf;
-        *delim = ’\0’;
+        *delim = '\0';
         buf = delim + 1;
-        while (*buf && (*buf == ’ ’)) /* Ignore spaces */
+        while (*buf && (*buf == ' ')) /* Ignore spaces */
             buf++;
     }
     argv[argc] = NULL;
@@ -883,7 +883,7 @@ int parseline(char *buf, char **argv)
         return 1;
 
     /* Should the job run in the background? */
-    if ((bg = (*argv[argc-1] == ’&’)) != 0)
+    if ((bg = (*argv[argc-1] == '&')) != 0)
         argv[--argc] = NULL;
 
     return bg;
