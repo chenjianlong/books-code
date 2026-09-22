@@ -11,9 +11,16 @@
 /*---- list operation begin----*/
 #define INIT_COUNT 6
 
+enum Job_Stat {
+    JOB_STAT_RUNNING = 0,
+    JOB_STAT_SUSPENDED = 1,
+    JOB_STAT_CONTINUED = 2,
+};
+
 struct List_Item {
     char cmd[MAXLINE];
     pid_t pid;
+    enum Job_Stat stat;
 };
 
 struct List {
@@ -23,7 +30,21 @@ struct List {
     int previous_item;
 };
 
-struct List_Item* new_item(char *cmd, pid_t pid)
+static const char* job_stat_str(enum Job_Stat stat)
+{
+    switch (stat) {
+    case JOB_STAT_RUNNING:
+        return "running";
+    case JOB_STAT_SUSPENDED:
+        return "suspended";
+    case JOB_STAT_CONTINUED:
+        return "continued";
+    default:
+        return "error";
+    }
+}
+
+struct List_Item* new_item(char *cmd, pid_t pid, enum Job_Stat stat)
 {
     if (cmd == NULL) {
         return NULL;
@@ -42,6 +63,7 @@ struct List_Item* new_item(char *cmd, pid_t pid)
     strncmp(item->cmd, cmd, cmd_len);
     item->cmd[cmd_len] = '\0';
     item->pid = pid;
+    item->stat = stat;
     return item;
 }
 
@@ -114,7 +136,7 @@ int expand_items(struct List *li)
     return 0;
 }
 
-int add_item(struct List *li, char *cmd, pid_t pid)
+int add_item(struct List *li, char *cmd, pid_t pid, enum Job_Stat stat)
 {
     if (li == NULL) {
         return -1;
@@ -145,7 +167,7 @@ int add_item(struct List *li, char *cmd, pid_t pid)
         }
     }
 
-    struct List_Item* item = new_item(cmd, pid);
+    struct List_Item* item = new_item(cmd, pid, stat);
     if (item == NULL) {
         return -1;
     }
@@ -303,7 +325,7 @@ void eval(char *cmdline)
         if (!bg) {
             fg_pgid = pgid;
             int status;
-            while ((waitpid(pid, &status, 0) < 0)) {
+            while ((waitpid(pid, &status, WUNTRACED) < 0)) {
                 if (errno != EINTR) {
                     unix_error("waitfg: waitpid error");
                 }
@@ -311,10 +333,19 @@ void eval(char *cmdline)
 
             printf("waitpid exit\n");
             fg_pgid = -1;
+            if (WIFSTOPPED(status)) {
+                int job_num = add_item(bg_jobs, cmdline, pid, JOB_STAT_SUSPENDED);
+                if (job_num == -1) {
+                    printf("add job to bg failure");
+                    exit(EXIT_FAILURE);
+                } else {
+                    printf("[%d] %d\n", job_num + 1, pid);
+                }
+            }
             /*if (waitpid(pid, &status, 0) < 0)
                 unix_error("waitfg: waitpid error");*/
         } else {
-            int job_num = add_item(bg_jobs, cmdline, pid);
+            int job_num = add_item(bg_jobs, cmdline, pid, JOB_STAT_RUNNING);
             if (job_num == -1) {
                 printf("add job to bg failure");
                 exit(EXIT_FAILURE);
@@ -350,8 +381,9 @@ int builtin_command(char **argv)
                 note = '-';
             }
 
-            printf("[%d]  %c %d    %s\n", i + 1, note,
+            printf("[%d]  %c %d %-9s  %s\n", i + 1, note,
                 bg_jobs->items[i]->pid,
+                job_stat_str(bg_jobs->items[i]->stat),
                 bg_jobs->items[i]->cmd);
         }
 
@@ -413,6 +445,11 @@ void sig_handler(int sig)
         break;
     case SIGSTOP:
         if (kill(-fg_pgid, SIGSTOP) < 0) {
+            perror("kill error");
+        }
+        break;
+    case SIGTSTP:
+        if (kill(-fg_pgid, SIGTSTP) < 0) {
             perror("kill error");
         }
         break;
