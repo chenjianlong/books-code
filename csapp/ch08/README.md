@@ -893,4 +893,4 @@ int parseline(char *buf, char **argv)
 
 **图 8-24 `parseline`:解析外壳的一个输人行**
 
-TODO
+答：[ex8.26.c](ex8.26.c)

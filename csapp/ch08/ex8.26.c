@@ -187,7 +187,7 @@ int find_item_by_pid(struct List *li, pid_t pid)
         return -1;
     }
 
-    for (int i = 0; i < li->current_item || i < li->previous_item; ++i) {
+    for (int i = 0; i <= li->current_item || i <= li->previous_item; ++i) {
         if (li->items[i]->pid == pid) {
             return i;
         }
@@ -198,7 +198,7 @@ int find_item_by_pid(struct List *li, pid_t pid)
 
 int remove_item(struct List *li, int job_num)
 {
-    if (li == NULL) {
+    if (li == NULL || job_num < 0) {
         return -1;
     }
 
@@ -275,6 +275,7 @@ int main()
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTSTP, &sa, NULL);
+    sigaction(SIGCHLD, &sa, NULL);
 
     char cmdline[MAXLINE]; /* Command line */
 
@@ -288,6 +289,29 @@ int main()
         /* Evaluate */
         eval(cmdline);
         cmdline[0] = 0;
+    }
+}
+
+void wait_fg(pid_t pid, char *cmdline)
+{
+    fg_pgid = pid;
+    int status;
+    while ((waitpid(pid, &status, WUNTRACED) < 0)) {
+        if (errno != EINTR) {
+            unix_error("waitfg: waitpid error");
+        }
+    }
+
+    printf("waitpid exit\n");
+    fg_pgid = -1;
+    if (WIFSTOPPED(status)) {
+        int job_num = add_item(bg_jobs, cmdline, pid, JOB_STAT_SUSPENDED);
+        if (job_num == -1) {
+            printf("add job to bg failure");
+            exit(EXIT_FAILURE);
+        } else {
+            printf("[%d] %d\n", job_num + 1, pid);
+        }
     }
 }
 
@@ -323,27 +347,7 @@ void eval(char *cmdline)
 
         /* Parent waits for foreground job to terminate */
         if (!bg) {
-            fg_pgid = pgid;
-            int status;
-            while ((waitpid(pid, &status, WUNTRACED) < 0)) {
-                if (errno != EINTR) {
-                    unix_error("waitfg: waitpid error");
-                }
-            }
-
-            printf("waitpid exit\n");
-            fg_pgid = -1;
-            if (WIFSTOPPED(status)) {
-                int job_num = add_item(bg_jobs, cmdline, pid, JOB_STAT_SUSPENDED);
-                if (job_num == -1) {
-                    printf("add job to bg failure");
-                    exit(EXIT_FAILURE);
-                } else {
-                    printf("[%d] %d\n", job_num + 1, pid);
-                }
-            }
-            /*if (waitpid(pid, &status, 0) < 0)
-                unix_error("waitfg: waitpid error");*/
+            wait_fg(pid, cmdline);
         } else {
             int job_num = add_item(bg_jobs, cmdline, pid, JOB_STAT_RUNNING);
             if (job_num == -1) {
@@ -355,6 +359,29 @@ void eval(char *cmdline)
         }
     }
     return;
+}
+
+int parse_job_idx(char *arg)
+{
+    if (arg == NULL) {
+        return bg_jobs->current_item;
+    }
+
+    if (arg[0] == '%') {
+        int job = atoi(&(arg[1]));
+        if (job <= 0) {
+            return -1;
+        }
+
+        int idx = (job - 1);
+        if (idx >= bg_jobs->items_count || bg_jobs->items[idx] == NULL) {
+            return -1;
+        }
+
+        return idx;
+    } else {
+        return find_item_by_pid(bg_jobs, atoi(arg));
+    }
 }
 
 /* If first arg is a builtin command, run it and return true */
@@ -388,7 +415,43 @@ int builtin_command(char **argv)
         }
 
         return 1;
+    } else if (!strcmp(argv[0], "fg")) {
+        int idx = parse_job_idx(argv[1]);
+        if (idx < 0) {
+            if (argv[1] == NULL) {
+                printf("fg: no current job\n");
+            } else {
+                printf("fg: %s: no such job\n", argv[1]);
+            }
+
+            return 1;
+        }
+
+        if (kill(-bg_jobs->items[idx]->pid, SIGCONT) < 0) {
+            perror("kill error");
+        }
+
+        wait_fg(bg_jobs->items[idx]->pid, bg_jobs->items[idx]->cmd);
+        return 1;
+    } else if (!strcmp(argv[0], "bg")) {
+        int idx = parse_job_idx(argv[1]);
+        if (idx < 0) {
+            if (argv[1] == NULL) {
+                printf("bg: no current job\n");
+            } else {
+                printf("bg: %s: no such job\n", argv[1]);
+            }
+
+            return 1;
+        }
+
+        if (kill(-bg_jobs->items[idx]->pid, SIGCONT) < 0) {
+            perror("kill error");
+        }
+
+        return 1;
     }
+
     return 0;                       /* Not a builtin command */
 }
 
@@ -430,28 +493,94 @@ void unix_error(char *msg)
     exit(EXIT_FAILURE);
 }
 
+void exit_status_str(int code, char* out)
+{
+    if (code == 0) {
+        strcpy(out, "done");
+    } else {
+        sprintf(out, "exit %d", code);
+    }
+}
+
+void sigchld_handler(int sig)
+{
+    int pid = -1, status = -1;
+    while (1) {
+        pid = waitpid(-1, &status, WNOHANG);
+        if (pid == 0 || (pid < 0 && errno != EINTR)) {
+            break;
+        }
+
+        printf("Receive SIGCHLD, pid=%d, sig=%d, %s\n", pid, sig, strsignal(sig));
+        int i = find_item_by_pid(bg_jobs, pid);
+        char note = ' ';
+        if (i == bg_jobs->current_item) {
+            note = '+';
+        } else if (i == bg_jobs->previous_item) {
+            note = '-';
+        }
+
+        if (WIFSIGNALED(status)) {
+            int signo = WTERMSIG(status);
+            if (i >= 0) {
+                printf("[%d]  %c %d %-9s  %s\n", i + 1, note,
+                    bg_jobs->items[i]->pid,
+                    strsignal(signo),
+                    bg_jobs->items[i]->cmd);
+            } else {
+                printf("%d %9s\n", pid, strsignal(sig));
+            }
+        } else if (WIFEXITED(status)) {
+            int exit_status = WEXITSTATUS(status);
+            char exit_str[16] = { '\0' };
+            exit_status_str(exit_status, exit_str);
+            if (i >= 0) {
+                printf("[%d]  %c %d %-9s  %s\n", i + 1, note,
+                    bg_jobs->items[i]->pid,
+                    exit_str,
+                    bg_jobs->items[i]->cmd);
+            } else {
+                printf("%d %9s\n", pid, exit_str);
+            }
+        }
+
+        remove_item(bg_jobs, i);
+    }
+}
+
 void sig_handler(int sig)
 {
     printf("Receive signal: %d, %s\n", sig, strsignal(sig));
-    if (fg_pgid <= 0) {
-        return;
-    }
-
     switch (sig) {
     case SIGINT:
+        if (fg_pgid <= 0) {
+            return;
+        }
+
         if (kill(-fg_pgid, SIGINT) < 0) {
             perror("kill error");
         }
         break;
     case SIGSTOP:
+        if (fg_pgid <= 0) {
+            return;
+        }
+
         if (kill(-fg_pgid, SIGSTOP) < 0) {
             perror("kill error");
         }
         break;
     case SIGTSTP:
+        if (fg_pgid <= 0) {
+            return;
+        }
+
         if (kill(-fg_pgid, SIGTSTP) < 0) {
             perror("kill error");
         }
+        break;
+    case SIGCHLD:
+        sigchld_handler(sig);
         break;
     }
 }
