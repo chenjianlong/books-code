@@ -45,3 +45,66 @@ P=2<sup>50</sup>(千千兆)，或 E=2<sup>60</sup>(千兆兆)。
 |16|8K|2<sup>3</sup>=8|
 |32|4K|2<sup>20</sup>|
 |32|8K|2<sup>19</sup>|
+
+### 练习题 9.3
+
+给定一个32位的虚拟地址空间和一个24位的物理地址，对于下面的页面大小P，确定 VPN、VPO、PPN和PPO中的位数:
+
+|P|# VPN位|# VPO位|# PPN位|# PPO位|
+|-|-|-|-|-|
+|1KB|||||
+|2KB|||||
+|4KB|||||
+|8KB|||||
+
+附录：
+
+<table>
+  <thead>
+    <tr><th colspan="2">基本参数</th></tr>
+    <tr><th>符号</th><th>描述</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>N=2<sup>n</sup></td><td>虚拟地址空间中的地址数量</td></tr>
+    <tr><td>M=2<sup>m</sup></td><td>物理地址空间中的地址数量</td></tr>
+    <tr><td>P=2<sup>p</sup></td><td>页的大小（字节）</td></tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr><th colspan="2">虚拟地址（VA）的组成部分</th></tr>
+    <tr><th>符号</th><th>描述</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>VPO</td><td>虚拟页面偏移量（字节）</td></tr>
+    <tr><td>VPN</td><td>虚拟页号</td></tr>
+    <tr><td>TLBI</td><td>TLB索引</td></tr>
+    <tr><td>TLBT</td><td>TLB标记</td></tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr><th colspan="2">物理地址（PA）的组成部分</th></tr>
+    <tr><th>符号</th><th>描述</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>PPO</td><td>物理页面偏移量（字节）</td></tr>
+    <tr><td>PPN</td><td>物理页号</td></tr>
+    <tr><td>CO</td><td>缓冲块内的字节偏移量</td></tr>
+    <tr><td>CI</td><td>高速缓存索引</td></tr>
+    <tr><td>CT</td><td>高速缓存标记</td></tr>
+  </tbody>
+</table>
+
+**图 9-11 地址翻译符号小结**
+
+答：
+
+|P|# VPN位|# VPO位|# PPN位|# PPO位|
+|-|-|-|-|-|
+|1KB|22|10|14|10|
+|2KB|21|11|13|11|
+|4KB|20|12|12|12|
+|8KB|19|13|11|13|
